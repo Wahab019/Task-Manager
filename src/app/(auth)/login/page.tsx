@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, CircleHelp, Globe2, Landmark } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-
 export default function LoginPage() {
   return (
     <div className="space-y-8">
@@ -63,14 +61,12 @@ export default function LoginPage() {
           Remember this workstation
         </label>
 
-        <Button
-          variant="heritage"
-          size="lg"
-          type="button"
-          className="h-12 w-full text-xs"
+        <Link
+          href="/dashboard"
+          className="flex h-12 w-full items-center justify-center gap-1.5 rounded-[3px] bg-primary text-xs font-bold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[#0a3026]"
         >
           Log In <ArrowRight className="size-4" />
-        </Button>
+        </Link>
       </div>
 
       <footer className="border-t border-[#eef0ee] pt-7 text-center">
