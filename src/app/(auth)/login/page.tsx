@@ -1,68 +1,87 @@
-"use client";
+import Link from "next/link";
+import { ArrowRight, CircleHelp, Globe2, Landmark } from "lucide-react";
 
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("demo@taskmanager.dev");
-  const [password, setPassword] = useState("password123");
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    localStorage.setItem("task-manager-auth", "true");
-    router.push("/dashboard");
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <p className="text-sm font-medium uppercase tracking-[0.25em] text-sky-300">
-          Welcome back
-        </p>
-        <h1 className="text-3xl font-semibold text-white">Sign in to Task Manager</h1>
-        <p className="text-sm text-slate-300">
-          Use the demo account below to jump into your dashboard.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <header className="space-y-3 text-center">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
+          <Landmark className="size-7" strokeWidth={1.8} />
+        </div>
+        <div>
+          <h1 className="text-[25px] leading-none font-semibold text-primary">
+            Executive Heritage
+          </h1>
+          <p className="mt-2 text-[11px] font-bold tracking-[0.13em] text-secondary">
+            TRACKER &amp; ARCHIVE
+          </p>
+        </div>
+      </header>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <label className="block space-y-2 text-sm text-slate-300">
-          <span>Email</span>
+      <div className="space-y-5">
+        <label className="block space-y-1.5">
+          <span className="text-xs font-bold tracking-[0.01em] text-[#4b5550]">
+            Email Address
+          </span>
           <input
             type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-sky-400"
-            placeholder="name@example.com"
-            required
+            defaultValue="executive@heritage.com"
+            className="h-11 w-full rounded-[3px] border border-[#dce0dd] px-3 text-sm text-[#3f4944] outline-none placeholder:text-[#9ba29e] focus:border-primary focus:ring-2 focus:ring-primary/10"
           />
         </label>
 
-        <label className="block space-y-2 text-sm text-slate-300">
-          <span>Password</span>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="password"
+              className="text-xs font-bold tracking-[0.01em] text-[#4b5550]"
+            >
+              Password
+            </label>
+            <Link
+              href="/reset-password"
+              className="text-[10px] font-bold text-primary underline underline-offset-2"
+            >
+              Forgot Password?
+            </Link>
+          </div>
           <input
+            id="password"
             type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-sky-400"
-            placeholder="••••••••"
-            required
+            defaultValue="password"
+            className="h-11 w-full rounded-[3px] border border-[#dce0dd] px-3 text-sm text-[#3f4944] outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
           />
+        </div>
+
+        <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[#69716d]">
+          <input
+            type="checkbox"
+            className="size-3.5 rounded-xs border-[#dce0dd] accent-primary"
+          />
+          Remember this workstation
         </label>
 
-        <button
-          type="submit"
-          className="w-full rounded-xl bg-sky-500 px-4 py-3 font-medium text-slate-950 transition hover:bg-sky-400"
+        <Button
+          variant="heritage"
+          size="lg"
+          type="button"
+          className="h-12 w-full text-xs"
         >
-          Log in
-        </button>
-      </form>
-
-      <div className="rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-300">
-        Demo login: <span className="font-semibold text-white">demo@taskmanager.dev</span>
+          Log In <ArrowRight className="size-4" />
+        </Button>
       </div>
+
+      <footer className="border-t border-[#eef0ee] pt-7 text-center">
+        <p className="mx-auto max-w-60 text-xs leading-4 italic text-[#8a918e]">
+          “Precision in Every Second, Heritage in Every Task.”
+        </p>
+        <div className="mt-5 flex justify-center gap-4 text-[#59625d]">
+          <CircleHelp className="size-4" strokeWidth={1.8} />
+          <Globe2 className="size-4" strokeWidth={1.8} />
+        </div>
+      </footer>
     </div>
   );
 }
