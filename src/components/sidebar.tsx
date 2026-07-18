@@ -20,7 +20,7 @@ const navigationItems = [
   { label: "Tasks", icon: TimerReset },
   { label: "Time Logs", icon: Clock3 },
   { label: "Reports", icon: ChartNoAxesColumn },
-  { label: "Team", icon: Users },
+  // { label: "Team", icon: Users },
 ];
 
 export function Sidebar() {
