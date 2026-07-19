@@ -5,14 +5,14 @@ import {
   Ellipsis,
   Pause,
   Play,
-  Square,
+  ChevronDown,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 export default function TasksPage() {
   return (
-    <div className="relative mx-auto min-h-[calc(100vh-4rem)] max-w-360 pb-32">
+    <div className="relative mx-auto min-h-[calc(100vh-4rem)] max-w-7xl">
       <header className="flex flex-col gap-5 border-b border-primary/10 pb-7 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-[11px] font-semibold tracking-wide text-primary">
@@ -33,7 +33,7 @@ export default function TasksPage() {
             </button>
           </div>
           <button className="flex h-9 min-w-42 items-center justify-between rounded-sm border border-primary/15 bg-white px-4 text-xs font-semibold text-primary">
-            All Projects <span className="text-base text-[#6e746f]">⌄</span>
+            All Projects <ChevronDown className="w-4 h-4" />
           </button>
         </div>
       </header>
