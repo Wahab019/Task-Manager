@@ -6,6 +6,9 @@ import {
   ChevronDown,
 } from "lucide-react";
 
+import { ReportPieChart } from "@/components/Reports/pie-chart";
+import { ReportBarChart } from "@/components/Reports/bar-chart";
+
 const weeklyHours = [5.2, 6.8, 4.4, 7.1, 5.8, 3.1, 1.8];
 const entries = [
   ["Review Q3 Financial Disclosures", "Oct 28, 2023", "2h 15m"],
@@ -17,7 +20,7 @@ const entries = [
 export default function ReportsPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <header className="flex flex-col gap-4 md:flex-row pb-7 md:items-end md:justify-between">
         <div>
           <h1 className="font-heading text-4xl font-semibold text-primary">
             Reports
@@ -32,87 +35,13 @@ export default function ReportsPage() {
         </button>
       </header>
       <section className="grid gap-5 md:grid-cols-3">
-        <Stat
-          icon={Clock3}
-          label="Total Hours"
-          value="38h 15m"
-          sub="↗ +4.2h vs last month"
-        />
-        <Stat
-          icon={CheckCircle2}
-          label="Tasks Completed"
-          value="12"
-          sub="Across 4 projects"
-        />
-        <Stat
-          icon={Clock3}
-          label="Avg Session Length"
-          value="1h 45m"
-          sub="↗ +15m improvement"
-        />
+        <Stat icon={Clock3} label="Total Hours" value="38h 15m" />
+        <Stat icon={CheckCircle2} label="Tasks Completed" value="12" />
+        <Stat icon={Clock3} label="Avg Session Length" value="1h 45m" />
       </section>
       <section className="grid gap-5 lg:grid-cols-2">
-        <article className="rounded-2xl border border-primary/10 bg-white p-5">
-          <div className="flex items-center justify-between">
-            <h2 className="font-heading text-xl font-semibold text-primary">
-              Time by Status
-            </h2>
-            <span className="size-5 rounded-full border-[3px] border-[#47857a] border-r-[#d3ad55]" />
-          </div>
-          <div className="mt-8 flex flex-col items-center justify-center gap-7 sm:flex-row">
-            <div
-              className="relative size-34 rounded-full"
-              style={{
-                background: "conic-gradient(#073d2d 0 75%, #d1ad56 75% 100%)",
-              }}
-            >
-              <div className="absolute inset-3 rounded-full bg-white" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <strong className="font-heading text-lg text-primary">
-                  38.2h
-                </strong>
-                <span className="text-[9px] font-bold text-[#47857a] uppercase">
-                  Total
-                </span>
-              </div>
-            </div>
-            <div className="space-y-5 text-xs">
-              <Legend
-                color="bg-primary"
-                label="Billable"
-                value="28h 45m (75%)"
-              />
-              <Legend
-                color="bg-[#d1ad56]"
-                label="Non-Billable"
-                value="9h 30m (25%)"
-              />
-            </div>
-          </div>
-        </article>
-        <article className="rounded-2xl border border-primary/10 bg-white p-5">
-          <div className="flex items-center justify-between">
-            <h2 className="font-heading text-xl font-semibold text-primary">
-              Hours Logged Over Time
-            </h2>
-            <Sparkles className="size-5 text-[#47857a]" />
-          </div>
-          <div className="mt-7 flex h-38 items-end gap-5 border-b border-primary/10 px-4 sm:gap-8">
-            {weeklyHours.map((value, index) => (
-              <div className="flex h-full flex-1 items-end" key={index}>
-                <div
-                  className="w-full rounded-t-sm bg-[#0b3b2e]"
-                  style={{ height: `${value * 13}%` }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex justify-between px-4 text-[9px] font-bold text-[#47857a]">
-            {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => (
-              <span key={day}>{day}</span>
-            ))}
-          </div>
-        </article>
+        <ReportPieChart />
+        <ReportBarChart />
       </section>
       <section className="overflow-hidden rounded-2xl border border-primary/10 bg-white">
         <h2 className="px-5 py-5 font-heading text-xl font-semibold text-primary">
@@ -151,12 +80,10 @@ function Stat({
   icon: Icon,
   label,
   value,
-  sub,
 }: {
   icon: typeof Clock3;
   label: string;
   value: string;
-  sub: string;
 }) {
   return (
     <article className="rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
@@ -168,11 +95,6 @@ function Stat({
       </div>
       <p className="mt-3 font-heading text-3xl font-semibold text-primary">
         {value}
-      </p>
-      <p
-        className={`mt-3 text-xs ${sub.startsWith("↗") ? "font-semibold text-green-700" : "text-[#47857a]"}`}
-      >
-        {sub}
       </p>
     </article>
   );

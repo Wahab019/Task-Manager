@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 export default function TasksPage() {
   return (
     <div className="relative mx-auto min-h-[calc(100vh-4rem)] max-w-7xl">
-      <header className="flex flex-col gap-5 border-b border-primary/10 pb-7 md:flex-row md:items-end md:justify-between">
+      <header className="flex flex-col gap-5 pb-7 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-[11px] font-semibold tracking-wide text-primary">
             Workspace <span className="mx-2 text-[#9a9e9b]">/</span> Active

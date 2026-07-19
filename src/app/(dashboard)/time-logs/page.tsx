@@ -41,7 +41,7 @@ const todayLogs = [
 export default function TimeLogsPage() {
   return (
     <div className="relative pb-20 mx-auto max-w-7xl space-y-6">
-      <header className="flex flex-col gap-5 border-b border-primary/10 pb-8 md:flex-row md:items-end md:justify-between">
+      <header className="flex flex-col gap-5 pb-7 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-[11px] font-semibold text-primary">
             Workspace <span className="mx-2 text-[#9a9e9b]">›</span> Time Logs
@@ -57,9 +57,6 @@ export default function TimeLogsPage() {
         <div className="flex gap-3">
           <Button variant="heritage-outline" size="lg">
             <Download /> Export Report
-          </Button>
-          <Button variant="heritage" size="lg">
-            <span className="text-lg leading-none">+</span> Add Time Entry
           </Button>
         </div>
       </header>
@@ -87,7 +84,7 @@ export default function TimeLogsPage() {
             </span>
           </div>
         </article>
-        <article className="rounded-lg border border-primary/10 bg-white p-6 lg:col-span-5">
+        <article className="rounded-lg border border-primary/10 bg-white p-6 lg:col-span-8">
           <div className="flex justify-between">
             <p className="text-[10px] font-bold tracking-[0.12em] text-primary uppercase">
               Weekly progress
@@ -107,7 +104,7 @@ export default function TimeLogsPage() {
             <span className="text-[#795f1f]">+2h today</span>
           </div>
         </article>
-        <article className="flex flex-col items-center justify-center rounded-lg border border-primary/10 bg-white p-6 text-center lg:col-span-3">
+        {/* <article className="flex flex-col items-center justify-center rounded-lg border border-primary/10 bg-white p-6 text-center lg:col-span-3">
           <span className="flex size-7 items-center justify-center rounded-full bg-[#866719] text-white">
             <Star className="size-4 fill-current" />
           </span>
@@ -117,7 +114,7 @@ export default function TimeLogsPage() {
           <p className="mt-1 max-w-45 text-xs leading-4 text-primary">
             Tuesday mornings, avg. 3.5h uninterrupted work.
           </p>
-        </article>
+        </article> */}
       </section>
       <section className="mt-10 overflow-hidden rounded-lg border border-primary/10 bg-white shadow-sm">
         <div className="flex flex-col gap-4 border-b border-primary/10 p-5 md:flex-row md:items-center md:justify-between">

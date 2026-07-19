@@ -16,6 +16,17 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ToolbarButton } from "@/components/Header";
+
+export function Avatar({ initials, tone }: { initials: string; tone: string }) {
+  return (
+    <span
+      className={`flex size-8 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold text-primary ${tone}`}
+    >
+      {initials}
+    </span>
+  );
+}
 
 const timeline = [
   {
@@ -52,18 +63,6 @@ const activity = [
     detail: "Asset Icon Library",
     meta: "2 hours ago · Project Aetheris",
   },
-  {
-    icon: MessageSquare,
-    label: "Comment added:",
-    detail: "“Looks great, Julian!”",
-    meta: "4 hours ago · Marketing Deck",
-  },
-  {
-    icon: FileUp,
-    label: "New Asset:",
-    detail: "high_res_mockup_v2.fig",
-    meta: "Yesterday · Internal Design",
-  },
 ];
 
 const dueTasks = [
@@ -90,33 +89,6 @@ const dueTasks = [
 export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <header className="flex flex-col gap-4 border-b border-primary/10 pb-5 lg:flex-row lg:items-center lg:justify-between">
-        <h1 className="font-heading text-2xl font-semibold text-primary">
-          Good morning, Julian
-        </h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="relative hidden sm:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#6e746f]" />
-            <input
-              className="h-9 w-60 rounded-lg border border-primary/20 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-secondary/30"
-              placeholder="Search tasks…"
-            />
-          </label>
-          <ToolbarButton label="Timer">
-            <Timer />
-          </ToolbarButton>
-          <ToolbarButton label="Notifications">
-            <Bell />
-          </ToolbarButton>
-          <ToolbarButton label="Settings">
-            <Settings />
-          </ToolbarButton>
-          <div className="flex size-9 items-center justify-center rounded-full border-2 border-secondary/30 bg-primary text-xs font-bold text-white">
-            JD
-          </div>
-        </div>
-      </header>
-
       <section className="grid gap-6 lg:grid-cols-12">
         <article className="relative overflow-hidden rounded-lg border border-primary/10 bg-white p-6 shadow-sm lg:col-span-8">
           <div className="absolute inset-y-0 left-0 w-1 bg-secondary" />
@@ -278,32 +250,5 @@ export default function DashboardPage() {
         now
       </div>
     </div>
-  );
-}
-
-function ToolbarButton({
-  children,
-  label,
-}: {
-  children: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <button
-      aria-label={label}
-      className="flex size-9 items-center justify-center rounded-full text-primary transition hover:bg-[#eae7e7] [&_svg]:size-4"
-    >
-      {children}
-    </button>
-  );
-}
-
-function Avatar({ initials, tone }: { initials: string; tone: string }) {
-  return (
-    <span
-      className={`flex size-8 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold text-primary ${tone}`}
-    >
-      {initials}
-    </span>
   );
 }

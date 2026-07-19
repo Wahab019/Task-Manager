@@ -10,11 +10,8 @@ export default function LoginPage() {
         </div>
         <div>
           <h1 className="text-[25px] leading-none font-semibold text-primary">
-            Executive Heritage
+            Task Manager
           </h1>
-          <p className="mt-2 text-[11px] font-bold tracking-[0.13em] text-secondary">
-            TRACKER &amp; ARCHIVE
-          </p>
         </div>
       </header>
 
@@ -68,16 +65,6 @@ export default function LoginPage() {
           Log In <ArrowRight className="size-4" />
         </Link>
       </div>
-
-      <footer className="border-t border-[#eef0ee] pt-7 text-center">
-        <p className="mx-auto max-w-60 text-xs leading-4 italic text-[#8a918e]">
-          “Precision in Every Second, Heritage in Every Task.”
-        </p>
-        <div className="mt-5 flex justify-center gap-4 text-[#59625d]">
-          <CircleHelp className="size-4" strokeWidth={1.8} />
-          <Globe2 className="size-4" strokeWidth={1.8} />
-        </div>
-      </footer>
     </div>
   );
 }

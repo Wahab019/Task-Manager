@@ -28,13 +28,9 @@ export function Sidebar() {
         <span className="flex size-6 items-center justify-center rounded-sm bg-primary text-[11px] font-bold text-secondary">
           ⏱
         </span>
-        <span>
-          <span className="block font-heading text-lg leading-4 font-semibold text-primary">
-            Task &amp; Time
-          </span>
-          <span className="block text-[9px] text-[#8b918d]">
-            Enterprise Edition
-          </span>
+
+        <span className="block font-heading text-lg leading-4 font-semibold text-primary">
+          Task Manager
         </span>
       </Link>
 

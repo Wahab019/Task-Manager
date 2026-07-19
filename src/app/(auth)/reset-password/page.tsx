@@ -22,16 +22,13 @@ export default function ResetPasswordPage() {
         </div>
         <div>
           <h1 className="text-[25px] leading-none font-semibold text-primary">
-            Executive Heritage
+            Task Manager
           </h1>
-          <p className="mt-2 text-[11px] font-bold tracking-[0.13em] text-secondary">
-            TRACKER &amp; ARCHIVE
-          </p>
         </div>
       </header>
 
       <div className="text-center">
-        <h2 className="text-2xl font-semibold text-primary">Reset Password</h2>
+        <h2 className="text-xl font-semibold text-primary">Reset Password</h2>
         <p className="mt-2 text-xs leading-5 text-[#737b76]">
           Enter your email and we&apos;ll send you a secure reset link.
         </p>
