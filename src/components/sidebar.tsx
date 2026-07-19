@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   ChartNoAxesColumn,
   CircleHelp,
@@ -7,23 +10,18 @@ import {
   LogOut,
   Play,
   TimerReset,
-  Users,
 } from "lucide-react";
 
 const navigationItems = [
-  {
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/dashboard",
-    active: true,
-  },
-  { label: "Tasks", icon: TimerReset },
-  { label: "Time Logs", icon: Clock3 },
-  { label: "Reports", icon: ChartNoAxesColumn },
-  // { label: "Team", icon: Users },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "Tasks", icon: TimerReset, href: "/tasks" },
+  { label: "Time Logs", icon: Clock3, href: "/time-logs" },
+  { label: "Reports", icon: ChartNoAxesColumn, href: "/reports" },
 ];
 
 export function Sidebar() {
+  const pathname = usePathname();
+
   return (
     <aside className="flex min-h-screen w-60 shrink-0 flex-col border-r border-[#e5e7e3] bg-[#faf9f7] px-4 py-4 text-[#5f6762]">
       <Link href="/dashboard" className="flex items-center gap-2 px-1">
@@ -41,23 +39,20 @@ export function Sidebar() {
       </Link>
 
       <nav className="mt-16 space-y-1" aria-label="Main navigation">
-        {navigationItems.map(({ label, icon: Icon, href, active }) => {
+        {navigationItems.map(({ label, icon: Icon, href }) => {
+          const active = pathname === href || pathname.startsWith(`${href}/`);
+
           const className = `flex h-10 items-center gap-5 border-r-2 px-2 text-sm font-semibold transition-colors ${
             active
               ? "border-secondary bg-[#f0f3f0] text-primary"
               : "border-transparent text-[#707772] hover:bg-[#f0f3f0] hover:text-primary"
           }`;
 
-          return href ? (
+          return (
             <Link key={label} href={href} className={className}>
               <Icon className="size-4" strokeWidth={2} />
               {label}
             </Link>
-          ) : (
-            <span key={label} className={className}>
-              <Icon className="size-4" strokeWidth={2} />
-              {label}
-            </span>
           );
         })}
       </nav>
