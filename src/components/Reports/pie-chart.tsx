@@ -83,7 +83,7 @@ export function ReportPieChart() {
                 innerRadius={62}
                 outerRadius={92}
                 strokeWidth={0}
-                startAngle={90}
+                startAngle={120}
                 endAngle={-270}
               >
                 {statusData.map((entry) => (

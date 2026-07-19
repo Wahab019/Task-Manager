@@ -62,8 +62,11 @@ export default function TasksPage() {
 
         <TaskColumn title="In Progress" count="03">
           <article className="relative overflow-hidden rounded-lg border border-[#9f7a2c] bg-white p-5 shadow-[0_8px_18px_rgba(11,59,46,0.09)]">
-            <span className="absolute right-0 top-0 flex size-13 items-start justify-end rounded-bl-[22px] bg-[#e6e2d9] p-3">
-              <span className="size-3 rounded-full bg-[#795f1f]" />
+            <span className="absolute right-0 top-0 flex size-13 items-center justify-center rounded-bl-[22px] p-3">
+              <span className="relative flex size-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#795f1f] opacity-75"></span>
+                <span className="relative inline-flex size-3 rounded-full bg-[#795f1f]"></span>
+              </span>
             </span>
             <Pill>In Progress</Pill>
             <h2 className="mt-5 font-heading text-xl font-semibold text-primary">
@@ -109,28 +112,6 @@ export default function TasksPage() {
           />
         </TaskColumn>
       </section>
-
-      {/* <aside className="fixed bottom-6 right-6 z-10 flex min-w-67 items-center gap-5 rounded-xl bg-[#003b2d] px-5 py-4 text-white shadow-[0_18px_40px_rgba(11,59,46,0.25)]">
-        <div>
-          <p className="text-[9px] tracking-[0.12em] text-[#a2d0be] uppercase">
-            Currently tracking
-          </p>
-          <p className="mt-1 font-mono text-lg font-bold">01:48:35</p>
-        </div>
-        <span className="h-8 w-px bg-white/15" />
-        <button
-          aria-label="Pause timer"
-          className="flex size-9 items-center justify-center rounded-lg bg-[#866719] text-white"
-        >
-          <Pause className="size-4 fill-current" />
-        </button>
-        <button
-          aria-label="Stop timer"
-          className="flex size-9 items-center justify-center rounded-lg bg-[#cf2525] text-white"
-        >
-          <Square className="size-3 fill-current" />
-        </button>
-      </aside> */}
     </div>
   );
 }

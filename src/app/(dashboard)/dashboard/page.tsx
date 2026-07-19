@@ -1,16 +1,10 @@
 import {
-  Bell,
   ChevronLeft,
   ChevronRight,
   Clock3,
-  FileUp,
-  MessageSquare,
   MoreHorizontal,
   Pause,
-  Search,
-  Settings,
   Square,
-  Timer,
   TrendingUp,
   UserRoundCheck,
 } from "lucide-react";
