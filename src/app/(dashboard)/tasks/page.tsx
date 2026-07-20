@@ -48,14 +48,12 @@ export default function TasksPage() {
             priority="High Priority"
             title="Refine Typography Scale"
             description="Ensure the Hanken Grotesk and Source Serif 4 pairing works perfectly across all templates."
-            time="2h / 0h"
             action="Start"
           />
           <TaskCard
             priority="Low Priority"
             title="Update Design Tokens"
             description="Export the latest color palette from Figma to the style guide manifest."
-            time="45m / 0h"
             action="Start"
           />
         </TaskColumn>
@@ -94,7 +92,6 @@ export default function TasksPage() {
             priority="Normal"
             title="Client Onboarding Flow"
             description="Integrating the automated email sequence for the initial 7 days."
-            time="5h / 1.5h"
             action="Resume"
           />
         </TaskColumn>
@@ -158,13 +155,11 @@ function TaskCard({
   priority,
   title,
   description,
-  time,
   action,
 }: {
   priority: string;
   title: string;
   description: string;
-  time: string;
   action: string;
 }) {
   return (
@@ -179,10 +174,7 @@ function TaskCard({
         {title}
       </h3>
       <p className="mt-1 text-sm leading-5 text-primary">{description}</p>
-      <div className="mt-6 flex items-center justify-between">
-        <span className="inline-flex items-center gap-1 text-xs text-[#8a908c]">
-          <Clock3 className="size-3.5" /> {time}
-        </span>
+      <div className="mt-6 flex justify-end">
         <Button variant="heritage-gold" size="sm">
           <Play className="size-3 fill-current" /> {action}
         </Button>
