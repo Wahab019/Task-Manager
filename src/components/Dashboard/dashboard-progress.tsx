@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { ToolbarButton } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { Pause, Square } from "lucide-react";

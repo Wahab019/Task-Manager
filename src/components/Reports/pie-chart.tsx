@@ -1,6 +1,4 @@
 "use client";
-
-import { Loader2 } from "lucide-react";
 import { Cell, Pie, PieChart } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
