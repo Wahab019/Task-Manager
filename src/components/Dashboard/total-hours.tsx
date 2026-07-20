@@ -4,7 +4,7 @@ import { Card, CardContent } from "../ui/card";
 export const TotalHours = () => {
   return (
     <>
-      <Card className="relative overflow-hidden rounded-lg bg-primary p-6 text-white shadow-lg lg:col-span-4">
+      <Card className="relative overflow-hidden rounded-lg bg-primary p-5 text-white shadow-lg lg:col-span-4">
         <CardContent>
           <div className="flex items-center justify-between">
             <TrendingUp className="size-8 text-[#ffdf9b]" />

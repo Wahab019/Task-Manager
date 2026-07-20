@@ -13,7 +13,7 @@ const activity = [
 export const RecentActivity = () => {
   return (
     <>
-      <Card className="rounded-lg border border-primary/10 bg-white p-6 shadow-sm">
+      <Card className="rounded-lg border border-primary/10 bg-white p-5 shadow-sm">
         <CardContent>
           <h2 className="font-heading text-2xl font-semibold text-primary">
             Recent Activity

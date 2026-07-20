@@ -16,7 +16,7 @@ export function Avatar({ initials, tone }: { initials: string; tone: string }) {
 export const DashboardProgress = () => {
   return (
     <>
-      <Card className="relative overflow-hidden rounded-lg border border-primary/10 bg-white p-6 shadow-sm lg:col-span-8">
+      <Card className="relative overflow-hidden rounded-lg border border-primary/10 bg-white p-5 shadow-sm lg:col-span-8">
         <CardContent>
           <div className="absolute inset-y-0 left-0 w-1 bg-secondary" />
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
