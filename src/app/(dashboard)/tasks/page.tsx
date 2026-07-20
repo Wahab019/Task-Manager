@@ -36,11 +36,7 @@ export default function TasksPage() {
       </header>
 
       <section className="mt-9 grid gap-5 xl:grid-cols-3 xl:gap-8">
-        <TaskColumn
-          title="To Do"
-          count="08"
-          action={<CirclePlus className="size-5" />}
-        >
+        <TaskColumn title="To Do" action={<CirclePlus className="size-5" />}>
           <TaskCard
             priority="High Priority"
             title="Refine Typography Scale"
@@ -55,7 +51,7 @@ export default function TasksPage() {
           />
         </TaskColumn>
 
-        <TaskColumn title="In Progress" count="03">
+        <TaskColumn title="In Progress">
           <OngoingTask />
           <TaskCard
             priority="Normal"
@@ -65,7 +61,7 @@ export default function TasksPage() {
           />
         </TaskColumn>
 
-        <TaskColumn title="Done" count="12">
+        <TaskColumn title="Done">
           <CompletedTask
             title="Wireframe User Journey"
             description="Completed mapping the end-to-end checkout experience for mobile."
