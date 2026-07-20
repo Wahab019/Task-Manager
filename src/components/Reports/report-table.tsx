@@ -1,4 +1,3 @@
-const weeklyHours = [5.2, 6.8, 4.4, 7.1, 5.8, 3.1, 1.8];
 const entries = [
   ["Review Q3 Financial Disclosures", "Oct 28, 2023", "2h 15m"],
   ["Client Presentation Preparation", "Oct 27, 2023", "3h 45m"],

@@ -1,10 +1,5 @@
-import {
-  CalendarDays,
-  CheckCircle2,
-  Clock3,
-  Sparkles,
-  ChevronDown,
-} from "lucide-react";
+import { Clock3 } from "lucide-react";
+import { Card, CardContent } from "../ui/card";
 
 export function ReportMetric({
   icon: Icon,
@@ -16,16 +11,18 @@ export function ReportMetric({
   value: string;
 }) {
   return (
-    <article className="rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-bold tracking-[0.08em] text-[#47857a] uppercase">
-          {label}
+    <Card className="rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
+      <CardContent>
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] font-bold tracking-[0.08em] text-[#47857a] uppercase">
+            {label}
+          </p>
+          <Icon className="size-5 text-[#ce9f38]" />
+        </div>
+        <p className="mt-3 font-heading text-3xl font-semibold text-primary">
+          {value}
         </p>
-        <Icon className="size-5 text-[#ce9f38]" />
-      </div>
-      <p className="mt-3 font-heading text-3xl font-semibold text-primary">
-        {value}
-      </p>
-    </article>
+      </CardContent>
+    </Card>
   );
 }
