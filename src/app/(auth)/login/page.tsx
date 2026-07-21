@@ -4,7 +4,25 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Eye, EyeOff, Landmark, Loader2 } from "lucide-react";
+import { z } from "zod";
 import { account } from "@/lib/appwrite";
+
+const loginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email address is required")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
+});
+
+type FieldErrors = {
+  email?: string;
+  password?: string;
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,7 +31,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [generalError, setGeneralError] = useState<string | null>(null);
 
   const createSession = async () => {
     if (typeof account.createEmailPasswordSession === "function") {
@@ -27,13 +46,22 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError("Please fill in both email and password.");
+    setFieldErrors({});
+    setGeneralError(null);
+
+    // Validate form inputs with Zod
+    const validationResult = loginSchema.safeParse({ email, password });
+
+    if (!validationResult.success) {
+      const flattened = validationResult.error.flatten().fieldErrors;
+      setFieldErrors({
+        email: flattened.email?.[0],
+        password: flattened.password?.[0],
+      });
       return;
     }
 
     setLoading(true);
-    setError(null);
 
     try {
       try {
@@ -57,7 +85,7 @@ export default function LoginPage() {
 
       router.push("/dashboard");
     } catch (err: any) {
-      setError(
+      setGeneralError(
         err?.message || "Failed to log in. Please check your credentials.",
       );
     } finally {
@@ -78,27 +106,40 @@ export default function LoginPage() {
         </div>
       </header>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {error && (
+      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+        {generalError && (
           <div className="rounded-[3px] border border-red-200 bg-red-50 p-3 text-xs text-red-600">
-            {error}
+            {generalError}
           </div>
         )}
 
-        <label className="block space-y-1.5">
-          <span className="text-xs font-bold tracking-[0.01em] text-[#4b5550]">
+        <div className="space-y-1.5">
+          <label className="block text-xs font-bold tracking-[0.01em] text-[#4b5550]">
             Email Address
-          </span>
+          </label>
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="executive@heritage.com"
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (fieldErrors.email) {
+                setFieldErrors((prev) => ({ ...prev, email: undefined }));
+              }
+            }}
+            placeholder="Enter your email"
             disabled={loading}
-            required
-            className="h-11 w-full rounded-[3px] border border-[#dce0dd] px-3 text-sm text-[#3f4944] outline-none placeholder:text-[#9ba29e] focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-50"
+            className={`h-11 w-full rounded-[3px] border px-3 text-sm text-[#3f4944] outline-none placeholder:text-[#9ba29e] focus:ring-2 disabled:opacity-50 ${
+              fieldErrors.email
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                : "border-[#dce0dd] focus:border-primary focus:ring-primary/10"
+            }`}
           />
-        </label>
+          {fieldErrors.email && (
+            <p className="text-xs font-medium text-red-500 mt-1">
+              {fieldErrors.email}
+            </p>
+          )}
+        </div>
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
@@ -120,11 +161,19 @@ export default function LoginPage() {
               id="password"
               type={showPassword ? "text" : "password"}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (fieldErrors.password) {
+                  setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                }
+              }}
+              placeholder="Enter password"
               disabled={loading}
-              required
-              className="h-11 w-full rounded-[3px] border border-[#dce0dd] pl-3 pr-10 text-sm text-[#3f4944] outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-50"
+              className={`h-11 w-full rounded-[3px] border pl-3 pr-10 text-sm text-[#3f4944] outline-none focus:ring-2 disabled:opacity-50 ${
+                fieldErrors.password
+                  ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                  : "border-[#dce0dd] focus:border-primary focus:ring-primary/10"
+              }`}
             />
             <button
               type="button"
@@ -140,6 +189,11 @@ export default function LoginPage() {
               )}
             </button>
           </div>
+          {fieldErrors.password && (
+            <p className="text-xs font-medium text-red-500 mt-1">
+              {fieldErrors.password}
+            </p>
+          )}
         </div>
 
         <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[#69716d]">

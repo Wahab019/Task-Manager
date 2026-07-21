@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Bell, Search, Settings, Timer } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { getTimeBasedGreeting } from "@/lib/utils";
 
 export function ToolbarButton({
   children,
@@ -22,6 +24,16 @@ export function ToolbarButton({
 
 export const Header = () => {
   const { user } = useAuth();
+  const [greeting, setGreeting] = useState("Good morning");
+
+  useEffect(() => {
+    setGreeting(getTimeBasedGreeting());
+    const interval = setInterval(
+      () => setGreeting(getTimeBasedGreeting()),
+      60_000,
+    );
+    return () => clearInterval(interval);
+  }, []);
 
   const name = user?.name || user?.email?.split("@")[0] || "User";
   const firstName = name.split(" ")[0];
@@ -39,7 +51,7 @@ export const Header = () => {
   return (
     <header className="flex flex-col gap-4 border-b border-primary/10 pb-5 lg:flex-row lg:items-center lg:justify-between">
       <h1 className="font-heading text-2xl font-semibold text-primary capitalize">
-        Good morning, {firstName}
+        {greeting}, {firstName}
       </h1>
       <div className="flex flex-wrap items-center gap-2">
         <label className="relative hidden sm:block">
