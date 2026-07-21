@@ -1,7 +1,70 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, CircleHelp, Globe2, Landmark } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Landmark, Loader2 } from "lucide-react";
+import { account } from "@/lib/appwrite";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const createSession = async () => {
+    if (typeof account.createEmailPasswordSession === "function") {
+      await account.createEmailPasswordSession(email, password);
+    } else if (typeof (account as any).createEmailSession === "function") {
+      await (account as any).createEmailSession(email, password);
+    } else {
+      throw new Error("Appwrite authentication method not available.");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setError("Please fill in both email and password.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      try {
+        await createSession();
+      } catch (err: any) {
+        if (
+          err?.message?.includes("session is active") ||
+          err?.code === 409 ||
+          err?.type === "user_session_already_exists"
+        ) {
+          try {
+            await account.deleteSession("current");
+          } catch (_) {
+            // Ignore error if session wasn't active
+          }
+          await createSession();
+        } else {
+          throw err;
+        }
+      }
+
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(
+        err?.message || "Failed to log in. Please check your credentials.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <header className="space-y-3 text-center">
@@ -15,15 +78,25 @@ export default function LoginPage() {
         </div>
       </header>
 
-      <div className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && (
+          <div className="rounded-[3px] border border-red-200 bg-red-50 p-3 text-xs text-red-600">
+            {error}
+          </div>
+        )}
+
         <label className="block space-y-1.5">
           <span className="text-xs font-bold tracking-[0.01em] text-[#4b5550]">
             Email Address
           </span>
           <input
             type="email"
-            defaultValue="executive@heritage.com"
-            className="h-11 w-full rounded-[3px] border border-[#dce0dd] px-3 text-sm text-[#3f4944] outline-none placeholder:text-[#9ba29e] focus:border-primary focus:ring-2 focus:ring-primary/10"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="executive@heritage.com"
+            disabled={loading}
+            required
+            className="h-11 w-full rounded-[3px] border border-[#dce0dd] px-3 text-sm text-[#3f4944] outline-none placeholder:text-[#9ba29e] focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-50"
           />
         </label>
 
@@ -42,29 +115,60 @@ export default function LoginPage() {
               Forgot Password?
             </Link>
           </div>
-          <input
-            id="password"
-            type="password"
-            defaultValue="password"
-            className="h-11 w-full rounded-[3px] border border-[#dce0dd] px-3 text-sm text-[#3f4944] outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-          />
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              disabled={loading}
+              required
+              className="h-11 w-full rounded-[3px] border border-[#dce0dd] pl-3 pr-10 text-sm text-[#3f4944] outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-50"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              disabled={loading}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#707772] hover:text-primary transition-colors disabled:opacity-50 cursor-pointer"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeOff className="size-4" />
+              ) : (
+                <Eye className="size-4" />
+              )}
+            </button>
+          </div>
         </div>
 
         <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[#69716d]">
           <input
             type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+            disabled={loading}
             className="size-3.5 rounded-xs border-[#dce0dd] accent-primary"
           />
           Remember this workstation
         </label>
 
-        <Link
-          href="/dashboard"
-          className="flex h-12 w-full items-center justify-center gap-1.5 rounded-[3px] bg-primary text-xs font-bold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[#0a3026]"
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex h-12 w-full items-center justify-center gap-1.5 rounded-[3px] bg-primary text-xs font-bold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[#0a3026] disabled:opacity-70 cursor-pointer"
         >
-          Log In <ArrowRight className="size-4" />
-        </Link>
-      </div>
+          {loading ? (
+            <>
+              Logging In... <Loader2 className="size-4 animate-spin" />
+            </>
+          ) : (
+            <>
+              Log In <ArrowRight className="size-4" />
+            </>
+          )}
+        </button>
+      </form>
     </div>
   );
 }

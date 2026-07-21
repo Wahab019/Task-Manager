@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import {
   ChartNoAxesColumn,
   CircleHelp,
@@ -21,6 +22,7 @@ const navigationItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { logout, user } = useAuth();
 
   return (
     <aside className="flex min-h-screen w-60 shrink-0 flex-col border-r border-[#e5e7e3] bg-[#faf9f7] px-4 py-4 text-[#5f6762]">
@@ -55,27 +57,36 @@ export function Sidebar() {
 
       <button
         type="button"
-        className="mt-auto flex h-10 items-center justify-center gap-3 rounded-[3px] bg-primary text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#0a3026]"
+        className="mt-auto flex h-10 items-center justify-center gap-3 rounded-[3px] bg-primary text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#0a3026] cursor-pointer"
       >
         <Play className="size-3 fill-current" />
         START TIMER
       </button>
 
       <div className="mt-5 space-y-1 border-t border-[#efefec] pt-4">
+        {user?.email && (
+          <div
+            className="px-3 py-1 text-[11px] font-medium text-[#707772] truncate"
+            title={user.email}
+          >
+            {user.email}
+          </div>
+        )}
         <button
           type="button"
-          className="flex h-8 w-full items-center gap-5 px-3 text-xs font-medium hover:text-primary"
+          className="flex h-8 w-full items-center gap-5 px-3 text-xs font-medium hover:text-primary cursor-pointer"
         >
           <CircleHelp className="size-4" />
           Support
         </button>
-        <Link
-          href="/login"
-          className="flex h-8 items-center gap-5 px-3 text-xs font-medium hover:text-primary"
+        <button
+          type="button"
+          onClick={logout}
+          className="flex h-8 w-full items-center gap-5 px-3 text-xs font-medium text-red-600 hover:text-red-700 cursor-pointer"
         >
           <LogOut className="size-4" />
           Logout
-        </Link>
+        </button>
       </div>
     </aside>
   );
