@@ -37,27 +37,6 @@ export default function TasksPage() {
       </header>
 
       <TaskBoard />
-
-      <section className="mt-9 grid gap-5 xl:grid-cols-3 xl:gap-8">
-        {/* <TaskColumn
-          title="To Do"
-          tasks={tasks.filter((t) => t.status === "todo")}
-          onAddTask={(draft) => {
-            // call POST /api/tasks here, then update `tasks` state with the real
-            // task returned from the server (including its real Appwrite id)
-          }}
-        />
-
-        <TaskColumn
-          title="In Progress"
-          tasks={tasks.filter((t) => t.status === "in_progress")}
-        />
-
-        <TaskColumn
-          title="Done"
-          tasks={tasks.filter((t) => t.status === "done")}
-        /> */}
-      </section>
     </div>
   );
 }

@@ -7,6 +7,7 @@ export type Task = {
   description: string;
   priority: Priority;
   status: Status;
+  time: string;
 };
 
 export const tasks: Task[] = [];

@@ -51,6 +51,7 @@ export function TaskBoard() {
     priority: Priority;
     title: string;
     description: string;
+    time: string;
   }) {
     // optimistic temp entry so the UI feels instant
     const tempId = `temp-${Date.now()}`;

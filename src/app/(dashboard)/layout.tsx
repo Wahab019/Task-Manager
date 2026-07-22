@@ -22,8 +22,8 @@ function DashboardGuard({ children }: { children: ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f5f1e8] text-primary">
         <div className="flex items-center gap-3 text-sm font-semibold">
-          <Loader2 className="size-6 animate-spin text-primary" />
-          Authenticating workspace...
+          <Loader2 className="size-35 animate-spin text-primary" />
+          {/* Authenticating workspace... */}
         </div>
       </div>
     );

@@ -24,12 +24,14 @@ export type Task = {
   description: string;
   priority: Priority;
   status: "todo" | "in_progress" | "done";
+  time: string;
 };
 
 type DraftTask = {
   priority: Priority | "";
   title: string;
   description: string;
+  time: string;
 };
 
 export function TaskColumn({
@@ -45,6 +47,7 @@ export function TaskColumn({
     priority: Priority;
     title: string;
     description: string;
+    time: string;
   }) => void;
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: status });
@@ -53,6 +56,7 @@ export function TaskColumn({
     priority: "",
     title: "",
     description: "",
+    time: "",
   });
 
   const formattedCount = String(tasks.length).padStart(2, "0");
@@ -71,9 +75,10 @@ export function TaskColumn({
       priority: draftTask.priority,
       title: draftTask.title,
       description: draftTask.description,
+      time: draftTask.time,
     });
 
-    setDraftTask({ priority: "", title: "", description: "" });
+    setDraftTask({ priority: "", title: "", description: "", time: "" });
     setShowForm(false);
   };
 
@@ -139,6 +144,16 @@ export function TaskColumn({
               }
               placeholder="Title"
             />
+            <Input
+              value={draftTask.time}
+              onChange={(event) =>
+                setDraftTask((currentTask) => ({
+                  ...currentTask,
+                  time: event.target.value,
+                }))
+              }
+              placeholder="Time"
+            />
             <Textarea
               value={draftTask.description}
               onChange={(event) =>
@@ -176,6 +191,7 @@ export function TaskColumn({
               title={task.title}
               description={task.description}
               action="Start"
+              time={task.time}
             />
           ))
         ) : (
