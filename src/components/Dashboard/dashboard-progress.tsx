@@ -1,7 +1,9 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-
-import { Pause, Square } from "lucide-react";
+import { Pause, Play, Square } from "lucide-react";
+import { useTimer } from "@/context/TimerContext";
 
 export function Avatar({ initials, tone }: { initials: string; tone: string }) {
   return (
@@ -12,7 +14,78 @@ export function Avatar({ initials, tone }: { initials: string; tone: string }) {
     </span>
   );
 }
+
+const formatSeconds = (seconds: number) => {
+  const h = Math.floor(seconds / 3600)
+    .toString()
+    .padStart(2, "0");
+  const m = Math.floor((seconds % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const s = (seconds % 60).toString().padStart(2, "0");
+  return `${h}:${m}:${s}`;
+};
+
 export const DashboardProgress = () => {
+  const {
+    tasks,
+    activeTaskId,
+    isTracking,
+    currentSeconds,
+    startTask,
+    pauseActiveTask,
+    resumeActiveTask,
+    stopActiveTask,
+    updateTaskStatus,
+  } = useTimer();
+
+  // Find the task to display
+  let displayedTask = activeTaskId
+    ? tasks.find((t) => t.id === activeTaskId)
+    : null;
+  const isActive = !!displayedTask;
+
+  // Fallback to first in-progress task if no active task is selected/tracking
+  if (!displayedTask) {
+    displayedTask = tasks.find((t) => t.status === "in_progress") || null;
+  }
+
+  // Handle resume/start from the dashboard
+  const handleToggle = () => {
+    if (!displayedTask) return;
+    if (isActive) {
+      if (isTracking) {
+        pauseActiveTask();
+      } else {
+        resumeActiveTask();
+      }
+    } else {
+      startTask(displayedTask.id);
+    }
+  };
+
+  const handleStop = () => {
+    if (!displayedTask) return;
+    if (isActive) {
+      stopActiveTask();
+    } else {
+      updateTaskStatus(displayedTask.id, "done");
+    }
+  };
+
+  const hasTask = !!displayedTask;
+  const title = displayedTask ? displayedTask.title : "No ongoing tasks";
+  const description = displayedTask
+    ? displayedTask.description
+    : "Go to the tasks board to start a task.";
+  const displaySeconds =
+    isActive && isTracking
+      ? currentSeconds
+      : displayedTask
+        ? displayedTask.elapsedSeconds
+        : 0;
+  const isCurrentlyTracking = isActive && isTracking;
+
   return (
     <>
       <Card className="relative overflow-hidden rounded-lg border border-primary/10 bg-white p-5 shadow-sm lg:col-span-8">
@@ -24,15 +97,13 @@ export const DashboardProgress = () => {
                 IN PROGRESS
               </span>
               <h2 className="mt-3 font-heading text-3xl font-semibold text-primary">
-                UI Redesign: Fleet Management Dashboard
+                {title}
               </h2>
-              <p className="mt-1 text-sm text-[#6e746f]">
-                Project: Aetheris Client Revamp
-              </p>
+              <p className="mt-1 text-sm text-[#6e746f]">{description}</p>
             </div>
             <div className="shrink-0 text-left sm:text-right">
               <p className="font-mono text-3xl font-semibold tracking-wider text-primary">
-                00:45:02
+                {formatSeconds(displaySeconds)}
               </p>
               <p className="mt-1 text-[10px] font-semibold tracking-[0.14em] text-[#6e746f] uppercase">
                 Session duration
@@ -45,10 +116,28 @@ export const DashboardProgress = () => {
               <Avatar initials="AM" tone="bg-[#ffdf9b]" />
             </div>
             <div className="flex gap-2">
-              <Button variant="heritage-outline" size="sm">
-                <Pause /> Pause
+              <Button
+                variant="heritage-outline"
+                size="sm"
+                onClick={handleToggle}
+                disabled={!hasTask}
+              >
+                {isCurrentlyTracking ? (
+                  <>
+                    <Pause /> Pause
+                  </>
+                ) : (
+                  <>
+                    <Play className="size-3 fill-current" /> Resume
+                  </>
+                )}
               </Button>
-              <Button variant="heritage" size="sm">
+              <Button
+                variant="heritage"
+                size="sm"
+                onClick={handleStop}
+                disabled={!hasTask}
+              >
                 <Square className="size-3 fill-current" /> Stop timer
               </Button>
             </div>

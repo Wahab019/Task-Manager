@@ -13,7 +13,7 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Executive Heritage",
+  title: "Task Manager",
   description: "A focused workspace for executive task management.",
 };
 

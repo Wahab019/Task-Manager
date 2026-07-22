@@ -2,13 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { account } from "@/lib/appwrite";
 
 export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem("task-manager-auth") === "true";
-    router.replace(isAuthenticated ? "/dashboard" : "/login");
+    account
+      .get()
+      .then(() => {
+        router.replace("/dashboard");
+      })
+      .catch(() => {
+        router.replace("/login");
+      });
   }, [router]);
 
   return null;
