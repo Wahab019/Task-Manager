@@ -1,7 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import axios, { AxiosError } from "axios";
 
 export type Priority = "low" | "normal" | "high";
 
@@ -49,8 +56,48 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [isTracking, setIsTracking] = useState(false);
   const [currentSeconds, setCurrentSeconds] = useState(0);
 
-  // Fetch initial tasks
+  // ─── shared helper: remove a task that no longer exists on the server ────
+  const evictTask = useCallback(
+    (taskId: string) => {
+      setTasks((current) => current.filter((t) => t.id !== taskId));
+      if (taskId === activeTaskId) {
+        setIsTracking(false);
+        setActiveTaskId(null);
+        setCurrentSeconds(0);
+        localStorage.removeItem("timer_activeTaskId");
+        localStorage.removeItem("timer_isTracking");
+        localStorage.removeItem("timer_currentSeconds");
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeTaskId],
+  );
+
+  // helper used inside fetch to validate & sync state
+  const validateAndSync = useCallback(
+    (fetchedTasks: Task[]) => {
+      setTasks(fetchedTasks);
+      if (activeTaskId) {
+        const stillExists = fetchedTasks.some((t) => t.id === activeTaskId);
+        if (!stillExists) {
+          setIsTracking(false);
+          setActiveTaskId(null);
+          setCurrentSeconds(0);
+          localStorage.removeItem("timer_activeTaskId");
+          localStorage.removeItem("timer_isTracking");
+          localStorage.removeItem("timer_currentSeconds");
+        }
+      }
+    },
+    [activeTaskId],
+  );
+
+  // Fetch & validate on mount (also restores localStorage)
+  const hasMounted = useRef(false);
   useEffect(() => {
+    if (hasMounted.current) return;
+    hasMounted.current = true;
+
     let isMounted = true;
     async function fetchTasks() {
       try {
@@ -60,26 +107,21 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         const fetchedTasks = response.data;
         setTasks(fetchedTasks);
 
-        // Validate localStorage against the real task list from the server.
-        // If the server was restarted its in-memory store is empty, so any
-        // saved activeTaskId will be stale and must be discarded.
+        // Validate localStorage against the real task list from the server
         const savedActiveTaskId = localStorage.getItem("timer_activeTaskId");
         if (savedActiveTaskId) {
           const taskStillExists = fetchedTasks.some(
             (t) => t.id === savedActiveTaskId,
           );
           if (taskStillExists) {
-            const savedIsTracking =
-              localStorage.getItem("timer_isTracking") === "true";
             const savedCurrentSeconds = Number(
               localStorage.getItem("timer_currentSeconds") || "0",
             );
             setActiveTaskId(savedActiveTaskId);
-            // Always start paused on restore — the user must explicitly resume
+            // Always start paused on restore
             setIsTracking(false);
             setCurrentSeconds(savedCurrentSeconds);
           } else {
-            // Stale — wipe it
             localStorage.removeItem("timer_activeTaskId");
             localStorage.removeItem("timer_isTracking");
             localStorage.removeItem("timer_currentSeconds");
@@ -95,7 +137,24 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Re-fetch & re-validate whenever the tab regains focus (catches hot-reloads)
+  useEffect(() => {
+    const handleVisibility = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const response = await axios.get<Task[]>("/api/tasks");
+        validateAndSync(response.data);
+      } catch {
+        // ignore — background re-fetch is best-effort
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibility);
+  }, [validateAndSync]);
 
   // Persist timer state to localStorage when it changes
   useEffect(() => {
@@ -163,7 +222,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         elapsedSeconds: secondsToSave,
       });
     } catch (e) {
-      console.error("Failed to save elapsed seconds:", e);
+      if ((e as AxiosError)?.response?.status === 404) {
+        evictTask(taskId);
+      } else {
+        console.error("Failed to save elapsed seconds:", e);
+      }
     }
   };
 
@@ -202,7 +265,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         elapsedSeconds: initialSeconds,
       });
     } catch (e) {
-      console.error("Failed to update starting task:", e);
+      if ((e as AxiosError)?.response?.status === 404) {
+        evictTask(taskId);
+      } else {
+        console.error("Failed to update starting task:", e);
+      }
     }
   };
 
@@ -240,7 +307,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         elapsedSeconds: finalSeconds,
       });
     } catch (e) {
-      console.error("Failed to stop task:", e);
+      if ((e as AxiosError)?.response?.status !== 404) {
+        console.error("Failed to stop task:", e);
+      }
+      // 404 just means the server already lost the task — the client state
+      // is already cleaned up above, so nothing more to do.
     }
   };
 
@@ -256,6 +327,9 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
     // Prevent dragging out of done
     if (previousStatus === "done") return;
+
+    // Prevent dragging in-progress tasks back to todo
+    if (previousStatus === "in_progress" && newStatus === "todo") return;
 
     // Optimistic update
     setTasks((current) =>
@@ -295,13 +369,18 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         status: newStatus,
       });
     } catch (e) {
-      // Rollback
-      setTasks((current) =>
-        current.map((t) =>
-          t.id === taskId ? { ...t, status: previousStatus } : t,
-        ),
-      );
-      console.error("Failed to update status:", e);
+      if ((e as AxiosError)?.response?.status === 404) {
+        // Task gone from server — evict it entirely instead of rolling back
+        evictTask(taskId);
+      } else {
+        // Rollback optimistic update
+        setTasks((current) =>
+          current.map((t) =>
+            t.id === taskId ? { ...t, status: previousStatus } : t,
+          ),
+        );
+        console.error("Failed to update status:", e);
+      }
     }
   };
 

@@ -24,10 +24,10 @@ export default function TasksPage() {
         <div className="flex items-center gap-4">
           <div className="flex rounded bg-[#eae9e8] p-1 text-xs font-semibold text-primary">
             <button className="rounded bg-white px-4 py-2 shadow-sm">
-              List
+              Card
             </button>
             <button className="rounded px-4 py-2 text-[#6e746f] hover:text-primary">
-              Card
+              List
             </button>
           </div>
           <button className="flex h-9 min-w-42 items-center justify-between rounded-sm border border-primary/15 bg-white px-4 text-xs font-semibold text-primary">

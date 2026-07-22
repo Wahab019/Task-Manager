@@ -1,5 +1,5 @@
 import { Pill } from "./pill";
-import { Pause } from "lucide-react";
+import { Pause, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDraggable } from "@dnd-kit/core";
@@ -55,8 +55,14 @@ export function OngoingTask({
         <CardContent>
           <span className="absolute right-0 top-0 flex size-13 items-center justify-center rounded-bl-[22px] p-3">
             <span className="relative flex size-3">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#795f1f] opacity-75"></span>
-              <span className="relative inline-flex size-3 rounded-full bg-[#795f1f]"></span>
+              {isTracking && (
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#795f1f] opacity-75"></span>
+              )}
+              <span
+                className={`relative inline-flex size-3 rounded-full ${
+                  isTracking ? "bg-[#795f1f]" : "bg-[#aeb2ad]"
+                }`}
+              ></span>
             </span>
           </span>
           <Pill>In Progress</Pill>
@@ -76,18 +82,33 @@ export function OngoingTask({
               <b className="text-xs text-primary">{time}</b>
             </span>
           </div>
-          <Button
-            className="mt-5 w-full cursor-pointer hover:opacity-90"
-            variant="heritage"
-            size="lg"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => {
-              event.stopPropagation();
-              onStop();
-            }}
-          >
-            <Pause className="fill-current" /> Stop Timer
-          </Button>
+          <div className="mt-5 flex gap-2">
+            <Button
+              className="flex-1 cursor-pointer hover:opacity-90"
+              variant="heritage-outline"
+              size="lg"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                onPause();
+              }}
+            >
+              <Pause className="size-4 fill-current" />
+              {isTracking ? "Pause" : "Resume"}
+            </Button>
+            <Button
+              className="flex-1 cursor-pointer hover:opacity-90"
+              variant="heritage"
+              size="lg"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                onStop();
+              }}
+            >
+              <Square className="size-3 fill-current" /> Stop
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </>

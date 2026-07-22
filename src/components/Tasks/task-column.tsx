@@ -79,8 +79,18 @@ export function TaskColumn({
     isTracking,
     currentSeconds,
     pauseActiveTask,
+    resumeActiveTask,
     stopActiveTask,
   } = useTimer();
+
+  // Toggle between pause and resume for the OngoingTask card
+  const handleTogglePause = () => {
+    if (isTracking) {
+      pauseActiveTask();
+    } else {
+      resumeActiveTask();
+    }
+  };
 
   const formattedCount = String(tasks.length).padStart(2, "0");
   const isToDoColumn = title === "To Do";
@@ -218,7 +228,8 @@ export function TaskColumn({
               );
             }
 
-            if (task.id === activeTaskId && isTracking) {
+            // Show OngoingTask for the active task whether tracking or paused
+            if (task.id === activeTaskId) {
               return (
                 <OngoingTask
                   key={task.id}
@@ -228,7 +239,7 @@ export function TaskColumn({
                   time={task.time}
                   elapsedSeconds={currentSeconds}
                   isTracking={isTracking}
-                  onPause={pauseActiveTask}
+                  onPause={handleTogglePause}
                   onStop={stopActiveTask}
                 />
               );
