@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 
 import { Pill } from "./pill";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTimer } from "@/context/TimerContext";
 
 export function TaskCard({
   id,
@@ -26,6 +27,14 @@ export function TaskCard({
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id });
 
+  const { startTask } = useTimer();
+
+  const handleAction = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+    startTask(id);
+  };
+
   return (
     <Card
       ref={setNodeRef}
@@ -42,10 +51,11 @@ export function TaskCard({
     >
       <CardContent>
         <div className="flex items-start justify-between">
-          <Pill>{priority}</Pill>
+          <Pill>{priority} PRIORITY</Pill>
           <button
             aria-label={`Options for ${title}`}
             className="text-[#aeb2ad]"
+            onClick={(event) => event.stopPropagation()}
           >
             <Ellipsis className="size-5" />
           </button>
@@ -58,7 +68,7 @@ export function TaskCard({
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4" /> {time}
           </div>
-          <Button variant="heritage-gold" size="sm">
+          <Button variant="heritage-gold" size="sm" onClick={handleAction}>
             <Play className="size-3 fill-current" /> {action}
           </Button>
         </div>

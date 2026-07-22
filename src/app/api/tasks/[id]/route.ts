@@ -15,9 +15,20 @@ export async function PATCH(
   }
 
   const taskData = body as Record<string, unknown>;
-  if (!isStatus(taskData.status)) {
+
+  if (taskData.status !== undefined && !isStatus(taskData.status)) {
     return Response.json(
       { error: "A valid status is required." },
+      { status: 400 },
+    );
+  }
+
+  if (
+    taskData.elapsedSeconds !== undefined &&
+    typeof taskData.elapsedSeconds !== "number"
+  ) {
+    return Response.json(
+      { error: "elapsedSeconds must be a number." },
       { status: 400 },
     );
   }
@@ -27,6 +38,12 @@ export async function PATCH(
     return Response.json({ error: "Task not found." }, { status: 404 });
   }
 
-  task.status = taskData.status;
+  if (taskData.status !== undefined) {
+    task.status = taskData.status;
+  }
+  if (taskData.elapsedSeconds !== undefined) {
+    task.elapsedSeconds = taskData.elapsedSeconds;
+  }
+
   return Response.json(task);
 }

@@ -55,15 +55,15 @@ export function Sidebar() {
         })}
       </nav>
 
-      <button
+      {/* <button
         type="button"
         className="mt-auto flex h-10 items-center justify-center gap-3 rounded-[3px] bg-primary text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#0a3026] cursor-pointer"
       >
         <Play className="size-3 fill-current" />
         START TIMER
-      </button>
+      </button> */}
 
-      <div className="mt-5 space-y-1 border-t border-[#efefec] pt-4">
+      <div className="mt-auto space-y-1 border-t border-[#efefec] pt-4">
         {user?.email && (
           <div
             className="px-3 py-1 text-[11px] font-medium text-[#707772] truncate"

@@ -38,6 +38,7 @@ export async function POST(request: Request) {
     priority: taskData.priority,
     status: taskData.status,
     time: typeof taskData.time === "string" ? taskData.time.trim() : "",
+    elapsedSeconds: 0,
   };
 
   tasks.push(task);

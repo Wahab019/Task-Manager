@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import axios from "axios";
 import {
   DndContext,
   DragEndEvent,
@@ -11,6 +9,7 @@ import {
 } from "@dnd-kit/core";
 
 import { TaskColumn, type Task, type Priority } from "./task-column";
+import { useTimer } from "@/context/TimerContext";
 
 const STATUS_LABELS: Record<Task["status"], string> = {
   todo: "To Do",
@@ -19,33 +18,11 @@ const STATUS_LABELS: Record<Task["status"], string> = {
 };
 
 export function TaskBoard() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { tasks, isLoading, error, addTask, updateTaskStatus } = useTimer();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function fetchTasks() {
-      try {
-        const response = await axios.get<Task[]>("/api/tasks");
-        if (isMounted) setTasks(response.data);
-      } catch {
-        if (isMounted) setError("Couldn't load tasks. Try refreshing.");
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    }
-
-    fetchTasks();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   async function handleAddTask(draft: {
     priority: Priority;
@@ -53,29 +30,7 @@ export function TaskBoard() {
     description: string;
     time: string;
   }) {
-    // optimistic temp entry so the UI feels instant
-    const tempId = `temp-${Date.now()}`;
-    const optimisticTask: Task = {
-      id: tempId,
-      status: "todo",
-      ...draft,
-    };
-    setTasks((current) => [...current, optimisticTask]);
-
-    try {
-      const response = await axios.post<Task>("/api/tasks", {
-        ...draft,
-        status: "todo",
-      });
-      // swap the temp task for the real one returned by the server
-      setTasks((current) =>
-        current.map((task) => (task.id === tempId ? response.data : task)),
-      );
-    } catch {
-      // roll back on failure
-      setTasks((current) => current.filter((task) => task.id !== tempId));
-      setError("Couldn't create the task. Try again.");
-    }
+    await addTask(draft);
   }
 
   async function handleDragEnd(event: DragEndEvent) {
@@ -85,29 +40,7 @@ export function TaskBoard() {
     const taskId = active.id as string;
     const newStatus = over.id as Task["status"];
 
-    const currentTask = tasks.find((task) => task.id === taskId);
-    if (!currentTask || currentTask.status === newStatus) return;
-
-    const previousStatus = currentTask.status;
-
-    // optimistic update
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskId ? { ...task, status: newStatus } : task,
-      ),
-    );
-
-    try {
-      await axios.patch(`/api/tasks/${taskId}`, { status: newStatus });
-    } catch {
-      // roll back on failure
-      setTasks((current) =>
-        current.map((task) =>
-          task.id === taskId ? { ...task, status: previousStatus } : task,
-        ),
-      );
-      setError("Couldn't update task status. Try again.");
-    }
+    await updateTaskStatus(taskId, newStatus);
   }
 
   if (isLoading) {

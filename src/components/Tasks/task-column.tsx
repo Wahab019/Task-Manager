@@ -15,6 +15,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { TaskCard } from "./task-card";
+import { CompletedTask } from "./task-completed";
+import { OngoingTask } from "./task-ongoing";
+import { useTimer } from "@/context/TimerContext";
 
 export type Priority = "low" | "normal" | "high";
 
@@ -25,6 +28,7 @@ export type Task = {
   priority: Priority;
   status: "todo" | "in_progress" | "done";
   time: string;
+  elapsedSeconds: number;
 };
 
 type DraftTask = {
@@ -32,6 +36,17 @@ type DraftTask = {
   title: string;
   description: string;
   time: string;
+};
+
+const formatSeconds = (seconds: number) => {
+  const h = Math.floor(seconds / 3600)
+    .toString()
+    .padStart(2, "0");
+  const m = Math.floor((seconds % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const s = (seconds % 60).toString().padStart(2, "0");
+  return `${h}:${m}:${s}`;
 };
 
 export function TaskColumn({
@@ -58,6 +73,14 @@ export function TaskColumn({
     description: "",
     time: "",
   });
+
+  const {
+    activeTaskId,
+    isTracking,
+    currentSeconds,
+    pauseActiveTask,
+    stopActiveTask,
+  } = useTimer();
 
   const formattedCount = String(tasks.length).padStart(2, "0");
   const isToDoColumn = title === "To Do";
@@ -183,17 +206,52 @@ export function TaskColumn({
         }`}
       >
         {tasks.length > 0 ? (
-          tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              id={task.id}
-              priority={task.priority}
-              title={task.title}
-              description={task.description}
-              action="Start"
-              time={task.time}
-            />
-          ))
+          tasks.map((task) => {
+            if (task.status === "done") {
+              return (
+                <CompletedTask
+                  key={task.id}
+                  title={task.title}
+                  description={task.description}
+                  time={formatSeconds(task.elapsedSeconds)}
+                />
+              );
+            }
+
+            if (task.id === activeTaskId && isTracking) {
+              return (
+                <OngoingTask
+                  key={task.id}
+                  id={task.id}
+                  title={task.title}
+                  description={task.description}
+                  time={task.time}
+                  elapsedSeconds={currentSeconds}
+                  isTracking={isTracking}
+                  onPause={pauseActiveTask}
+                  onStop={stopActiveTask}
+                />
+              );
+            }
+
+            const actionText = task.status === "todo" ? "Start" : "Resume";
+            const displayTime =
+              task.status === "in_progress"
+                ? formatSeconds(task.elapsedSeconds)
+                : task.time;
+
+            return (
+              <TaskCard
+                key={task.id}
+                id={task.id}
+                priority={task.priority}
+                title={task.title}
+                description={task.description}
+                action={actionText}
+                time={displayTime}
+              />
+            );
+          })
         ) : (
           <p className="px-1 text-sm text-[#747974]">No tasks yet</p>
         )}

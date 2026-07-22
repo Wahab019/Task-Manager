@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { TimeTracker } from "@/components/TimeTracker";
 import { Header } from "@/components/Header";
 import { Loader2 } from "lucide-react";
+import { TimerProvider } from "@/context/TimerContext";
 
 function DashboardGuard({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -34,15 +35,17 @@ function DashboardGuard({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f5f1e8] text-foreground">
-      <Sidebar />
-      <div className="min-w-0 flex-1 p-8 space-y-6">
-        <Header />
-        <main>{children}</main>
-      </div>
+    <TimerProvider>
+      <div className="flex min-h-screen bg-[#f5f1e8] text-foreground">
+        <Sidebar />
+        <div className="min-w-0 flex-1 p-8 space-y-6">
+          <Header />
+          <main>{children}</main>
+        </div>
 
-      <TimeTracker />
-    </div>
+        <TimeTracker />
+      </div>
+    </TimerProvider>
   );
 }
 
