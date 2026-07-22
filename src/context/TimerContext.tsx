@@ -5,7 +5,6 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from "react";
 import axios, { AxiosError } from "axios";
@@ -93,11 +92,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   );
 
   // Fetch & validate on mount (also restores localStorage)
-  const hasMounted = useRef(false);
   useEffect(() => {
-    if (hasMounted.current) return;
-    hasMounted.current = true;
-
     let isMounted = true;
     async function fetchTasks() {
       try {
