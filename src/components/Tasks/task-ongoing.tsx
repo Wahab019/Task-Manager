@@ -1,5 +1,5 @@
 import { Pill } from "./pill";
-import { Pause, Square } from "lucide-react";
+import { Pause, Square, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDraggable } from "@dnd-kit/core";
@@ -93,8 +93,18 @@ export function OngoingTask({
                 onPause();
               }}
             >
-              <Pause className="size-4 fill-current" />
-              {isTracking ? "Pause" : "Resume"}
+              {/* <Pause className="size-4 fill-current" /> */}
+              {isTracking ? (
+                <>
+                  <Pause className="size-4 fill-current" />
+                  <span>Pause</span>
+                </>
+              ) : (
+                <>
+                  <Play className="size-4 fill-current" />
+                  <span>Resume</span>
+                </>
+              )}
             </Button>
             <Button
               className="flex-1 cursor-pointer hover:opacity-90"
