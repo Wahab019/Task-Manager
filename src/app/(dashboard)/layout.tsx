@@ -3,7 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
-import { Sidebar } from "@/components/Sidebar";
+import { Sidebar } from "@/components/sidebar";
 import { TimeTracker } from "@/components/TimeTracker";
 import { Header } from "@/components/Header";
 import { Loader2 } from "lucide-react";
