@@ -10,10 +10,10 @@ export const TodaysTotal = () => {
           <p className="text-[10px] font-bold tracking-[0.12em] text-[#795f1f] uppercase">
             Today&apos;s total
           </p>
-          <p className="mt-2 font-heading text-4xl font-semibold text-primary">
+          <p className="mt-2 font-heading text-6xl font-semibold text-primary">
             07:42<span className="ml-1 font-sans text-sm">hrs</span>
           </p>
-          <div className="mt-6 flex items-center gap-2">
+          {/* <div className="mt-6 flex items-center gap-2">
             <span className="flex -space-x-2">
               <i className="flex size-5 items-center justify-center rounded-full bg-[#ffdf9b] text-[7px] not-italic">
                 PR
@@ -25,7 +25,7 @@ export const TodaysTotal = () => {
             <span className="text-[10px] font-semibold text-primary">
               Across 2 projects
             </span>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </>

@@ -3,14 +3,12 @@ import {
   ChevronRight,
   Search,
   SlidersHorizontal,
-  Pencil,
 } from "lucide-react";
 
 const todayLogs = [
   [
     "User Interview Analysis - Phase 2",
     "Synthesizing findings from internal stakeholder group.",
-    "Aetheris Redesign",
     "09:15 AM - 12:30 PM",
     "03:15",
     "bg-[#886719]",
@@ -18,7 +16,6 @@ const todayLogs = [
   [
     "Weekly Sync & Strategy Session",
     "Q4 planning and resource allocation.",
-    "Internal Ops",
     "01:30 PM - 03:00 PM",
     "01:30",
     "bg-primary",
@@ -26,7 +23,6 @@ const todayLogs = [
   [
     "High-Fidelity Prototyping",
     "Interactive components for the tracking module.",
-    "Aetheris Redesign",
     "03:15 PM - 06:12 PM",
     "02:57",
     "bg-[#886719]",
@@ -44,7 +40,7 @@ export function DateRow({
 }) {
   return (
     <tr className="border-b border-primary/10 bg-[#f5f3f1]">
-      <td className="px-5 py-3 text-xs font-semibold text-primary" colSpan={4}>
+      <td className="px-5 py-3 text-xs font-semibold text-primary" colSpan={2}>
         {label}{" "}
         {current && (
           <span className="ml-2 bg-[#ffdf9b] px-1.5 py-1 text-[8px] font-bold text-[#795f1f] uppercase">
@@ -52,7 +48,7 @@ export function DateRow({
           </span>
         )}
       </td>
-      <td className="px-5 py-3 text-right text-xs font-bold text-primary">
+      <td className="px-4 py-4 text-xs font-bold text-primary">
         Total: {total}
       </td>
     </tr>
@@ -60,7 +56,7 @@ export function DateRow({
 }
 
 export function LogRow({ log, muted }: { log: string[]; muted?: boolean }) {
-  const [title, description, project, hours, duration, color] = log;
+  const [title, description, hours, duration, color] = log;
   return (
     <tr className={`border-b border-primary/5 ${muted ? "opacity-60" : ""}`}>
       <td className="px-5 py-4">
@@ -76,18 +72,8 @@ export function LogRow({ log, muted }: { log: string[]; muted?: boolean }) {
           </span>
         </div>
       </td>
-      <td className="px-4 py-4">
-        <span className="rounded-full border border-primary/10 bg-[#f5f5f2] px-3 py-1 text-[10px] text-primary">
-          {project}
-        </span>
-      </td>
       <td className="px-4 py-4 text-xs text-primary">{hours}</td>
       <td className="px-4 py-4 text-xs font-bold text-primary">{duration}</td>
-      <td className="px-5 py-4 text-right">
-        <button aria-label={`Edit ${title}`}>
-          <Pencil className="size-4 text-primary" />
-        </button>
-      </td>
     </tr>
   );
 }
@@ -129,10 +115,8 @@ export const LogTable = () => {
             <thead className="border-b border-primary/10 bg-[#faf9f7] text-[10px] font-bold tracking-widest text-primary uppercase">
               <tr>
                 <th className="px-5 py-4">Date / Task name</th>
-                <th className="px-4 py-4">Project</th>
                 <th className="px-4 py-4">Start - End</th>
                 <th className="px-4 py-4">Duration</th>
-                <th className="px-5 py-4 text-right">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -143,11 +127,9 @@ export const LogTable = () => {
               <DateRow label="Sunday, Oct 20" total="00:00" />
               <DateRow label="Saturday, Oct 19" total="04:20" />
               <LogRow
-                muted
                 log={[
                   "Cloud Infrastructure Review",
                   "Emergency scaling documentation.",
-                  "Internal Ops",
                   "10:00 AM - 02:20 PM",
                   "04:20",
                   "bg-[#557b70]",
@@ -156,9 +138,9 @@ export const LogTable = () => {
             </tbody>
           </table>
         </div>
-        <footer className="bg-[#faf9f7] px-5 py-6 text-[10px] text-primary">
+        {/* <footer className="bg-[#faf9f7] px-5 py-6 text-[10px] text-primary">
           Showing logs for the selected week. All times are in GMT+1.
-        </footer>
+        </footer> */}
       </section>
     </>
   );
