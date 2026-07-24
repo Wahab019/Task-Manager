@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useSidebar } from "@/context/SidebarContext";
 import {
   ChartNoAxesColumn,
   CircleHelp,
   Clock3,
   LayoutDashboard,
   LogOut,
-  Play,
   TimerReset,
 } from "lucide-react";
 
@@ -23,71 +23,117 @@ const navigationItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { logout, user } = useAuth();
+  const { isOpen, close } = useSidebar();
 
   return (
-    <aside className="flex min-h-screen w-60 shrink-0 flex-col border-r border-[#e5e7e3] bg-[#faf9f7] px-4 py-4 text-[#5f6762]">
-      <Link href="/dashboard" className="flex items-center gap-2 px-1">
-        <span className="flex size-6 items-center justify-center rounded-sm bg-primary text-[11px] font-bold text-secondary">
-          ⏱
-        </span>
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/40 backdrop-blur-sm lg:hidden"
+          onClick={close}
+          aria-hidden="true"
+        />
+      )}
 
-        <span className="block font-heading text-lg leading-4 font-semibold text-primary">
-          Task Manager
-        </span>
-      </Link>
-
-      <nav className="mt-16 space-y-1" aria-label="Main navigation">
-        {navigationItems.map(({ label, icon: Icon, href }) => {
-          const active = pathname === href || pathname.startsWith(`${href}/`);
-
-          const className = `flex h-10 items-center gap-5 border-r-2 px-2 text-sm font-semibold transition-colors ${
-            active
-              ? "border-secondary bg-[#f0f3f0] text-primary"
-              : "border-transparent text-[#707772] hover:bg-[#f0f3f0] hover:text-primary"
-          }`;
-
-          return (
-            <Link key={label} href={href} className={className}>
-              <Icon className="size-4" strokeWidth={2} />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* <button
-        type="button"
-        className="mt-auto flex h-10 items-center justify-center gap-3 rounded-[3px] bg-primary text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#0a3026] cursor-pointer"
+      <aside
+        className={[
+          // Base styles
+          "fixed top-0 left-0 z-30 flex min-h-full lg:max-h-screen flex-col border-r border-[#e5e7e3] bg-[#faf9f7] py-4 text-[#5f6762]",
+          "transition-[width,transform] duration-300 ease-in-out overflow-hidden",
+          // Desktop behaviour: icon-only (w-16) vs expanded (w-56)
+          "lg:relative lg:translate-x-0 lg:shrink-0",
+          isOpen ? "lg:w-56" : "lg:w-16",
+          // Mobile behaviour: fully off-screen vs fully visible (w-64)
+          isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64",
+          "lg:translate-x-0", // always visible on desktop (transform handled by width)
+        ].join(" ")}
       >
-        <Play className="size-3 fill-current" />
-        START TIMER
-      </button> */}
-
-      <div className="mt-auto space-y-1 border-t border-[#efefec] pt-4">
-        {user?.email && (
-          <div
-            className="px-3 py-1 text-[11px] font-medium text-[#707772] truncate"
-            title={user.email}
+        {/* Logo / Brand */}
+        <div className="flex items-center gap-2 px-4 mb-6">
+          <span
+            className={[
+              "block font-heading text-lg leading-4 font-semibold text-primary whitespace-nowrap overflow-hidden transition-all duration-300",
+              isOpen
+                ? "opacity-100 max-w-[200px]"
+                : "opacity-0 max-w-0 lg:max-w-0",
+            ].join(" ")}
           >
-            {user.email}
-          </div>
-        )}
-        <button
-          type="button"
-          className="flex h-8 w-full items-center gap-5 px-3 text-xs font-medium hover:text-primary cursor-pointer"
+            Task Manager
+          </span>
+        </div>
+
+        {/* Navigation */}
+        <nav
+          className="mt-6 flex-1 space-y-1 px-2"
+          aria-label="Main navigation"
         >
-          <CircleHelp className="size-4" />
-          Support
-        </button>
-        <button
-          type="button"
-          onClick={logout}
-          className="flex h-8 w-full items-center gap-5 px-3 text-xs font-medium text-red-600 hover:text-red-700 cursor-pointer"
-        >
-          <LogOut className="size-4" />
-          Logout
-        </button>
-      </div>
-    </aside>
+          {navigationItems.map(({ label, icon: Icon, href }) => {
+            const active = pathname === href || pathname.startsWith(`${href}/`);
+
+            return (
+              <Link
+                key={label}
+                href={href}
+                onClick={() => {
+                  // On mobile, close sidebar after navigation
+                  if (window.innerWidth < 1024) close();
+                }}
+                title={!isOpen ? label : undefined}
+                className={[
+                  "flex h-10 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors",
+                  active
+                    ? "bg-[#f0f3f0] text-primary"
+                    : "text-[#707772] hover:bg-[#f0f3f0] hover:text-primary",
+                ].join(" ")}
+              >
+                <Icon className="size-4 shrink-0" strokeWidth={2} />
+                <span
+                  className={[
+                    "whitespace-nowrap overflow-hidden transition-all duration-300",
+                    isOpen
+                      ? "opacity-100 max-w-[200px]"
+                      : "opacity-0 max-w-0 lg:max-w-0",
+                  ].join(" ")}
+                >
+                  {label}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div className="mt-auto space-y-1 border-t border-[#efefec] pt-4 px-2">
+          {user?.email && isOpen && (
+            <div
+              className="px-3 py-1 text-[11px] font-medium text-[#707772] truncate"
+              title={user.email}
+            >
+              {user.email}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={logout}
+            title={!isOpen ? "Logout" : undefined}
+            className="flex h-8 w-full items-center gap-3 px-3 text-xs font-medium text-red-600 hover:text-red-700 cursor-pointer rounded-md hover:bg-red-50"
+          >
+            <LogOut className="size-4 shrink-0" />
+            <span
+              className={[
+                "whitespace-nowrap overflow-hidden transition-all duration-300",
+                isOpen
+                  ? "opacity-100 max-w-[200px]"
+                  : "opacity-0 max-w-0 lg:max-w-0",
+              ].join(" ")}
+            >
+              Logout
+            </span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

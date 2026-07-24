@@ -1,20 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, Search, Settings, Timer } from "lucide-react";
+import { Bell, PanelLeft, Search, Settings, Timer } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useSidebar } from "@/context/SidebarContext";
 import { getTimeBasedGreeting } from "@/lib/utils";
 
 export function ToolbarButton({
   children,
   label,
+  onClick,
 }: {
   children: React.ReactNode;
   label: string;
+  onClick?: () => void;
 }) {
   return (
     <button
       aria-label={label}
+      onClick={onClick}
       className="flex size-9 items-center justify-center rounded-full text-primary transition hover:bg-[#eae7e7] [&_svg]:size-4 cursor-pointer"
     >
       {children}
@@ -24,6 +28,7 @@ export function ToolbarButton({
 
 export const Header = () => {
   const { user } = useAuth();
+  const { toggle } = useSidebar();
   const [greeting, setGreeting] = useState("Good morning");
 
   useEffect(() => {
@@ -49,10 +54,18 @@ export const Header = () => {
   const initials = getInitials(name);
 
   return (
-    <header className="flex flex-col gap-4 border-b border-primary/10 pb-5 lg:flex-row lg:items-center lg:justify-between">
-      <h1 className="font-heading text-2xl font-semibold text-primary capitalize">
-        {greeting}, {firstName}
-      </h1>
+    <header className="flex flex-col gap-4 border-b border-primary/10 py-4 px-4 lg:px-8 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex items-center gap-3">
+        {/* Sidebar toggle button */}
+        <ToolbarButton label="Toggle sidebar" onClick={toggle}>
+          <PanelLeft />
+        </ToolbarButton>
+
+        <h1 className="font-heading text-2xl font-semibold text-primary capitalize">
+          {greeting}, {firstName}
+        </h1>
+      </div>
+
       <div className="flex flex-wrap items-center gap-2">
         <label className="relative hidden sm:block">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#6e746f]" />
@@ -61,15 +74,6 @@ export const Header = () => {
             placeholder="Search tasks…"
           />
         </label>
-        <ToolbarButton label="Timer">
-          <Timer />
-        </ToolbarButton>
-        <ToolbarButton label="Notifications">
-          <Bell />
-        </ToolbarButton>
-        <ToolbarButton label="Settings">
-          <Settings />
-        </ToolbarButton>
         <div
           title={user?.email || name}
           className="flex size-9 items-center justify-center rounded-full border-2 border-secondary/30 bg-primary text-xs font-bold text-white uppercase"

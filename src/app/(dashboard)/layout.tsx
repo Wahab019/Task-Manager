@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { SidebarProvider } from "@/context/SidebarContext";
 import { Sidebar } from "@/components/sidebar";
 import { TimeTracker } from "@/components/TimeTracker";
 import { Header } from "@/components/Header";
@@ -24,7 +25,6 @@ function DashboardGuard({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen items-center justify-center bg-[#f5f1e8] text-primary">
         <div className="flex items-center gap-3 text-sm font-semibold">
           <Loader2 className="size-35 animate-spin text-primary" />
-          {/* Authenticating workspace... */}
         </div>
       </div>
     );
@@ -36,15 +36,16 @@ function DashboardGuard({ children }: { children: ReactNode }) {
 
   return (
     <TimerProvider>
-      <div className="flex min-h-screen bg-[#f5f1e8] text-foreground">
-        <Sidebar />
-        <div className="min-w-0 flex-1 p-8 space-y-6">
+      <SidebarProvider>
+        <div className="flex h-screen flex-col overflow-hidden">
           <Header />
-          <main>{children}</main>
+          <div className="flex flex-1 overflow-hidden">
+            <Sidebar />
+            <main className="flex-1 overflow-y-auto p-8">{children}</main>
+          </div>
+          <TimeTracker />
         </div>
-
-        <TimeTracker />
-      </div>
+      </SidebarProvider>
     </TimerProvider>
   );
 }
