@@ -1,11 +1,4 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Pencil,
-  Search,
-  SlidersHorizontal,
-} from "lucide-react";
+import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { TodaysTotal, WeeklyProgress, LogTable } from "@/components/TimeLogs";
