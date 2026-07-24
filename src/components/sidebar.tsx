@@ -4,9 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/context/SidebarContext";
+import { useEffect, useState } from "react";
+import { getTimeBasedGreeting } from "@/lib/utils";
 import {
   ChartNoAxesColumn,
-  CircleHelp,
   Clock3,
   LayoutDashboard,
   LogOut,
@@ -24,6 +25,18 @@ export function Sidebar() {
   const pathname = usePathname();
   const { logout, user } = useAuth();
   const { isOpen, close } = useSidebar();
+  const name = user?.name || user?.email?.split("@")[0] || "User";
+  const [greeting, setGreeting] = useState("Good morning");
+  const firstName = name.split(" ")[0];
+
+  useEffect(() => {
+    setGreeting(getTimeBasedGreeting());
+    const interval = setInterval(
+      () => setGreeting(getTimeBasedGreeting()),
+      60_000,
+    );
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -49,20 +62,6 @@ export function Sidebar() {
           "lg:translate-x-0", // always visible on desktop (transform handled by width)
         ].join(" ")}
       >
-        {/* Logo / Brand */}
-        <div className="flex items-center gap-2 px-4 mb-6">
-          <span
-            className={[
-              "block font-heading text-lg leading-4 font-semibold text-primary whitespace-nowrap overflow-hidden transition-all duration-300",
-              isOpen
-                ? "opacity-100 max-w-[200px]"
-                : "opacity-0 max-w-0 lg:max-w-0",
-            ].join(" ")}
-          >
-            Task Manager
-          </span>
-        </div>
-
         {/* Navigation */}
         <nav
           className="mt-6 flex-1 space-y-1 px-2"
@@ -105,12 +104,9 @@ export function Sidebar() {
 
         {/* Footer */}
         <div className="mt-auto space-y-1 border-t border-[#efefec] pt-4 px-2">
-          {user?.email && isOpen && (
-            <div
-              className="px-3 py-1 text-[11px] font-medium text-[#707772] truncate"
-              title={user.email}
-            >
-              {user.email}
+          {isOpen && (
+            <div className="px-3 py-1 text-[11px] font-medium text-[#707772] truncate">
+              {greeting}, {firstName}
             </div>
           )}
 
