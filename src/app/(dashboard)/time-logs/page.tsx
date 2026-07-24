@@ -1,11 +1,4 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Pencil,
-  Search,
-  SlidersHorizontal,
-} from "lucide-react";
+import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { TodaysTotal, WeeklyProgress, LogTable } from "@/components/TimeLogs";
@@ -15,9 +8,6 @@ export default function TimeLogsPage() {
     <div className="relative pb-20 mx-auto max-w-7xl space-y-6">
       <header className="flex flex-col gap-5 pb-7 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-[11px] font-semibold text-primary">
-            Workspace <span className="mx-2 text-[#9a9e9b]">›</span> Time Logs
-          </p>
           <h1 className="mt-2 font-heading text-4xl font-semibold text-primary">
             Daily &amp; Weekly Logs
           </h1>
