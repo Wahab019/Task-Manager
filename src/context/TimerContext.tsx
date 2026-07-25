@@ -21,6 +21,14 @@ export type Task = {
   elapsedSeconds: number;
 };
 
+export type TimeLog = {
+  id: string;
+  taskId: string;
+  startTime: string; // ISO string
+  endTime: string; // ISO string
+  duration: number; // in seconds
+};
+
 interface TimerContextType {
   tasks: Task[];
   isLoading: boolean;
@@ -28,6 +36,7 @@ interface TimerContextType {
   activeTaskId: string | null;
   isTracking: boolean;
   currentSeconds: number;
+  timeLogs: TimeLog[];
   addTask: (draft: {
     priority: Priority;
     title: string;
@@ -54,6 +63,29 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [isTracking, setIsTracking] = useState(false);
   const [currentSeconds, setCurrentSeconds] = useState(0);
+
+  const [timeLogs, setTimeLogs] = useState<TimeLog[]>([]);
+  const [hasLoadedLogs, setHasLoadedLogs] = useState(false);
+
+  // Load timeLogs on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("timer_timeLogs");
+    if (saved) {
+      try {
+        setTimeLogs(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse saved time logs:", e);
+      }
+    }
+    setHasLoadedLogs(true);
+  }, []);
+
+  // Persist timeLogs when they change
+  useEffect(() => {
+    if (hasLoadedLogs) {
+      localStorage.setItem("timer_timeLogs", JSON.stringify(timeLogs));
+    }
+  }, [timeLogs, hasLoadedLogs]);
 
   // ─── shared helper: remove a task that no longer exists on the server ────
   const evictTask = useCallback(
@@ -288,6 +320,20 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setActiveTaskId(null);
     setCurrentSeconds(0);
 
+    // Record time log
+    if (finalSeconds > 0) {
+      const endTime = new Date();
+      const startTime = new Date(endTime.getTime() - finalSeconds * 1000);
+      const newLog: TimeLog = {
+        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        taskId,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        duration: finalSeconds,
+      };
+      setTimeLogs((prev) => [...prev, newLog]);
+    }
+
     setTasks((current) =>
       current.map((t) =>
         t.id === taskId
@@ -336,6 +382,21 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         setIsTracking(false);
         setActiveTaskId(null);
         setCurrentSeconds(0);
+
+        // Record time log
+        if (currentSeconds > 0) {
+          const endTime = new Date();
+          const startTime = new Date(endTime.getTime() - currentSeconds * 1000);
+          const newLog: TimeLog = {
+            id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            taskId,
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+            duration: currentSeconds,
+          };
+          setTimeLogs((prev) => [...prev, newLog]);
+        }
+
         try {
           await axios.patch(`/api/tasks/${taskId}`, {
             status: "done",
@@ -388,6 +449,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         activeTaskId,
         isTracking,
         currentSeconds,
+        timeLogs,
         addTask,
         startTask,
         pauseActiveTask,
@@ -408,3 +470,24 @@ export function useTimer() {
   }
   return context;
 }
+
+// NOTE THIS FOR LATER
+
+// BEFORE (localStorage)
+// useEffect(() => {
+//   const saved = localStorage.getItem("timer_timeLogs");
+//   setTimeLogs(JSON.parse(saved));
+// }, []);
+
+// AFTER (DB)
+// useEffect(() => {
+//   axios.get("/api/timelogs").then(res => setTimeLogs(res.data));
+// }, []);
+
+// ----------------------------------------
+
+// BEFORE — on stopActiveTask
+// localStorage.setItem("timer_timeLogs", JSON.stringify(timeLogs));
+
+// AFTER — on stopActiveTask
+// await axios.post("/api/timelogs", { taskId, startTime, endTime, duration });
