@@ -470,3 +470,24 @@ export function useTimer() {
   }
   return context;
 }
+
+// NOTE THIS FOR LATER
+
+// BEFORE (localStorage)
+// useEffect(() => {
+//   const saved = localStorage.getItem("timer_timeLogs");
+//   setTimeLogs(JSON.parse(saved));
+// }, []);
+
+// AFTER (DB)
+// useEffect(() => {
+//   axios.get("/api/timelogs").then(res => setTimeLogs(res.data));
+// }, []);
+
+// ----------------------------------------
+
+// BEFORE — on stopActiveTask
+// localStorage.setItem("timer_timeLogs", JSON.stringify(timeLogs));
+
+// AFTER — on stopActiveTask
+// await axios.post("/api/timelogs", { taskId, startTime, endTime, duration });
