@@ -63,7 +63,7 @@ export function ReportPieChart() {
         <span className="size-5 rounded-full border-[3px] border-[#47857a] border-r-[#d3ad55]" />
       </CardHeader>
 
-      <CardContent className="flex items-center justify-center gap-10 pt-4">
+      <CardContent className="flex flex-col sm:flex-row items-center justify-center gap-10 pt-4">
         <div className="relative flex items-center justify-center">
           <ChartContainer
             config={chartConfig}
