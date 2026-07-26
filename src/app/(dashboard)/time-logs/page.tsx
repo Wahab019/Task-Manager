@@ -16,11 +16,11 @@ export default function TimeLogsPage() {
             tracking and editorial-grade reporting.
           </p>
         </div>
-        <div className="flex gap-3">
+        {/* <div className="flex gap-3">
           <Button variant="heritage-outline" size="lg">
             <Download /> Export Report
           </Button>
-        </div>
+        </div> */}
       </header>
       <section className="mt-10 grid gap-5 lg:grid-cols-12">
         <TodaysTotal />
