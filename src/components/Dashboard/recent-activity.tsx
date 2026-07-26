@@ -6,7 +6,7 @@ const activity = [
     icon: UserRoundCheck,
     label: "Task Completed:",
     detail: "Asset Icon Library",
-    meta: "2 hours ago · Project Aetheris",
+    meta: "2 hours ago",
   },
 ];
 
