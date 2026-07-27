@@ -55,16 +55,18 @@ export function TaskBoard() {
         </p>
       )}
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          {(["todo", "in_progress", "done"] as const).map((status) => (
-            <TaskColumn
-              key={status}
-              status={status}
-              title={STATUS_LABELS[status]}
-              tasks={tasks.filter((task) => task.status === status)}
-              onAddTask={status === "todo" ? handleAddTask : undefined}
-            />
-          ))}
+        <div className="overflow-x-auto min-h-screen">
+          <div className="grid min-w-max grid-flow-col auto-cols-[minmax(320px,1fr)] gap-8">
+            {(["todo", "in_progress", "done"] as const).map((status) => (
+              <TaskColumn
+                key={status}
+                status={status}
+                title={STATUS_LABELS[status]}
+                tasks={tasks.filter((task) => task.status === status)}
+                onAddTask={status === "todo" ? handleAddTask : undefined}
+              />
+            ))}
+          </div>
         </div>
       </DndContext>
     </div>

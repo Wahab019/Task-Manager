@@ -213,7 +213,7 @@ export const LogTable = () => {
                             {group.description}
                           </span>
                         </td>
-                        <td className="px-4 py-4 text-xs text-primary">
+                        <td className="px-4 py-4 text-xs font-bold text-primary">
                           Task total
                         </td>
                         <td className="px-4 py-4 text-xs font-bold text-primary">

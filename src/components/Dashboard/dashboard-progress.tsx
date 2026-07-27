@@ -110,11 +110,12 @@ export const DashboardProgress = () => {
               </p>
             </div>
           </div>
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-primary/10 pt-5">
-            <div className="flex -space-x-2">
+          <div className="mt-6 flex flex-wrap items-center justify-end gap-4 border-t border-primary/10 pt-5">
+            {/* <div className="flex -space-x-2">
               <Avatar initials="JD" tone="bg-[#bdedda]" />
               <Avatar initials="AM" tone="bg-[#ffdf9b]" />
-            </div>
+            </div> */}
+
             <div className="flex gap-2">
               <Button
                 variant="heritage-outline"
