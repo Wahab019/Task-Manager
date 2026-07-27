@@ -21,10 +21,9 @@ function formatLogDuration(totalSeconds: number) {
   return `${minutes}m`;
 }
 
-function formatRelativeTime(endTime: string) {
+function formatRelativeTime(endTime: number) {
   const now = Date.now();
-  const then = new Date(endTime).getTime();
-  const diffSeconds = Math.max(0, Math.round((now - then) / 1000));
+  const diffSeconds = Math.max(0, Math.round((now - endTime) / 1000));
 
   const minutes = Math.floor(diffSeconds / 60);
   const hours = Math.floor(diffSeconds / 3600);
@@ -43,20 +42,19 @@ function formatRelativeTime(endTime: string) {
 }
 
 export const RecentActivity = () => {
-  const { tasks, timeLogs } = useTimer();
+  const { tasks, timelogs } = useTimer();
 
   const taskById = new Map(tasks.map((task) => [task.id, task.title]));
 
-  const recentLogs = [...timeLogs]
-    .sort(
-      (a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime(),
-    )
+  const recentLogs = [...timelogs]
+    .filter((log) => log.endTime !== null)
+    .sort((a, b) => (b.endTime ?? 0) - (a.endTime ?? 0))
     .slice(0, 3)
     .map((log) => ({
       ...log,
       title: taskById.get(log.taskId) ?? "Deleted task",
       durationLabel: formatLogDuration(log.duration),
-      relativeLabel: formatRelativeTime(log.endTime),
+      relativeLabel: formatRelativeTime(log.endTime ?? 0),
     }));
 
   return (

@@ -3,7 +3,7 @@
 import { Fragment, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { TimeLog, useTimer } from "@/context/TimerContext";
+import { TimeLogEntry, useTimer } from "@/context/TimerContext";
 
 const dayFormatter = new Intl.DateTimeFormat("en-US", {
   weekday: "long",
@@ -20,8 +20,6 @@ const timeFormatter = new Intl.DateTimeFormat("en-US", {
   hour: "numeric",
   minute: "2-digit",
 });
-
-const rowColors = ["bg-primary", "bg-[#886719]", "bg-[#557b70]"];
 
 function startOfDay(date: Date) {
   const nextDate = new Date(date);
@@ -56,6 +54,10 @@ function formatWeekRange(monday: Date) {
   return `${weekFormatter.format(monday)} - ${weekFormatter.format(sunday)} ${yearLabel}`.trim();
 }
 
+function getEntryEndTime(entry: TimeLogEntry) {
+  return entry.endTime ?? Date.now();
+}
+
 export function DateRow({
   label,
   total,
@@ -75,49 +77,15 @@ export function DateRow({
           </span>
         )}
       </td>
-      <td className="px-4 py-4 text-xs font-bold text-primary">
+      <td className="px-4 py-3 text-xs font-bold text-primary">
         Total: {total}
       </td>
     </tr>
   );
 }
 
-export function LogRow({
-  title,
-  description,
-  hours,
-  duration,
-  color,
-}: {
-  title: string;
-  description: string;
-  hours: string;
-  duration: string;
-  color: string;
-}) {
-  return (
-    <tr className="border-b border-primary/5">
-      <td className="px-5 py-4">
-        <div className="flex gap-3">
-          <span className={`mt-1 h-5 w-1 rounded-full ${color}`} />
-          <span>
-            <strong className="block text-xs tracking-wide text-primary">
-              {title}
-            </strong>
-            <span className="block text-[10px] text-primary">
-              {description}
-            </span>
-          </span>
-        </div>
-      </td>
-      <td className="px-4 py-4 text-xs text-primary">{hours}</td>
-      <td className="px-4 py-4 text-xs font-bold text-primary">{duration}</td>
-    </tr>
-  );
-}
-
 export const LogTable = () => {
-  const { tasks, timeLogs } = useTimer();
+  const { tasks, timelogs } = useTimer();
   const [selectedMonday, setSelectedMonday] = useState(() =>
     startOfWeek(new Date()),
   );
@@ -129,16 +97,12 @@ export const LogTable = () => {
     const weekEnd = addDays(weekStart, 7);
     const tasksById = new Map(tasks.map((task) => [task.id, task]));
 
-    const logsByDay = timeLogs
+    const logsByDay = timelogs
       .filter((log) => {
         const start = new Date(log.startTime);
         return start >= weekStart && start < weekEnd;
       })
-      .sort(
-        (a, b) =>
-          new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
-      )
-      .reduce<Map<string, TimeLog[]>>((groups, log) => {
+      .reduce<Map<string, TimeLogEntry[]>>((groups, log) => {
         const key = startOfDay(new Date(log.startTime)).toISOString();
         const logs = groups.get(key) ?? [];
         logs.push(log);
@@ -149,110 +113,147 @@ export const LogTable = () => {
     return Array.from({ length: 7 }, (_, index) => {
       const date = addDays(weekStart, 6 - index);
       const key = date.toISOString();
-      const logs = logsByDay.get(key) ?? [];
-      const total = logs.reduce((sum, log) => sum + log.duration, 0);
+      const logs = (logsByDay.get(key) ?? [])
+        .slice()
+        .sort((a, b) => a.startTime - b.startTime);
+
+      const groupedByTask = logs.reduce<
+        Map<string, { taskId: string; logs: TimeLogEntry[] }>
+      >((groups, log) => {
+        const group = groups.get(log.taskId) ?? {
+          taskId: log.taskId,
+          logs: [],
+        };
+        group.logs.push(log);
+        groups.set(log.taskId, group);
+        return groups;
+      }, new Map());
+
+      const taskGroups = Array.from(groupedByTask.values()).map((group) => {
+        const task = tasksById.get(group.taskId);
+        const total = group.logs.reduce((sum, log) => sum + log.duration, 0);
+        return {
+          taskId: group.taskId,
+          title: task?.title ?? "Deleted task",
+          description:
+            task?.description ?? "This task is no longer in your task list.",
+          total: formatDuration(total),
+          totalSeconds: total,
+          segments: group.logs.map((log) => ({
+            id: log.id,
+            start: new Date(log.startTime),
+            end: new Date(getEntryEndTime(log)),
+            duration: formatDuration(log.duration),
+          })),
+        };
+      });
 
       return {
         date,
         key,
-        logs: logs.map((log, logIndex) => {
-          const task = tasksById.get(log.taskId);
-          const start = new Date(log.startTime);
-          const end = new Date(log.endTime);
-
-          return {
-            ...log,
-            title: task?.title ?? "Deleted task",
-            description:
-              task?.description ?? "This task is no longer in your task list.",
-            hours: `${timeFormatter.format(start)} - ${timeFormatter.format(end)}`,
-            duration: formatDuration(log.duration),
-            color: rowColors[logIndex % rowColors.length],
-          };
-        }),
-        total: formatDuration(total),
+        taskGroups,
+        total: formatDuration(
+          taskGroups.reduce((sum, group) => sum + group.totalSeconds, 0),
+        ),
       };
     });
-  }, [selectedMonday, tasks, timeLogs]);
+  }, [selectedMonday, tasks, timelogs]);
 
   return (
-    <>
-      <section className="mt-10 overflow-hidden rounded-lg border border-primary/10 bg-white shadow-sm">
-        <div className="flex flex-col gap-4 border-b border-primary/10 p-5 md:flex-row md:items-center md:justify-between">
-          <div className="flex w-fit items-center rounded-xl bg-[#f7f6f4] px-3 py-1">
-            <button
-              aria-label="Previous week"
-              className="p-2 text-primary"
-              type="button"
-              onClick={() =>
-                setSelectedMonday((current) => addDays(current, -7))
-              }
-            >
-              <ChevronLeft className="size-4" />
-            </button>
-            <span className="min-w-42 text-center text-xs font-bold text-primary">
-              {formatWeekRange(selectedMonday)}
-            </span>
-            <button
-              aria-label="Next week"
-              className="p-2 text-primary"
-              type="button"
-              onClick={() =>
-                setSelectedMonday((current) => addDays(current, 7))
-              }
-            >
-              <ChevronRight className="size-4" />
-            </button>
-          </div>
-          {/* <div className="flex gap-2">
-            <label className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-primary" />
-              <input
-                className="h-9 w-55 rounded-xl border border-primary/10 bg-[#faf9f7] pl-9 pr-3 text-xs outline-none focus:border-primary"
-                placeholder="Search tasks..."
-              />
-            </label>
-            <button
-              aria-label="Filter logs"
-              className="flex size-9 items-center justify-center rounded-xl border border-primary/10"
-            >
-              <SlidersHorizontal className="size-4 text-primary" />
-            </button>
-          </div> */}
+    <section className="mt-10 overflow-hidden rounded-lg border border-primary/10 bg-white shadow-sm">
+      <div className="flex flex-col gap-4 border-b border-primary/10 p-5 md:flex-row md:items-center md:justify-between">
+        <div className="flex w-fit items-center rounded-xl bg-[#f7f6f4] px-3 py-1">
+          <button
+            aria-label="Previous week"
+            className="p-2 text-primary"
+            type="button"
+            onClick={() => setSelectedMonday((current) => addDays(current, -7))}
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <span className="min-w-42 text-center text-xs font-bold text-primary">
+            {formatWeekRange(selectedMonday)}
+          </span>
+          <button
+            aria-label="Next week"
+            className="p-2 text-primary"
+            type="button"
+            onClick={() => setSelectedMonday((current) => addDays(current, 7))}
+          >
+            <ChevronRight className="size-4" />
+          </button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-190 text-left">
-            <thead className="border-b border-primary/10 bg-[#faf9f7] text-[10px] font-bold tracking-widest text-primary uppercase">
-              <tr>
-                <th className="px-5 py-4">Date / Task name</th>
-                <th className="px-4 py-4">Start - End</th>
-                <th className="px-4 py-4">Duration</th>
-              </tr>
-            </thead>
-            <tbody>
-              {days.map((day) => (
-                <Fragment key={day.key}>
-                  <DateRow
-                    label={dayFormatter.format(day.date)}
-                    total={day.total}
-                    current={day.key === todayKey}
-                  />
-                  {day.logs.map((log) => (
-                    <LogRow
-                      key={log.id}
-                      title={log.title}
-                      description={log.description}
-                      hours={log.hours}
-                      duration={log.duration}
-                      color={log.color}
-                    />
-                  ))}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-190 text-left">
+          <thead className="border-b border-primary/10 bg-[#faf9f7] text-[10px] font-bold tracking-widest text-primary uppercase">
+            <tr>
+              <th className="px-5 py-4">Date / Task name</th>
+              <th className="px-4 py-4">Start - End</th>
+              <th className="px-4 py-4">Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            {days.map((day) => (
+              <Fragment key={day.key}>
+                <DateRow
+                  label={dayFormatter.format(day.date)}
+                  total={day.total}
+                  current={day.key === todayKey}
+                />
+                {day.taskGroups.length > 0 ? (
+                  day.taskGroups.map((group) => (
+                    <Fragment key={`${day.key}-${group.taskId}`}>
+                      <tr className="border-b border-primary/5 bg-white">
+                        <td className="px-5 py-4">
+                          <strong className="block text-xs tracking-wide text-primary">
+                            {group.title}
+                          </strong>
+                          <span className="block text-[10px] text-primary">
+                            {group.description}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-xs text-primary">
+                          Task total
+                        </td>
+                        <td className="px-4 py-4 text-xs font-bold text-primary">
+                          {group.total}
+                        </td>
+                      </tr>
+                      {group.segments.map((segment) => (
+                        <tr
+                          key={segment.id}
+                          className="border-b border-primary/5 bg-[#faf9f7]"
+                        >
+                          <td className="px-5 py-4 pl-10 text-xs text-primary">
+                            Segment
+                          </td>
+                          <td className="px-4 py-4 text-xs text-primary">
+                            {timeFormatter.format(segment.start)} -{" "}
+                            {timeFormatter.format(segment.end)}
+                          </td>
+                          <td className="px-4 py-4 text-xs font-bold text-primary">
+                            {segment.duration}
+                          </td>
+                        </tr>
+                      ))}
+                    </Fragment>
+                  ))
+                ) : (
+                  <tr className="border-b border-primary/5">
+                    <td
+                      className="px-5 py-4 text-sm text-[#6e746f]"
+                      colSpan={3}
+                    >
+                      No time logs for this day.
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 };

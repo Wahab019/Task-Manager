@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { useTimer } from "@/context/TimerContext";
@@ -18,39 +18,37 @@ function getWeekBounds(offsetWeeks = 0) {
   return { monday, sunday };
 }
 
-function sumLogsInRange(
-  timeLogs: { startTime: string; duration: number }[],
-  monday: Date,
-  sunday: Date,
-) {
-  return timeLogs
-    .filter((log) => {
-      const start = new Date(log.startTime);
-      return start >= monday && start <= sunday;
-    })
-    .reduce((acc, log) => acc + log.duration, 0);
-}
-
 export const TotalHours = () => {
-  const { timeLogs } = useTimer();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { timelogs } = useTimer();
+  const mounted = typeof window !== "undefined";
 
   let displayHours = "0h 00m";
   let deltaLabel = "No data from last week";
   let isUp = true;
   let hasDelta = false;
 
-  if (mounted) {
+  const { thisWeekSeconds, lastWeekSeconds } = useMemo(() => {
+    if (!mounted) {
+      return { thisWeekSeconds: 0, lastWeekSeconds: 0 };
+    }
     const { monday: thisMonday, sunday: thisSunday } = getWeekBounds(0);
     const { monday: lastMonday, sunday: lastSunday } = getWeekBounds(-1);
+    const currentWeek = timelogs
+      .filter((log) => {
+        const start = new Date(log.startTime);
+        return start >= thisMonday && start <= thisSunday;
+      })
+      .reduce((acc, log) => acc + log.duration, 0);
+    const previousWeek = timelogs
+      .filter((log) => {
+        const start = new Date(log.startTime);
+        return start >= lastMonday && start <= lastSunday;
+      })
+      .reduce((acc, log) => acc + log.duration, 0);
+    return { thisWeekSeconds: currentWeek, lastWeekSeconds: previousWeek };
+  }, [mounted, timelogs]);
 
-    const thisWeekSeconds = sumLogsInRange(timeLogs, thisMonday, thisSunday);
-    const lastWeekSeconds = sumLogsInRange(timeLogs, lastMonday, lastSunday);
-
+  if (mounted) {
     const thisH = Math.floor(thisWeekSeconds / 3600);
     const thisM = Math.floor((thisWeekSeconds % 3600) / 60);
     displayHours = `${thisH}h ${String(thisM).padStart(2, "0")}m`;

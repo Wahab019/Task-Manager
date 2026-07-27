@@ -29,26 +29,20 @@ function formatHoursMinutes(totalSeconds: number) {
 }
 
 export const WeeklyProgress = () => {
-  const { timeLogs } = useTimer();
-  const [mounted, setMounted] = useState(false);
-
+  const { timelogs } = useTimer();
   // Weekly target in hours — null means "not set"
-  const [weeklyTarget, setWeeklyTarget] = useState<number | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempTarget, setTempTarget] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Hydrate from localStorage once mounted
-  useEffect(() => {
-    setMounted(true);
+  const [weeklyTarget, setWeeklyTarget] = useState<number | null>(() => {
+    if (typeof window === "undefined") return null;
     const saved = localStorage.getItem("timer_weeklyTarget");
     if (saved !== null) {
       const parsed = Number(saved);
-      if (!isNaN(parsed) && parsed > 0) {
-        setWeeklyTarget(parsed);
-      }
+      if (!isNaN(parsed) && parsed > 0) return parsed;
     }
-  }, []);
+    return null;
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempTarget, setTempTarget] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Focus input when entering edit mode
   useEffect(() => {
@@ -93,11 +87,11 @@ export const WeeklyProgress = () => {
   let todaySeconds = 0;
   let progressPercent = 0;
 
-  if (mounted) {
+  if (typeof window !== "undefined") {
     const { monday, sunday } = getWeekBounds();
     const todayStr = new Date().toDateString();
 
-    for (const log of timeLogs) {
+    for (const log of timelogs) {
       const start = new Date(log.startTime);
       if (start >= monday && start <= sunday) {
         weeklySeconds += log.duration;
