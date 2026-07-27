@@ -29,8 +29,6 @@ export const TodaysTotal = () => {
     <>
       <Card className="relative overflow-hidden rounded-lg border border-[#89671b] bg-white p-5 lg:col-span-4">
         <CardContent>
-          <span className="absolute right-0 top-0 h-16 w-16 rounded-bl-2xl bg-[#e2e5e2]" />
-          <span className="absolute right-5 top-5 size-6 rounded-full bg-[#d7dcda]" />
           <p className="text-[10px] font-bold tracking-[0.12em] text-[#795f1f] uppercase">
             Today&apos;s total
           </p>

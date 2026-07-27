@@ -181,7 +181,7 @@ export const LogTable = () => {
           </span>
           <button
             aria-label="Next week"
-            className="p-2 text-primary"
+            className="p-2 text-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
             type="button"
             disabled={selectedMonday >= currentWeekMonday}
             onClick={() => setSelectedMonday((current) => addDays(current, 7))}
