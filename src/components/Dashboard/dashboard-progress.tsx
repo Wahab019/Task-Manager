@@ -37,6 +37,7 @@ export const DashboardProgress = () => {
     resumeActiveTask,
     stopActiveTask,
     updateTaskStatus,
+    getTotalDurationForTask,
   } = useTimer();
 
   // Find the task to display
@@ -78,12 +79,11 @@ export const DashboardProgress = () => {
   const description = displayedTask
     ? displayedTask.description
     : "Go to the tasks board to start a task.";
-  const displaySeconds =
-    isActive && isTracking
-      ? currentSeconds
-      : displayedTask
-        ? displayedTask.elapsedSeconds
-        : 0;
+  const displaySeconds = isActive
+    ? currentSeconds
+    : displayedTask
+      ? getTotalDurationForTask(displayedTask.id)
+      : 0;
   const isCurrentlyTracking = isActive && isTracking;
 
   return (
