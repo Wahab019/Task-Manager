@@ -91,6 +91,8 @@ export const LogTable = () => {
   );
 
   const todayKey = startOfDay(new Date()).toISOString();
+  const today = startOfDay(new Date());
+  const currentWeekMonday = startOfWeek(new Date());
 
   const days = useMemo(() => {
     const weekStart = startOfDay(selectedMonday);
@@ -112,6 +114,9 @@ export const LogTable = () => {
 
     return Array.from({ length: 7 }, (_, index) => {
       const date = addDays(weekStart, 6 - index);
+      if (date > today) {
+        return null;
+      }
       const key = date.toISOString();
       const logs = (logsByDay.get(key) ?? [])
         .slice()
@@ -156,8 +161,8 @@ export const LogTable = () => {
           taskGroups.reduce((sum, group) => sum + group.totalSeconds, 0),
         ),
       };
-    });
-  }, [selectedMonday, tasks, timelogs]);
+    }).filter((day): day is NonNullable<typeof day> => day !== null);
+  }, [selectedMonday, tasks, timelogs, today]);
 
   return (
     <section className="mt-10 overflow-hidden rounded-lg border border-primary/10 bg-white shadow-sm">
@@ -178,6 +183,7 @@ export const LogTable = () => {
             aria-label="Next week"
             className="p-2 text-primary"
             type="button"
+            disabled={selectedMonday >= currentWeekMonday}
             onClick={() => setSelectedMonday((current) => addDays(current, 7))}
           >
             <ChevronRight className="size-4" />
