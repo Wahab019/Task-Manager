@@ -7,7 +7,6 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from "react";
 
@@ -37,6 +36,7 @@ type PersistedTimerState = {
   currentEntryStartTime: number | null;
   currentEntryId: string | null;
   isTracking: boolean;
+  currentSeconds: number;
   persistedAt: number;
 };
 
@@ -113,15 +113,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   >(null);
   const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
   const [isTracking, setIsTracking] = useState(false);
+  const [currentSeconds, setCurrentSeconds] = useState(0);
   const [timelogs, setTimelogs] = useState<TimeLogEntry[]>([]);
   const [hasHydratedLogs, setHasHydratedLogs] = useState(false);
   const [hasHydratedTimer, setHasHydratedTimer] = useState(false);
-  const [tick, setTick] = useState(0);
-
-  const currentSeconds = useMemo(() => {
-    if (!isTracking || !currentEntryStartTime) return 0;
-    return Math.max(0, Math.floor((tick - currentEntryStartTime) / 1000));
-  }, [currentEntryStartTime, isTracking, tick]);
 
   const persistTimerState = useCallback(() => {
     const payload: PersistedTimerState = {
@@ -130,6 +125,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       currentEntryStartTime,
       currentEntryId,
       isTracking,
+      currentSeconds,
       persistedAt: Date.now(),
     };
     localStorage.setItem(TIMING_STORAGE_KEY, JSON.stringify(payload));
@@ -138,6 +134,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     activeTaskTitle,
     currentEntryStartTime,
     currentEntryId,
+    currentSeconds,
     isTracking,
   ]);
 
@@ -245,12 +242,15 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           const filtered = current.filter((log) => log.id !== closedEntry.id);
           return [...filtered, closedEntry];
         });
-        setActiveTaskId(null);
-        setActiveTaskTitle(null);
+        // A tab close is equivalent to Pause: retain the task as resumable.
+        setActiveTaskId(parsed.activeTaskId);
+        setActiveTaskTitle(parsed.activeTaskTitle);
         setCurrentEntryStartTime(null);
         setCurrentEntryId(null);
         setIsTracking(false);
-        localStorage.removeItem(TIMING_STORAGE_KEY);
+        setCurrentSeconds(
+          parsed.currentSeconds ?? Math.floor(closedEntry.duration),
+        );
       } else {
         // Restore a paused timer exactly as it was persisted.
         setActiveTaskId(parsed.activeTaskId);
@@ -258,6 +258,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         setCurrentEntryStartTime(parsed.currentEntryStartTime);
         setCurrentEntryId(parsed.currentEntryId);
         setIsTracking(parsed.isTracking);
+        setCurrentSeconds(parsed.currentSeconds ?? 0);
       }
     } catch (e) {
       console.error("Failed to parse saved timer state:", e);
@@ -270,12 +271,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hasHydratedTimer) return;
-    if (
-      activeTaskId &&
-      currentEntryStartTime &&
-      currentEntryId !== null &&
-      activeTaskTitle !== null
-    ) {
+    if (activeTaskId && activeTaskTitle !== null) {
       persistTimerState();
     } else {
       localStorage.removeItem(TIMING_STORAGE_KEY);
@@ -285,6 +281,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     activeTaskTitle,
     currentEntryId,
     currentEntryStartTime,
+    currentSeconds,
     hasHydratedTimer,
     isTracking,
     persistTimerState,
@@ -294,8 +291,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     let intervalId: ReturnType<typeof setInterval> | null = null;
     if (isTracking && currentEntryStartTime) {
       intervalId = setInterval(() => {
-        // Keep the displayed running duration fresh.
-        setTick(Date.now());
+        // Keep the accumulated task duration fresh while this segment runs.
+        setCurrentSeconds((seconds) => seconds + 1);
       }, 1000);
     }
     return () => {
@@ -402,7 +399,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setCurrentEntryStartTime(entry.startTime);
     setCurrentEntryId(entry.id);
     setIsTracking(true);
-    setTick(entry.startTime);
+    setCurrentSeconds(Math.floor(getTotalDurationForTask(taskId)));
 
     setTasks((current) =>
       current.map((task) =>
@@ -434,7 +431,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     const closedEntry = closeCurrentEntry();
     if (!closedEntry) return;
 
-    const totalSeconds = syncTaskElapsedSeconds(taskId);
+    const totalSeconds = syncTaskElapsedSeconds(taskId, closedEntry.duration);
+    setCurrentSeconds(totalSeconds);
     setTasks((current) =>
       current.map((task) =>
         task.id === taskId
@@ -467,7 +465,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setCurrentEntryStartTime(entry.startTime);
     setCurrentEntryId(entry.id);
     setIsTracking(true);
-    setTick(entry.startTime);
+    setCurrentSeconds(Math.floor(getTotalDurationForTask(taskId)));
   };
 
   const stopTimer = async () => {
@@ -481,6 +479,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
     const totalSeconds = syncTaskElapsedSeconds(taskId, closedEntry.duration);
     clearActiveTimer();
+    setCurrentSeconds(totalSeconds);
     setTasks((current) =>
       current.map((task) =>
         task.id === taskId
