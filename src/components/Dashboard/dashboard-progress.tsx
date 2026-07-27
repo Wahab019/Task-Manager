@@ -37,6 +37,7 @@ export const DashboardProgress = () => {
     resumeActiveTask,
     stopActiveTask,
     updateTaskStatus,
+    getTotalDurationForTask,
   } = useTimer();
 
   // Find the task to display
@@ -78,12 +79,11 @@ export const DashboardProgress = () => {
   const description = displayedTask
     ? displayedTask.description
     : "Go to the tasks board to start a task.";
-  const displaySeconds =
-    isActive && isTracking
-      ? currentSeconds
-      : displayedTask
-        ? displayedTask.elapsedSeconds
-        : 0;
+  const displaySeconds = isActive
+    ? currentSeconds
+    : displayedTask
+      ? getTotalDurationForTask(displayedTask.id)
+      : 0;
   const isCurrentlyTracking = isActive && isTracking;
 
   return (
@@ -110,11 +110,12 @@ export const DashboardProgress = () => {
               </p>
             </div>
           </div>
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-primary/10 pt-5">
-            <div className="flex -space-x-2">
+          <div className="mt-6 flex flex-wrap items-center justify-end gap-4 border-t border-primary/10 pt-5">
+            {/* <div className="flex -space-x-2">
               <Avatar initials="JD" tone="bg-[#bdedda]" />
               <Avatar initials="AM" tone="bg-[#ffdf9b]" />
-            </div>
+            </div> */}
+
             <div className="flex gap-2">
               <Button
                 variant="heritage-outline"

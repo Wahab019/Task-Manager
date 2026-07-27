@@ -15,19 +15,26 @@ export function TaskCard({
   title,
   description,
   action,
-  time,
 }: {
   id: string;
   priority: string;
   title: string;
   description: string;
   action: string;
-  time: string;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id });
 
-  const { startTask } = useTimer();
+  const { startTask, getTotalDurationForTask } = useTimer();
+
+  const totalSeconds = getTotalDurationForTask(id);
+  const totalHours = Math.floor(totalSeconds / 3600)
+    .toString()
+    .padStart(2, "0");
+  const totalMinutes = Math.floor((totalSeconds % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const displayTotal = `${totalHours}:${totalMinutes}`;
 
   const handleAction = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -66,7 +73,7 @@ export function TaskCard({
         <p className="mt-1 text-sm leading-5 text-primary">{description}</p>
         <div className="mt-6 flex justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" /> {time}
+            <Clock className="w-4 h-4" /> {displayTotal}
           </div>
           <Button variant="heritage-gold" size="sm" onClick={handleAction}>
             <Play className="size-3 fill-current" /> {action}

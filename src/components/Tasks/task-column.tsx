@@ -246,11 +246,6 @@ export function TaskColumn({
             }
 
             const actionText = task.status === "todo" ? "Start" : "Resume";
-            const displayTime =
-              task.status === "in_progress"
-                ? formatSeconds(task.elapsedSeconds)
-                : task.time;
-
             return (
               <TaskCard
                 key={task.id}
@@ -259,7 +254,6 @@ export function TaskColumn({
                 title={task.title}
                 description={task.description}
                 action={actionText}
-                time={displayTime}
               />
             );
           })
