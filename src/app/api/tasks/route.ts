@@ -38,6 +38,10 @@ export async function POST(request: Request) {
     priority: taskData.priority,
     status: taskData.status,
     time: typeof taskData.time === "string" ? taskData.time.trim() : "",
+    deadline:
+      typeof taskData.deadline === "string" && taskData.deadline.trim()
+        ? taskData.deadline.trim()
+        : null,
     elapsedSeconds: 0,
   };
 

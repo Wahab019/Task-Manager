@@ -1,6 +1,3 @@
-import { Download } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import { TodaysTotal, WeeklyProgress, LogTable } from "@/components/TimeLogs";
 
 export default function TimeLogsPage() {
@@ -16,11 +13,6 @@ export default function TimeLogsPage() {
             tracking and editorial-grade reporting.
           </p>
         </div>
-        {/* <div className="flex gap-3">
-          <Button variant="heritage-outline" size="lg">
-            <Download /> Export Report
-          </Button>
-        </div> */}
       </header>
       <section className="mt-10 grid gap-5 lg:grid-cols-12">
         <TodaysTotal />

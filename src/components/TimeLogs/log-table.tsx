@@ -89,6 +89,9 @@ export const LogTable = () => {
   const [selectedMonday, setSelectedMonday] = useState(() =>
     startOfWeek(new Date()),
   );
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const todayKey = startOfDay(new Date()).toISOString();
   const today = startOfDay(new Date());
@@ -164,6 +167,13 @@ export const LogTable = () => {
     }).filter((day): day is NonNullable<typeof day> => day !== null);
   }, [selectedMonday, tasks, timelogs, today]);
 
+  function toggleGroupExpanded(groupKey: string) {
+    setExpandedGroups((current) => ({
+      ...current,
+      [groupKey]: !current[groupKey],
+    }));
+  }
+
   return (
     <section className="mt-10 overflow-hidden rounded-lg border border-primary/10 bg-white shadow-sm">
       <div className="flex flex-col gap-4 border-b border-primary/10 p-5 md:flex-row md:items-center md:justify-between">
@@ -210,39 +220,84 @@ export const LogTable = () => {
                 {day.taskGroups.length > 0 ? (
                   day.taskGroups.map((group) => (
                     <Fragment key={`${day.key}-${group.taskId}`}>
-                      <tr className="border-b border-primary/5 bg-white">
-                        <td className="px-5 py-4">
-                          <strong className="block text-xs tracking-wide text-primary">
-                            {group.title}
-                          </strong>
-                          <span className="block text-[10px] text-primary">
-                            {group.description}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-xs font-bold text-primary">
-                          Task total
-                        </td>
-                        <td className="px-4 py-4 text-xs font-bold text-primary">
-                          {group.total}
-                        </td>
-                      </tr>
-                      {group.segments.map((segment) => (
-                        <tr
-                          key={segment.id}
-                          className="border-b border-primary/5 bg-[#faf9f7]"
-                        >
-                          <td className="px-5 py-4 pl-10 text-xs text-primary">
-                            Segment
+                      {group.segments.length === 1 ? (
+                        <tr className="border-b border-primary/5 bg-white">
+                          <td className="px-5 py-4">
+                            <strong className="block text-xs tracking-wide text-primary">
+                              {group.title}
+                            </strong>
+                            <span className="block text-[10px] text-primary">
+                              {group.description}
+                            </span>
                           </td>
                           <td className="px-4 py-4 text-xs text-primary">
-                            {timeFormatter.format(segment.start)} -{" "}
-                            {timeFormatter.format(segment.end)}
+                            {timeFormatter.format(group.segments[0].start)} -{" "}
+                            {timeFormatter.format(group.segments[0].end)}
                           </td>
                           <td className="px-4 py-4 text-xs font-bold text-primary">
-                            {segment.duration}
+                            {group.segments[0].duration}
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        <>
+                          <tr className="border-b border-primary/5 bg-white">
+                            <td className="px-5 py-4">
+                              <button
+                                aria-expanded={
+                                  expandedGroups[`${day.key}-${group.taskId}`]
+                                }
+                                className="flex w-full items-start gap-2 text-left"
+                                type="button"
+                                onClick={() =>
+                                  toggleGroupExpanded(
+                                    `${day.key}-${group.taskId}`,
+                                  )
+                                }
+                              >
+                                <ChevronRight
+                                  className={`mt-0.5 size-4 shrink-0 text-primary transition-transform duration-200 ${
+                                    expandedGroups[`${day.key}-${group.taskId}`]
+                                      ? "rotate-90"
+                                      : "rotate-0"
+                                  }`}
+                                />
+                                <span>
+                                  <strong className="block text-xs tracking-wide text-primary">
+                                    {group.title}
+                                  </strong>
+                                  <span className="block text-[10px] text-primary">
+                                    {group.description}
+                                  </span>
+                                </span>
+                              </button>
+                            </td>
+                            <td className="px-4 py-4 text-xs text-primary">
+                              Task total
+                            </td>
+                            <td className="px-4 py-4 text-xs font-bold text-primary">
+                              {group.total}
+                            </td>
+                          </tr>
+                          {expandedGroups[`${day.key}-${group.taskId}`] &&
+                            group.segments.map((segment) => (
+                              <tr
+                                key={segment.id}
+                                className="border-b border-primary/5 bg-[#faf9f7]"
+                              >
+                                <td className="px-5 py-4 pl-12 text-xs text-primary">
+                                  Segment
+                                </td>
+                                <td className="px-4 py-4 text-xs text-primary">
+                                  {timeFormatter.format(segment.start)} -{" "}
+                                  {timeFormatter.format(segment.end)}
+                                </td>
+                                <td className="px-4 py-4 text-xs font-bold text-primary">
+                                  {segment.duration}
+                                </td>
+                              </tr>
+                            ))}
+                        </>
+                      )}
                     </Fragment>
                   ))
                 ) : (

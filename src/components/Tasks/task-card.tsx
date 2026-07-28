@@ -1,25 +1,28 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import { Clock, Ellipsis, Play } from "lucide-react";
+import { CalendarClock, Clock, Ellipsis, Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 import { Pill } from "./pill";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTimer } from "@/context/TimerContext";
+import { formatDueLabel } from "@/lib/utils";
 
 export function TaskCard({
   id,
   priority,
   title,
   description,
+  deadline,
   action,
 }: {
   id: string;
   priority: string;
   title: string;
   description: string;
+  deadline: string | null;
   action: string;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -35,6 +38,7 @@ export function TaskCard({
     .toString()
     .padStart(2, "0");
   const displayTotal = `${totalHours}:${totalMinutes}`;
+  const deadlineLabel = deadline ? formatDueLabel(deadline) : "";
 
   const handleAction = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -71,9 +75,15 @@ export function TaskCard({
           {title}
         </h3>
         <p className="mt-1 text-sm leading-5 text-primary">{description}</p>
-        <div className="mt-6 flex justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" /> {displayTotal}
+        {deadlineLabel && (
+          <div className="mt-3 flex items-center gap-2 text-xs text-[#6e746f]">
+            <CalendarClock className="size-4" />
+            <span className="font-semibold">{deadlineLabel}</span>
+          </div>
+        )}
+        <div className="mt-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-[#6e746f]">
+            <Clock className="size-4" /> {displayTotal}
           </div>
           <Button variant="heritage-gold" size="sm" onClick={handleAction}>
             <Play className="size-3 fill-current" /> {action}
