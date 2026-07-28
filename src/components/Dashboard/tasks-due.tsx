@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { MoreHorizontal } from "lucide-react";
 
 import { Card, CardContent } from "../ui/card";
@@ -21,7 +22,7 @@ const colorClasses = {
 } as const;
 
 export const TasksDue = ({ tasks }: { tasks: Task[] }) => {
-  const dueTasks = getTasksDueSoon(tasks);
+  const dueTasks = getTasksDueSoon(tasks).slice(0, 3);
 
   return (
     <Card className="rounded-lg border border-primary/10 bg-white p-5 shadow-sm">
@@ -60,6 +61,12 @@ export const TasksDue = ({ tasks }: { tasks: Task[] }) => {
             </p>
           )}
         </div>
+        <Link
+          href="/tasks"
+          className="mt-6 block w-full border-t border-primary/10 pt-3 text-center text-xs font-bold tracking-wider text-primary hover:text-secondary"
+        >
+          VIEW ALL TASKS
+        </Link>
       </CardContent>
     </Card>
   );
