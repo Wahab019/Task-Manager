@@ -78,7 +78,7 @@ export function TaskCard({
         {deadlineLabel && (
           <div className="mt-3 flex items-center gap-2 text-xs text-[#6e746f]">
             <CalendarClock className="size-4" />
-            <span>{deadlineLabel}</span>
+            <span className="font-semibold">{deadlineLabel}</span>
           </div>
         )}
         <div className="mt-6 flex items-center justify-between">

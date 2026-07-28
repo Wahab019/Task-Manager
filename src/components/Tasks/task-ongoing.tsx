@@ -78,7 +78,7 @@ export function OngoingTask({
           {deadline ? (
             <div className="mt-3 flex items-center gap-2 text-xs text-[#6e746f]">
               <CalendarClock className="size-4" />
-              <span>{formatDueLabel(deadline)}</span>
+              <span className="font-semibold">{formatDueLabel(deadline)}</span>
             </div>
           ) : null}
           <div className="mt-6 flex items-center justify-between rounded bg-[#f5f3f1] px-3 py-3">

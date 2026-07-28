@@ -189,9 +189,6 @@ export function TaskColumn({
               placeholder="Title"
             />
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-[#747974]">
-                Estimated Time
-              </label>
               <Input
                 value={draftTask.time}
                 onChange={(event) =>
@@ -200,7 +197,7 @@ export function TaskColumn({
                     time: event.target.value,
                   }))
                 }
-                placeholder="HH:MM"
+                placeholder="Estimated Time"
               />
             </div>
             <div className="space-y-1">
