@@ -29,6 +29,7 @@ export function TaskBoard() {
     title: string;
     description: string;
     time: string;
+    deadline: string | null;
   }) {
     await addTask(draft);
   }

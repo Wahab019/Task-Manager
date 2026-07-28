@@ -1,8 +1,9 @@
 import { Pill } from "./pill";
-import { Pause, Square, Play } from "lucide-react";
+import { CalendarClock, Pause, Play, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDraggable } from "@dnd-kit/core";
+import { formatDueLabel } from "@/lib/utils";
 
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
@@ -20,6 +21,7 @@ export function OngoingTask({
   title,
   description,
   time,
+  deadline,
   elapsedSeconds,
   isTracking,
   onPause,
@@ -29,6 +31,7 @@ export function OngoingTask({
   title: string;
   description: string;
   time: string;
+  deadline: string | null;
   elapsedSeconds: number;
   isTracking: boolean;
   onPause: () => void;
@@ -72,6 +75,12 @@ export function OngoingTask({
           <p className="mt-1 max-w-72 text-sm leading-5 text-primary">
             {description}
           </p>
+          {deadline ? (
+            <div className="mt-3 flex items-center gap-2 text-xs text-[#6e746f]">
+              <CalendarClock className="size-4" />
+              <span>{formatDueLabel(deadline)}</span>
+            </div>
+          ) : null}
           <div className="mt-6 flex items-center justify-between rounded bg-[#f5f3f1] px-3 py-3">
             <span className="font-mono text-lg font-bold text-[#795f1f]">
               {formatSeconds(elapsedSeconds)}

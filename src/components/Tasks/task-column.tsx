@@ -28,6 +28,7 @@ export type Task = {
   priority: Priority;
   status: "todo" | "in_progress" | "done";
   time: string;
+  deadline: string | null;
   elapsedSeconds: number;
 };
 
@@ -36,6 +37,7 @@ type DraftTask = {
   title: string;
   description: string;
   time: string;
+  deadline: string;
 };
 
 const formatSeconds = (seconds: number) => {
@@ -63,6 +65,7 @@ export function TaskColumn({
     title: string;
     description: string;
     time: string;
+    deadline: string | null;
   }) => void;
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: status });
@@ -72,6 +75,7 @@ export function TaskColumn({
     title: "",
     description: "",
     time: "",
+    deadline: "",
   });
 
   const {
@@ -109,9 +113,16 @@ export function TaskColumn({
       title: draftTask.title,
       description: draftTask.description,
       time: draftTask.time,
+      deadline: draftTask.deadline || null,
     });
 
-    setDraftTask({ priority: "", title: "", description: "", time: "" });
+    setDraftTask({
+      priority: "",
+      title: "",
+      description: "",
+      time: "",
+      deadline: "",
+    });
     setShowForm(false);
   };
 
@@ -177,16 +188,36 @@ export function TaskColumn({
               }
               placeholder="Title"
             />
-            <Input
-              value={draftTask.time}
-              onChange={(event) =>
-                setDraftTask((currentTask) => ({
-                  ...currentTask,
-                  time: event.target.value,
-                }))
-              }
-              placeholder="Time"
-            />
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-[#747974]">
+                Estimated Time
+              </label>
+              <Input
+                value={draftTask.time}
+                onChange={(event) =>
+                  setDraftTask((currentTask) => ({
+                    ...currentTask,
+                    time: event.target.value,
+                  }))
+                }
+                placeholder="HH:MM"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-[#747974]">
+                Deadline
+              </label>
+              <Input
+                type="date"
+                value={draftTask.deadline}
+                onChange={(event) =>
+                  setDraftTask((currentTask) => ({
+                    ...currentTask,
+                    deadline: event.target.value,
+                  }))
+                }
+              />
+            </div>
             <Textarea
               value={draftTask.description}
               onChange={(event) =>
@@ -237,6 +268,7 @@ export function TaskColumn({
                   title={task.title}
                   description={task.description}
                   time={task.time}
+                  deadline={task.deadline}
                   elapsedSeconds={currentSeconds}
                   isTracking={isTracking}
                   onPause={handleTogglePause}
@@ -253,6 +285,7 @@ export function TaskColumn({
                 priority={task.priority}
                 title={task.title}
                 description={task.description}
+                deadline={task.deadline}
                 action={actionText}
               />
             );

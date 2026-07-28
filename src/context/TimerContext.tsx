@@ -19,6 +19,7 @@ export type Task = {
   priority: Priority;
   status: "todo" | "in_progress" | "done";
   time: string;
+  deadline: string | null;
   elapsedSeconds: number;
 };
 
@@ -56,6 +57,7 @@ interface TimerContextType {
     title: string;
     description: string;
     time: string;
+    deadline: string | null;
   }) => Promise<void>;
   startTimer: (taskId: string, taskTitle: string) => Promise<void>;
   pauseTimer: () => Promise<void>;
@@ -364,6 +366,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     title: string;
     description: string;
     time: string;
+    deadline: string | null;
   }) => {
     const tempId = `temp-${Date.now()}`;
     const optimisticTask: Task = {
