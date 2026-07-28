@@ -24,8 +24,6 @@ export function formatDueLabel(deadline: string): string {
     return "";
   }
 
-  const diffMs = dueDate.getTime() - now.getTime();
-  const diffHours = diffMs / (1000 * 60 * 60);
   const dayFormatter = new Intl.DateTimeFormat("en-US", {
     weekday: "long",
   });
@@ -42,9 +40,12 @@ export function formatDueLabel(deadline: string): string {
     (startOfDueDate.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24),
   );
 
+  if (dayDifference < 0) {
+    return "Overdue";
+  }
+
   if (dayDifference === 0) {
-    const hours = Math.max(1, Math.ceil(diffHours));
-    return `Due in ${hours} hour${hours === 1 ? "" : "s"}`;
+    return `Due Today`;
   }
 
   if (dayDifference === 1) {
@@ -56,4 +57,44 @@ export function formatDueLabel(deadline: string): string {
   }
 
   return `Due ${monthDayFormatter.format(dueDate)}`;
+}
+
+export function getDueDateColor(deadline: string): "red" | "yellow" | "green" {
+  const now = new Date();
+  const dueDate = new Date(`${deadline}T00:00:00`);
+
+  if (Number.isNaN(dueDate.getTime())) {
+    return "green";
+  }
+
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+  const startOfDueDate = new Date(dueDate);
+  startOfDueDate.setHours(0, 0, 0, 0);
+  const dayDifference = Math.round(
+    (startOfDueDate.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  if (dayDifference <= 0) {
+    return "red";
+  }
+
+  if (dayDifference === 1) {
+    return "yellow";
+  }
+
+  return "green";
+}
+
+export function getTasksDueSoon<
+  T extends { status: string; deadline: string | null },
+>(tasks: T[]): T[] {
+  return tasks
+    .filter((task) => task.status !== "done" && !!task.deadline?.trim())
+    .slice()
+    .sort((a, b) => {
+      const aTime = new Date(`${a.deadline}T00:00:00`).getTime();
+      const bTime = new Date(`${b.deadline}T00:00:00`).getTime();
+      return aTime - bTime;
+    });
 }
