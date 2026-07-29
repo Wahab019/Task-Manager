@@ -58,6 +58,16 @@ function getEntryEndTime(entry: TimeLogEntry) {
   return entry.endTime ?? Date.now();
 }
 
+function getWeekDayKeys(weekStart: Date, today: Date) {
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = addDays(weekStart, 6 - index);
+    if (date > today) {
+      return null;
+    }
+    return date.toISOString();
+  }).filter((key): key is string => key !== null);
+}
+
 export function DateRow({
   label,
   total,
@@ -103,17 +113,18 @@ export function DateRow({
 
 export const LogTable = () => {
   const { tasks, timelogs } = useTimer();
+  const today = startOfDay(new Date());
+  const todayKey = today.toISOString();
+  const currentWeekMonday = startOfWeek(new Date());
   const [selectedMonday, setSelectedMonday] = useState(() =>
     startOfWeek(new Date()),
   );
-  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
+  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(
+    () => new Set(getWeekDayKeys(startOfWeek(new Date()), today)),
+  );
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {},
   );
-
-  const todayKey = startOfDay(new Date()).toISOString();
-  const today = startOfDay(new Date());
-  const currentWeekMonday = startOfWeek(new Date());
 
   const days = useMemo(() => {
     const weekStart = startOfDay(selectedMonday);
@@ -185,6 +196,12 @@ export const LogTable = () => {
     }).filter((day): day is NonNullable<typeof day> => day !== null);
   }, [selectedMonday, tasks, timelogs, today]);
 
+  function navigateWeek(offset: number) {
+    const nextMonday = addDays(selectedMonday, offset);
+    setSelectedMonday(nextMonday);
+    setCollapsedDays(new Set(getWeekDayKeys(nextMonday, today)));
+  }
+
   function toggleDay(key: string) {
     setCollapsedDays((current) => {
       const next = new Set(current);
@@ -212,7 +229,7 @@ export const LogTable = () => {
             aria-label="Previous week"
             className="p-2 text-primary"
             type="button"
-            onClick={() => setSelectedMonday((current) => addDays(current, -7))}
+            onClick={() => navigateWeek(-7)}
           >
             <ChevronLeft className="size-4" />
           </button>
@@ -224,7 +241,7 @@ export const LogTable = () => {
             className="p-2 text-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
             type="button"
             disabled={selectedMonday >= currentWeekMonday}
-            onClick={() => setSelectedMonday((current) => addDays(current, 7))}
+            onClick={() => navigateWeek(7)}
           >
             <ChevronRight className="size-4" />
           </button>
