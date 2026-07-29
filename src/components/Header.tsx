@@ -46,7 +46,7 @@ export const Header = () => {
   const initials = getInitials(name);
 
   return (
-    <header className="flex flex-row lg:flex-col gap-4 border-b border-primary/10 py-4 px-4 lg:px-8 lg:flex-row lg:items-center justify-between">
+    <header className="flex flex-row gap-4 border-b border-primary/10 py-4 px-4 lg:px-8 lg:flex-row lg:items-center justify-between">
       <div className="flex items-center gap-3">
         {/* Sidebar toggle button */}
         <ToolbarButton label="Toggle sidebar" onClick={toggle}>

@@ -35,7 +35,11 @@ function formatDuration(totalSeconds: number) {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
-function formatTimeRange(startTime: number, endTime: number) {
+function formatTimeRange(startTime: number, endTime: number | null) {
+  if (endTime === null) {
+    return `${timeFormatter.format(new Date(startTime))} - NOW`;
+  }
+
   return `${timeFormatter.format(new Date(startTime))} - ${timeFormatter.format(new Date(endTime))}`;
 }
 
