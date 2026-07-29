@@ -8,16 +8,21 @@ export function ToolbarButton({
   children,
   label,
   onClick,
+  disabled,
+  className = "",
 }: {
   children: React.ReactNode;
   label: string;
   onClick?: () => void;
+  disabled?: boolean;
+  className?: string;
 }) {
   return (
     <button
       aria-label={label}
       onClick={onClick}
-      className="flex size-9 items-center justify-center rounded-full text-primary transition hover:bg-[#eae7e7] [&_svg]:size-4 cursor-pointer"
+      disabled={disabled}
+      className={`flex size-9 items-center justify-center rounded-full text-primary transition hover:bg-[#eae7e7] [&_svg]:size-4 cursor-pointer disabled:cursor-not-allowed disabled:opacity-30 ${className}`}
     >
       {children}
     </button>
