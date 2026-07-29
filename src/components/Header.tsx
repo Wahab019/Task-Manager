@@ -8,16 +8,21 @@ export function ToolbarButton({
   children,
   label,
   onClick,
+  disabled,
+  className = "",
 }: {
   children: React.ReactNode;
   label: string;
   onClick?: () => void;
+  disabled?: boolean;
+  className?: string;
 }) {
   return (
     <button
       aria-label={label}
       onClick={onClick}
-      className="flex size-9 items-center justify-center rounded-full text-primary transition hover:bg-[#eae7e7] [&_svg]:size-4 cursor-pointer"
+      disabled={disabled}
+      className={`flex size-9 items-center justify-center rounded-full text-primary transition hover:bg-[#eae7e7] [&_svg]:size-4 cursor-pointer disabled:cursor-not-allowed disabled:opacity-30 ${className}`}
     >
       {children}
     </button>
@@ -41,7 +46,7 @@ export const Header = () => {
   const initials = getInitials(name);
 
   return (
-    <header className="flex flex-row lg:flex-col gap-4 border-b border-primary/10 py-4 px-4 lg:px-8 lg:flex-row lg:items-center justify-between">
+    <header className="flex flex-row gap-4 border-b border-primary/10 py-4 px-4 lg:px-8 lg:flex-row lg:items-center justify-between">
       <div className="flex items-center gap-3">
         {/* Sidebar toggle button */}
         <ToolbarButton label="Toggle sidebar" onClick={toggle}>
