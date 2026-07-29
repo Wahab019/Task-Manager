@@ -64,6 +64,7 @@ export function TaskCard({
         <div className="flex items-start justify-between">
           <Pill>{priority} PRIORITY</Pill>
           <button
+            type="button"
             aria-label={`Options for ${title}`}
             className="text-[#aeb2ad]"
             onClick={(event) => event.stopPropagation()}
@@ -85,7 +86,12 @@ export function TaskCard({
           <div className="flex items-center gap-2 text-xs text-[#6e746f]">
             <Clock className="size-4" /> {displayTotal}
           </div>
-          <Button variant="heritage-gold" size="sm" onClick={handleAction}>
+          <Button
+            variant="heritage-gold"
+            size="sm"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={handleAction}
+          >
             <Play className="size-3 fill-current" /> {action}
           </Button>
         </div>

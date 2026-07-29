@@ -41,15 +41,14 @@ export const DashboardProgress = () => {
   } = useTimer();
 
   // Find the task to display
-  let displayedTask = activeTaskId
+  const activeTask = activeTaskId
     ? tasks.find((t) => t.id === activeTaskId)
     : null;
-  const isActive = !!displayedTask;
 
   // Fallback to first in-progress task if no active task is selected/tracking
-  if (!displayedTask) {
-    displayedTask = tasks.find((t) => t.status === "in_progress") || null;
-  }
+  const fallbackTask = tasks.find((t) => t.status === "in_progress") || null;
+  const displayedTask = activeTask ?? fallbackTask;
+  const isActive = !!activeTask;
 
   // Handle resume/start from the dashboard
   const handleToggle = () => {
