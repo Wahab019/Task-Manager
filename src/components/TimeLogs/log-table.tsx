@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { TimeLogEntry, useTimer } from "@/context/TimerContext";
 
@@ -62,20 +62,37 @@ export function DateRow({
   label,
   total,
   current,
+  collapsed,
+  onToggle,
 }: {
   label: string;
   total: string;
   current?: boolean;
+  collapsed: boolean;
+  onToggle: () => void;
 }) {
   return (
     <tr className="border-b border-primary/10 bg-[#f5f3f1]">
       <td className="px-5 py-3 text-xs font-semibold text-primary" colSpan={2}>
-        {label}{" "}
-        {current && (
-          <span className="ml-2 bg-[#ffdf9b] px-1.5 py-1 text-[8px] font-bold text-[#795f1f] uppercase">
-            Current day
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex items-center gap-2 text-left"
+        >
+          <ChevronDown
+            className={`size-4 shrink-0 text-primary transition-transform duration-200 ${
+              collapsed ? "-rotate-90" : "rotate-0"
+            }`}
+          />
+          <span>
+            {label}{" "}
+            {current && (
+              <span className="ml-2 bg-[#ffdf9b] px-1.5 py-1 text-[8px] font-bold text-[#795f1f] uppercase">
+                Current day
+              </span>
+            )}
           </span>
-        )}
+        </button>
       </td>
       <td className="px-4 py-3 text-xs font-bold text-primary">
         Total: {total}
@@ -89,6 +106,7 @@ export const LogTable = () => {
   const [selectedMonday, setSelectedMonday] = useState(() =>
     startOfWeek(new Date()),
   );
+  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {},
   );
@@ -167,6 +185,18 @@ export const LogTable = () => {
     }).filter((day): day is NonNullable<typeof day> => day !== null);
   }, [selectedMonday, tasks, timelogs, today]);
 
+  function toggleDay(key: string) {
+    setCollapsedDays((current) => {
+      const next = new Set(current);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }
+
   function toggleGroupExpanded(groupKey: string) {
     setExpandedGroups((current) => ({
       ...current,
@@ -210,108 +240,124 @@ export const LogTable = () => {
             </tr>
           </thead>
           <tbody>
-            {days.map((day) => (
-              <Fragment key={day.key}>
-                <DateRow
-                  label={dayFormatter.format(day.date)}
-                  total={day.total}
-                  current={day.key === todayKey}
-                />
-                {day.taskGroups.length > 0 ? (
-                  day.taskGroups.map((group) => (
-                    <Fragment key={`${day.key}-${group.taskId}`}>
-                      {group.segments.length === 1 ? (
-                        <tr className="border-b border-primary/5 bg-white">
-                          <td className="px-5 py-4">
-                            <strong className="block text-xs tracking-wide text-primary">
-                              {group.title}
-                            </strong>
-                            <span className="block text-[10px] text-primary">
-                              {group.description}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 text-xs text-primary">
-                            {timeFormatter.format(group.segments[0].start)} -{" "}
-                            {timeFormatter.format(group.segments[0].end)}
-                          </td>
-                          <td className="px-4 py-4 text-xs font-bold text-primary">
-                            {group.segments[0].duration}
-                          </td>
-                        </tr>
-                      ) : (
-                        <>
-                          <tr className="border-b border-primary/5 bg-white">
-                            <td className="px-5 py-4">
-                              <button
-                                aria-expanded={
-                                  expandedGroups[`${day.key}-${group.taskId}`]
-                                }
-                                className="flex w-full items-start gap-2 text-left"
-                                type="button"
-                                onClick={() =>
-                                  toggleGroupExpanded(
-                                    `${day.key}-${group.taskId}`,
-                                  )
-                                }
-                              >
-                                <ChevronRight
-                                  className={`mt-0.5 size-4 shrink-0 text-primary transition-transform duration-200 ${
-                                    expandedGroups[`${day.key}-${group.taskId}`]
-                                      ? "rotate-90"
-                                      : "rotate-0"
-                                  }`}
-                                />
-                                <span>
+            {days.map((day) => {
+              const isDayCollapsed = collapsedDays.has(day.key);
+              return (
+                <Fragment key={day.key}>
+                  <DateRow
+                    label={dayFormatter.format(day.date)}
+                    total={day.total}
+                    current={day.key === todayKey}
+                    collapsed={isDayCollapsed}
+                    onToggle={() => toggleDay(day.key)}
+                  />
+                  {!isDayCollapsed && (
+                    <>
+                      {day.taskGroups.length > 0 ? (
+                        day.taskGroups.map((group) => (
+                          <Fragment key={`${day.key}-${group.taskId}`}>
+                            {group.segments.length === 1 ? (
+                              <tr className="border-b border-primary/5 bg-white">
+                                <td className="px-5 py-4">
                                   <strong className="block text-xs tracking-wide text-primary">
                                     {group.title}
                                   </strong>
                                   <span className="block text-[10px] text-primary">
                                     {group.description}
                                   </span>
-                                </span>
-                              </button>
-                            </td>
-                            <td className="px-4 py-4 text-xs text-primary">
-                              Task total
-                            </td>
-                            <td className="px-4 py-4 text-xs font-bold text-primary">
-                              {group.total}
-                            </td>
-                          </tr>
-                          {expandedGroups[`${day.key}-${group.taskId}`] &&
-                            group.segments.map((segment) => (
-                              <tr
-                                key={segment.id}
-                                className="border-b border-primary/5 bg-[#faf9f7]"
-                              >
-                                <td className="px-5 py-4 pl-12 text-xs text-primary">
-                                  Segment
                                 </td>
                                 <td className="px-4 py-4 text-xs text-primary">
-                                  {timeFormatter.format(segment.start)} -{" "}
-                                  {timeFormatter.format(segment.end)}
+                                  {timeFormatter.format(
+                                    group.segments[0].start,
+                                  )}{" "}
+                                  -{" "}
+                                  {timeFormatter.format(group.segments[0].end)}
                                 </td>
                                 <td className="px-4 py-4 text-xs font-bold text-primary">
-                                  {segment.duration}
+                                  {group.segments[0].duration}
                                 </td>
                               </tr>
-                            ))}
-                        </>
+                            ) : (
+                              <>
+                                <tr className="border-b border-primary/5 bg-white">
+                                  <td className="px-5 py-4">
+                                    <button
+                                      aria-expanded={
+                                        expandedGroups[
+                                          `${day.key}-${group.taskId}`
+                                        ]
+                                      }
+                                      className="flex w-full items-start gap-2 text-left"
+                                      type="button"
+                                      onClick={() =>
+                                        toggleGroupExpanded(
+                                          `${day.key}-${group.taskId}`,
+                                        )
+                                      }
+                                    >
+                                      <ChevronRight
+                                        className={`mt-0.5 size-4 shrink-0 text-primary transition-transform duration-200 ${
+                                          expandedGroups[
+                                            `${day.key}-${group.taskId}`
+                                          ]
+                                            ? "rotate-90"
+                                            : "rotate-0"
+                                        }`}
+                                      />
+                                      <span>
+                                        <strong className="block text-xs tracking-wide text-primary">
+                                          {group.title}
+                                        </strong>
+                                        <span className="block text-[10px] text-primary">
+                                          {group.description}
+                                        </span>
+                                      </span>
+                                    </button>
+                                  </td>
+                                  <td className="px-4 py-4 text-xs text-primary">
+                                    Task total
+                                  </td>
+                                  <td className="px-4 py-4 text-xs font-bold text-primary">
+                                    {group.total}
+                                  </td>
+                                </tr>
+                                {expandedGroups[`${day.key}-${group.taskId}`] &&
+                                  group.segments.map((segment) => (
+                                    <tr
+                                      key={segment.id}
+                                      className="border-b border-primary/5 bg-[#faf9f7]"
+                                    >
+                                      <td className="px-5 py-4 pl-12 text-xs text-primary">
+                                        Segment
+                                      </td>
+                                      <td className="px-4 py-4 text-xs text-primary">
+                                        {timeFormatter.format(segment.start)} -{" "}
+                                        {timeFormatter.format(segment.end)}
+                                      </td>
+                                      <td className="px-4 py-4 text-xs font-bold text-primary">
+                                        {segment.duration}
+                                      </td>
+                                    </tr>
+                                  ))}
+                              </>
+                            )}
+                          </Fragment>
+                        ))
+                      ) : (
+                        <tr className="border-b border-primary/5">
+                          <td
+                            className="px-5 py-4 text-sm text-[#6e746f]"
+                            colSpan={3}
+                          >
+                            No time logs for this day.
+                          </td>
+                        </tr>
                       )}
-                    </Fragment>
-                  ))
-                ) : (
-                  <tr className="border-b border-primary/5">
-                    <td
-                      className="px-5 py-4 text-sm text-[#6e746f]"
-                      colSpan={3}
-                    >
-                      No time logs for this day.
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
-            ))}
+                    </>
+                  )}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
