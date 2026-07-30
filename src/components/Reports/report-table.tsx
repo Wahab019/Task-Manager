@@ -5,7 +5,11 @@ const entries = [
   ["Draft Executive Summary", "Oct 25, 2023", "4h 30m"],
 ];
 
-export const ReportTable = () => {
+export const ReportTable = ({
+  dateRange: _dateRange,
+}: {
+  dateRange: { from: Date; to: Date };
+}) => {
   return (
     <>
       <section className="overflow-hidden rounded-2xl border border-primary/10 bg-white">
