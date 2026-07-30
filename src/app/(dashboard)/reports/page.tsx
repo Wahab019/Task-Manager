@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CalendarDays, CheckCircle2, Clock3, ChevronDown } from "lucide-react";
 import type { DateRange as DayPickerDateRange } from "react-day-picker";
 
@@ -17,6 +17,12 @@ import {
   ReportTable,
 } from "@/components/Reports";
 import type { DateRange } from "@/components/Reports/report-metric";
+import { useTimer } from "@/context/TimerContext";
+import {
+  getTotalHoursInRange,
+  getTasksCompletedInRange,
+  getAverageSessionLength,
+} from "@/lib/utils";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -30,30 +36,19 @@ function startOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1);
 }
 
-// ── static metric definitions ─────────────────────────────────────────────
+// ── metric icon/label definitions (values computed from real data) ────────────
 
-const reportMetrics = [
-  {
-    icon: Clock3,
-    label: "Total Hours",
-    value: "38h 15m",
-  },
-  {
-    icon: CheckCircle2,
-    label: "Tasks Completed",
-    value: "12",
-  },
-  {
-    icon: Clock3,
-    label: "Avg Session Length",
-    value: "1h 45m",
-  },
-];
+const metricDefs = [
+  { icon: Clock3, label: "Total Hours" },
+  { icon: CheckCircle2, label: "Tasks Completed" },
+  { icon: Clock3, label: "Avg Session Length" },
+] as const;
 
 // ── page ──────────────────────────────────────────────────────────────────
 
 export default function ReportsPage() {
   const today = new Date();
+  const { tasks, timelogs } = useTimer();
 
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfMonth(today),
@@ -69,6 +64,17 @@ export default function ReportsPage() {
     to: dateRange.to,
   });
   const [open, setOpen] = useState(false);
+
+  // ── computed metric values ────────────────────────────────────────────────
+  const metricValues = useMemo(
+    () =>
+      [
+        getTotalHoursInRange(timelogs, dateRange.from, dateRange.to),
+        String(getTasksCompletedInRange(tasks, dateRange.from, dateRange.to)),
+        getAverageSessionLength(timelogs, dateRange.from, dateRange.to),
+      ] as const,
+    [timelogs, tasks, dateRange],
+  );
 
   function handleSelect(range: DayPickerDateRange | undefined) {
     setPickerRange(range);
@@ -113,12 +119,12 @@ export default function ReportsPage() {
       </header>
 
       <section className="grid gap-5 md:grid-cols-3">
-        {reportMetrics.map((metric, index) => (
+        {metricDefs.map((def, index) => (
           <ReportMetric
-            key={index}
-            icon={metric.icon}
-            label={metric.label}
-            value={metric.value}
+            key={def.label}
+            icon={def.icon}
+            label={def.label}
+            value={metricValues[index]}
             dateRange={dateRange}
           />
         ))}

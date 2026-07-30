@@ -98,3 +98,73 @@ export function getTasksDueSoon<
       return aTime - bTime;
     });
 }
+
+// ── Report aggregation helpers ────────────────────────────────────────────────
+
+import type { Task, TimeLogEntry } from "@/context/TimerContext";
+
+/** Format a total-seconds count as "Xh Ym" (e.g. "38h 15m" or "0m"). */
+function formatReportDuration(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if (hours === 0) return `${minutes}m`;
+  return `${hours}h ${minutes}m`;
+}
+
+/** Timelogs whose startTime (ms epoch) falls within [from, to] (day-inclusive). */
+function filterTimelogsInRange(
+  timelogs: TimeLogEntry[],
+  from: Date,
+  to: Date,
+): TimeLogEntry[] {
+  const start = new Date(from);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(to);
+  end.setHours(23, 59, 59, 999);
+  return timelogs.filter(
+    (log) => log.startTime >= start.getTime() && log.startTime <= end.getTime(),
+  );
+}
+
+/**
+ * Sum durations of all timelogs whose startTime falls within [from, to]
+ * and return the result formatted as "Xh Ym".
+ */
+export function getTotalHoursInRange(
+  timelogs: TimeLogEntry[],
+  from: Date,
+  to: Date,
+): string {
+  const filtered = filterTimelogsInRange(timelogs, from, to);
+  const totalSeconds = filtered.reduce((sum, log) => sum + log.duration, 0);
+  return formatReportDuration(totalSeconds);
+}
+
+/**
+ * Count tasks with status "done".
+ * Tasks do not currently carry a completion timestamp, so the full list is
+ * counted regardless of date range. The from/to params are accepted for
+ * forward-compatibility once a completedAt field is added.
+ */
+export function getTasksCompletedInRange(
+  tasks: Task[],
+  _from: Date,
+  _to: Date,
+): number {
+  return tasks.filter((task) => task.status === "done").length;
+}
+
+/**
+ * Average duration of timelogs whose startTime falls within [from, to],
+ * formatted as "Xh Ym". Returns "0m" when there are no matching entries.
+ */
+export function getAverageSessionLength(
+  timelogs: TimeLogEntry[],
+  from: Date,
+  to: Date,
+): string {
+  const filtered = filterTimelogsInRange(timelogs, from, to);
+  if (filtered.length === 0) return "0m";
+  const totalSeconds = filtered.reduce((sum, log) => sum + log.duration, 0);
+  return formatReportDuration(Math.round(totalSeconds / filtered.length));
+}
