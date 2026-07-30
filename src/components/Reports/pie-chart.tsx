@@ -53,7 +53,11 @@ const chartConfig = {
 
 const totalHours = "38.2h";
 
-export function ReportPieChart() {
+export function ReportPieChart({
+  dateRange: _dateRange,
+}: {
+  dateRange: { from: Date; to: Date };
+}) {
   return (
     <Card className="rounded-2xl border-none shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0">
