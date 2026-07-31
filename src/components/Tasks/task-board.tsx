@@ -7,6 +7,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { useMemo } from "react";
 
 import { TaskColumn, type Task, type Priority } from "./task-column";
 import { useTimer } from "@/context/TimerContext";
@@ -44,6 +45,20 @@ export function TaskBoard() {
     await updateTaskStatus(taskId, newStatus);
   }
 
+  const tasksByStatus = useMemo(() => {
+    const grouped: Record<Task["status"], Task[]> = {
+      todo: [],
+      in_progress: [],
+      done: [],
+    };
+
+    for (const task of tasks) {
+      grouped[task.status].push(task);
+    }
+
+    return grouped;
+  }, [tasks]);
+
   if (isLoading) {
     return <p className="px-1 text-sm text-[#747974]">Loading tasks…</p>;
   }
@@ -63,7 +78,7 @@ export function TaskBoard() {
                 key={status}
                 status={status}
                 title={STATUS_LABELS[status]}
-                tasks={tasks.filter((task) => task.status === status)}
+                tasks={tasksByStatus[status]}
                 onAddTask={status === "todo" ? handleAddTask : undefined}
               />
             ))}

@@ -1,12 +1,18 @@
-const entries = [
-  ["Review Q3 Financial Disclosures", "Oct 28, 2023", "2h 15m"],
-  ["Client Presentation Preparation", "Oct 27, 2023", "3h 45m"],
-  ["Weekly Strategy Alignment", "Oct 26, 2023", "1h 00m"],
-  ["Draft Executive Summary", "Oct 25, 2023", "4h 30m"],
-];
+"use client";
+
+import { useMemo } from "react";
+
+import { useTimer } from "@/context/TimerContext";
+import { getRecentEntriesInMonth } from "@/lib/utils";
 
 export const ReportTable = ({ selectedMonth }: { selectedMonth: Date }) => {
-  void selectedMonth;
+  const { tasks, timelogs } = useTimer();
+
+  const entries = useMemo(
+    () => getRecentEntriesInMonth(timelogs, tasks, selectedMonth),
+    [timelogs, tasks, selectedMonth],
+  );
+
   return (
     <>
       <section className="overflow-hidden rounded-2xl border border-primary/10 bg-white">
@@ -23,17 +29,30 @@ export const ReportTable = ({ selectedMonth }: { selectedMonth: Date }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-primary/10">
-              {entries.map(([name, date, duration]) => (
-                <tr key={name}>
-                  <td className="px-5 py-3.5 text-xs font-semibold text-primary">
-                    {name}
-                  </td>
-                  <td className="px-5 py-3.5 text-xs text-[#47857a]">{date}</td>
-                  <td className="px-5 py-3.5 text-xs font-bold text-primary">
-                    {duration}
+              {entries.length > 0 ? (
+                entries.map((entry) => (
+                  <tr key={entry.id}>
+                    <td className="px-5 py-3.5 text-xs font-semibold text-primary">
+                      {entry.taskName}
+                    </td>
+                    <td className="px-5 py-3.5 text-xs text-[#47857a]">
+                      {entry.date}
+                    </td>
+                    <td className="px-5 py-3.5 text-xs font-bold text-primary">
+                      {entry.duration}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    className="px-5 py-8 text-center text-sm text-[#6e746f]"
+                    colSpan={3}
+                  >
+                    No time logged this month.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

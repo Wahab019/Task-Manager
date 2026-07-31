@@ -256,8 +256,8 @@ export function TaskColumn({
               );
             }
 
-            // Show OngoingTask for the active task whether tracking or paused
-            if (task.id === activeTaskId) {
+            // Any task already marked in_progress should render as the ongoing card.
+            if (task.status === "in_progress") {
               return (
                 <OngoingTask
                   key={task.id}
@@ -266,8 +266,12 @@ export function TaskColumn({
                   description={task.description}
                   time={task.time}
                   deadline={task.deadline}
-                  elapsedSeconds={currentSeconds}
-                  isTracking={isTracking}
+                  elapsedSeconds={
+                    task.id === activeTaskId
+                      ? currentSeconds
+                      : task.elapsedSeconds
+                  }
+                  isTracking={task.id === activeTaskId ? isTracking : false}
                   onPause={handleTogglePause}
                   onStop={stopActiveTask}
                 />

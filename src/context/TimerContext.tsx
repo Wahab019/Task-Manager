@@ -120,6 +120,19 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [hasHydratedLogs, setHasHydratedLogs] = useState(false);
   const [hasHydratedTimer, setHasHydratedTimer] = useState(false);
 
+  const promoteTaskToInProgress = useCallback((taskId: string) => {
+    setTasks((current) =>
+      current.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              status: "in_progress",
+            }
+          : task,
+      ),
+    );
+  }, []);
+
   const persistTimerState = useCallback(() => {
     const payload: PersistedTimerState = {
       activeTaskId,
@@ -315,7 +328,28 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   const validateAndSync = useCallback(
     (fetchedTasks: Task[]) => {
-      setTasks(fetchedTasks);
+      setTasks((current) => {
+        const currentById = new Map(current.map((task) => [task.id, task]));
+        return fetchedTasks.map((task) => {
+          const existing = currentById.get(task.id);
+          if (!existing) {
+            return task;
+          }
+
+          if (existing.status !== task.status) {
+            return {
+              ...task,
+              status: existing.status,
+              elapsedSeconds: existing.elapsedSeconds,
+            };
+          }
+
+          return {
+            ...task,
+            elapsedSeconds: existing.elapsedSeconds,
+          };
+        });
+      });
       if (activeTaskId) {
         const stillExists = fetchedTasks.some((t) => t.id === activeTaskId);
         if (!stillExists) {
@@ -383,8 +417,30 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         status: "todo",
       });
       setTasks((current) =>
-        current.map((task) => (task.id === tempId ? response.data : task)),
+        current.map((task) => {
+          if (task.id !== tempId) return task;
+          const isActiveTempTask = activeTaskId === tempId;
+          return {
+            ...response.data,
+            status: isActiveTempTask ? "in_progress" : task.status,
+            elapsedSeconds: task.elapsedSeconds,
+          };
+        }),
       );
+      if (activeTaskId === tempId) {
+        setActiveTaskId(response.data.id);
+        setActiveTaskTitle(response.data.title);
+        promoteTaskToInProgress(response.data.id);
+        try {
+          await axios.patch(`/api/tasks/${response.data.id}`, {
+            status: "in_progress",
+          });
+        } catch (e) {
+          if ((e as AxiosError)?.response?.status === 404) {
+            evictTask(response.data.id);
+          }
+        }
+      }
     } catch {
       setTasks((current) => current.filter((task) => task.id !== tempId));
       setError("Couldn't create the task. Try again.");
@@ -403,17 +459,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setCurrentEntryId(entry.id);
     setIsTracking(true);
     setCurrentSeconds(Math.floor(getTotalDurationForTask(taskId)));
-
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              status: "in_progress",
-            }
-          : task,
-      ),
-    );
+    promoteTaskToInProgress(taskId);
 
     try {
       await axios.patch(`/api/tasks/${taskId}`, {
@@ -469,6 +515,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setCurrentEntryId(entry.id);
     setIsTracking(true);
     setCurrentSeconds(Math.floor(getTotalDurationForTask(taskId)));
+    promoteTaskToInProgress(taskId);
   };
 
   const stopTimer = async () => {
@@ -510,6 +557,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const startTask = async (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
+    promoteTaskToInProgress(taskId);
     await startTimer(taskId, task.title);
   };
 

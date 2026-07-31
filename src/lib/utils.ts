@@ -166,6 +166,26 @@ export function getHoursByDayInRange(
   }));
 }
 
+function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function endOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+}
+
+function isSameMonth(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+}
+
+function formatReportDate(date: Date) {
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 // â”€â”€ Report aggregation helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /** Format a total-seconds count as "Xh Ym" (e.g. "38h 15m" or "0m"). */
@@ -234,4 +254,37 @@ export function getAverageSessionLength(
   if (filtered.length === 0) return "0m";
   const totalSeconds = filtered.reduce((sum, log) => sum + log.duration, 0);
   return formatReportDuration(Math.round(totalSeconds / filtered.length));
+}
+
+export function getRecentEntriesInMonth(
+  timelogs: TimeLogEntry[],
+  tasks: Task[],
+  month: Date,
+  limit: number = 5,
+): { id: string; taskName: string; date: string; duration: string }[] {
+  const today = new Date();
+  const monthStart = startOfMonth(month);
+  const monthEnd = isSameMonth(month, today)
+    ? new Date(Math.min(endOfMonth(month).getTime(), today.getTime()))
+    : endOfMonth(month);
+  const tasksById = new Map(tasks.map((task) => [task.id, task]));
+
+  return timelogs
+    .filter(
+      (log) =>
+        log.startTime >= monthStart.getTime() &&
+        log.startTime <= monthEnd.getTime(),
+    )
+    .slice()
+    .sort((a, b) => b.startTime - a.startTime)
+    .slice(0, limit)
+    .map((log) => {
+      const task = tasksById.get(log.taskId);
+      return {
+        id: log.id,
+        taskName: task?.title ?? "Deleted task",
+        date: formatReportDate(new Date(log.startTime)),
+        duration: formatReportDuration(log.duration),
+      };
+    });
 }
