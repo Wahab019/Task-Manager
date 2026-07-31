@@ -3,13 +3,36 @@
 import { Sparkles } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+const items = [
+  { label: "Select Week", value: null },
+  { label: "Week 1", value: "week 1" },
+  { label: "Week 2", value: "week 2" },
+  { label: "Week 3", value: "week 3" },
+  { label: "Week 4", value: "week 4" },
+];
 
 const hoursData = [
   { day: "MON", hours: 5.5 },
@@ -39,7 +62,23 @@ export function ReportBarChart({
         <CardTitle className="font-heading text-xl font-bold text-[#0f3d2e]">
           Hours Logged Over Time
         </CardTitle>
-        <Sparkles className="size-5 text-[#7fa294]" strokeWidth={2} />
+        <CardAction>
+          <Select items={items}>
+            <SelectTrigger className="w-full max-w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Weeks</SelectLabel>
+                {items.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </CardAction>
       </CardHeader>
 
       <CardContent className="pt-6">
