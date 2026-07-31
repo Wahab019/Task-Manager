@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
@@ -16,7 +16,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-
 import {
   Select,
   SelectContent,
@@ -26,23 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-const items = [
-  { label: "Select Week", value: null },
-  { label: "Week 1", value: "week 1" },
-  { label: "Week 2", value: "week 2" },
-  { label: "Week 3", value: "week 3" },
-  { label: "Week 4", value: "week 4" },
-];
-
-const hoursData = [
-  { day: "MON", hours: 5.5 },
-  { day: "TUE", hours: 7.5 },
-  { day: "WED", hours: 4.5 },
-  { day: "THU", hours: 8 },
-  { day: "FRI", hours: 6.5 },
-  { day: "SAT", hours: 3 },
-  { day: "SUN", hours: 2 },
-];
+import { useTimer } from "@/context/TimerContext";
+import { getHoursByDayInRange, getWeeksInMonth } from "@/lib/utils";
 
 const chartConfig = {
   hours: {
@@ -51,11 +35,37 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function ReportBarChart({
-  dateRange: _dateRange,
-}: {
-  dateRange: { from: Date; to: Date };
-}) {
+function isSameMonth(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+}
+
+export function ReportBarChart({ selectedMonth }: { selectedMonth: Date }) {
+  const { timelogs } = useTimer();
+  const weeks = useMemo(() => getWeeksInMonth(selectedMonth), [selectedMonth]);
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
+  const isCurrentMonth = isSameMonth(selectedMonth, new Date());
+
+  useEffect(() => {
+    if (!isCurrentMonth) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedWeekIndex(0);
+      return;
+    }
+
+    const today = new Date();
+    const matchingWeekIndex = weeks.findIndex(
+      (week) => today >= week.from && today <= week.to,
+    );
+    setSelectedWeekIndex(matchingWeekIndex >= 0 ? matchingWeekIndex : 0);
+  }, [isCurrentMonth, selectedMonth, weeks]);
+
+  const selectedWeek = weeks[selectedWeekIndex] ?? weeks[0];
+
+  const hoursData = useMemo(
+    () => getHoursByDayInRange(timelogs, selectedWeek.from, selectedWeek.to),
+    [timelogs, selectedWeek.from, selectedWeek.to],
+  );
+
   return (
     <Card className="rounded-2xl border-none shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0">
@@ -63,16 +73,19 @@ export function ReportBarChart({
           Hours Logged Over Time
         </CardTitle>
         <CardAction>
-          <Select items={items}>
+          <Select
+            value={String(selectedWeekIndex)}
+            onValueChange={(value) => setSelectedWeekIndex(Number(value))}
+          >
             <SelectTrigger className="w-full max-w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Weeks</SelectLabel>
-                {items.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
+                {weeks.map((week, index) => (
+                  <SelectItem key={week.label} value={String(index)}>
+                    {week.label}
                   </SelectItem>
                 ))}
               </SelectGroup>
