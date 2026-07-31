@@ -59,12 +59,12 @@ export default function ReportsPage() {
   const monthOptions = Array.from({ length: 25 }, (_, index) => {
     const month = new Date(today.getFullYear(), today.getMonth() - index, 1);
     return {
-      value: `${month.getFullYear()}-${month.getMonth()}`,
+      value: `${month.getFullYear()}-${month.getMonth() + 1}`,
       label: formatMonthLabel(month, currentYear),
     };
   });
 
-  const selectedMonthValue = `${selectedMonth.getFullYear()}-${selectedMonth.getMonth()}`;
+  const selectedMonthValue = `${selectedMonth.getFullYear()}-${selectedMonth.getMonth() + 1}`;
   const range = {
     from: startOfMonth(selectedMonth),
     to: isSameMonth(selectedMonth, today)
@@ -102,7 +102,7 @@ export default function ReportsPage() {
             }
 
             const [year, month] = value.split("-").map(Number);
-            setSelectedMonth(new Date(year, month, 1));
+            setSelectedMonth(new Date(year, month - 1, 1));
           }}
         >
           <SelectTrigger

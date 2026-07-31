@@ -74,17 +74,17 @@ export function ReportBarChart({ selectedMonth }: { selectedMonth: Date }) {
         </CardTitle>
         <CardAction>
           <Select
-            value={String(selectedWeekIndex)}
-            onValueChange={(value) => setSelectedWeekIndex(Number(value))}
+            value={String(selectedWeekIndex + 1)}
+            onValueChange={(value) => setSelectedWeekIndex(Number(value) - 1)}
           >
             <SelectTrigger className="w-full max-w-48">
-              <SelectValue />
+              Week <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Weeks</SelectLabel>
                 {weeks.map((week, index) => (
-                  <SelectItem key={week.label} value={String(index)}>
+                  <SelectItem key={week.label} value={String(index + 1)}>
                     {week.label}
                   </SelectItem>
                 ))}
