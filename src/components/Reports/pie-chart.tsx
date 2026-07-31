@@ -1,4 +1,5 @@
 "use client";
+import { useMemo } from "react";
 import { Cell, Pie, PieChart } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,56 +9,40 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-
-const statusData = [
-  {
-    status: "todo",
-    label: "To Do",
-    hours: "28h 45m",
-    percent: 30,
-    value: 30,
-    fill: "#0f3d2e",
-  },
-  {
-    status: "inProgress",
-    label: "In Progress",
-    hours: "9h 30m",
-    percent: 40,
-    value: 40,
-    fill: "#d4b872",
-  },
-  {
-    status: "done",
-    label: "Done",
-    hours: "9h 30m",
-    percent: 40,
-    value: 40,
-    fill: "#f5f1e8",
-  },
-];
+import { useTimer } from "@/context/TimerContext";
+import { getTimeByStatus } from "@/lib/utils";
 
 const chartConfig = {
   todo: {
     label: "To Do",
     color: "#0f3d2e",
   },
-  inProgress: {
+  in_progress: {
     label: "In Progress",
     color: "#d4b872",
   },
   done: {
     label: "Done",
-    color: "#d4b872",
+    color: "#f5f1e8", // fixed: was incorrectly #d4b872
   },
 } satisfies ChartConfig;
 
-const totalHours = "38.2h";
-
 export function ReportPieChart({
-  dateRange: _dateRange,
+  dateRange,
 }: {
   dateRange: { from: Date; to: Date };
 }) {
+  const { tasks, timelogs } = useTimer();
+
+  const { statusData, totalHours } = useMemo(
+    () => getTimeByStatus(timelogs, tasks, dateRange.from, dateRange.to),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [timelogs, tasks, dateRange.from, dateRange.to],
+  );
+
+  // Only non-zero slices are rendered in the donut; all three appear in the legend.
+  const pieData = statusData.filter((entry) => entry.value > 0);
+
   return (
     <Card className="rounded-2xl border-none shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0">
@@ -79,7 +64,7 @@ export function ReportPieChart({
                 content={<ChartTooltipContent hideLabel />}
               />
               <Pie
-                data={statusData}
+                data={pieData}
                 dataKey="value"
                 nameKey="label"
                 innerRadius={62}
@@ -88,7 +73,7 @@ export function ReportPieChart({
                 startAngle={120}
                 endAngle={-270}
               >
-                {statusData.map((entry) => (
+                {pieData.map((entry) => (
                   <Cell key={entry.status} fill={entry.fill} />
                 ))}
               </Pie>
