@@ -11,7 +11,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  ReportPieChart,
   ReportMetric,
   ReportBarChart,
   ReportTable,
@@ -130,8 +129,8 @@ export default function ReportsPage() {
         ))}
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-2">
-        <ReportPieChart dateRange={dateRange} />
+      <section>
+        {/* <ReportPieChart dateRange={dateRange} /> */}
         <ReportBarChart dateRange={dateRange} />
       </section>
 
