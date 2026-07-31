@@ -97,6 +97,10 @@ export default function ReportsPage() {
         <Select
           value={selectedMonthValue}
           onValueChange={(value) => {
+            if (!value) {
+              return;
+            }
+
             const [year, month] = value.split("-").map(Number);
             setSelectedMonth(new Date(year, month, 1));
           }}
