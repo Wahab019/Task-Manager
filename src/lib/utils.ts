@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { Task, TimeLogEntry } from "@/context/TimerContext";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -99,9 +100,73 @@ export function getTasksDueSoon<
     });
 }
 
-// ── Report aggregation helpers ────────────────────────────────────────────────
+function startOfDay(date: Date): Date {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+}
 
-import type { Task, TimeLogEntry } from "@/context/TimerContext";
+function endOfDay(date: Date): Date {
+  const normalized = new Date(date);
+  normalized.setHours(23, 59, 59, 999);
+  return normalized;
+}
+
+export function getWeeksInMonth(
+  month: Date,
+): { label: string; from: Date; to: Date }[] {
+  const year = month.getFullYear();
+  const monthIndex = month.getMonth();
+  const monthEndDay = new Date(year, monthIndex + 1, 0).getDate();
+
+  return [
+    {
+      label: "Week 1",
+      from: new Date(year, monthIndex, 1),
+      to: new Date(year, monthIndex, 7),
+    },
+    {
+      label: "Week 2",
+      from: new Date(year, monthIndex, 8),
+      to: new Date(year, monthIndex, 14),
+    },
+    {
+      label: "Week 3",
+      from: new Date(year, monthIndex, 15),
+      to: new Date(year, monthIndex, 21),
+    },
+    {
+      label: "Week 4",
+      from: new Date(year, monthIndex, 22),
+      to: new Date(year, monthIndex, monthEndDay),
+    },
+  ];
+}
+
+export function getHoursByDayInRange(
+  timelogs: TimeLogEntry[],
+  from: Date,
+  to: Date,
+): { day: string; hours: number }[] {
+  const days = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+  const totals = new Map(days.map((day) => [day, 0]));
+  const start = startOfDay(from).getTime();
+  const end = endOfDay(to).getTime();
+
+  for (const log of timelogs) {
+    if (log.startTime < start || log.startTime > end) continue;
+    const jsDay = new Date(log.startTime).getDay();
+    const day = days[(jsDay + 6) % 7];
+    totals.set(day, (totals.get(day) ?? 0) + log.duration / 3600);
+  }
+
+  return days.map((day) => ({
+    day,
+    hours: Math.round((totals.get(day) ?? 0) * 10) / 10,
+  }));
+}
+
+// â”€â”€ Report aggregation helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /** Format a total-seconds count as "Xh Ym" (e.g. "38h 15m" or "0m"). */
 function formatReportDuration(totalSeconds: number): string {
@@ -148,9 +213,11 @@ export function getTotalHoursInRange(
  */
 export function getTasksCompletedInRange(
   tasks: Task[],
-  _from: Date,
-  _to: Date,
+  from: Date,
+  to: Date,
 ): number {
+  void from;
+  void to;
   return tasks.filter((task) => task.status === "done").length;
 }
 

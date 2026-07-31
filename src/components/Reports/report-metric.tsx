@@ -1,22 +1,18 @@
 import { Clock3 } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 
-export interface DateRange {
-  from: Date;
-  to: Date;
-}
-
 export function ReportMetric({
   icon: Icon,
   label,
   value,
-  dateRange: _dateRange,
+  selectedMonth,
 }: {
   icon: typeof Clock3;
   label: string;
   value: string;
-  dateRange: DateRange;
+  selectedMonth: Date;
 }) {
+  void selectedMonth;
   return (
     <Card className="rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
       <CardContent>

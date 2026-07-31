@@ -1,42 +1,48 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { CalendarDays, CheckCircle2, Clock3, ChevronDown } from "lucide-react";
-import type { DateRange as DayPickerDateRange } from "react-day-picker";
+import { useState, useMemo } from "react";
+import { CalendarDays, CheckCircle2, Clock3 } from "lucide-react";
 
-import { Calendar } from "@/components/ui/calendar";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  ReportPieChart,
-  ReportMetric,
   ReportBarChart,
+  ReportMetric,
   ReportTable,
 } from "@/components/Reports";
-import type { DateRange } from "@/components/Reports/report-metric";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useTimer } from "@/context/TimerContext";
 import {
-  getTotalHoursInRange,
-  getTasksCompletedInRange,
   getAverageSessionLength,
+  getTasksCompletedInRange,
+  getTotalHoursInRange,
 } from "@/lib/utils";
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
-function formatDateRangeLabel(from: Date, to: Date): string {
-  const opts: Intl.DateTimeFormatOptions = { month: "short", day: "2-digit" };
-  const fmt = (d: Date) => d.toLocaleDateString("en-US", opts).replace(",", "");
-  return `${fmt(from)} - ${fmt(to)}`;
+function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
-function startOfMonth(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), 1);
+function endOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
-// ── metric icon/label definitions (values computed from real data) ────────────
+function isSameMonth(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+}
+
+function formatMonthLabel(month: Date, currentYear: number) {
+  const monthName = month.toLocaleDateString("en-US", { month: "long" });
+  if (month.getFullYear() === currentYear) {
+    return monthName;
+  }
+  return `${monthName} ${month.getFullYear()}`;
+}
 
 const metricDefs = [
   { icon: Clock3, label: "Total Hours" },
@@ -44,49 +50,41 @@ const metricDefs = [
   { icon: Clock3, label: "Avg Session Length" },
 ] as const;
 
-// ── page ──────────────────────────────────────────────────────────────────
-
 export default function ReportsPage() {
   const today = new Date();
+  const currentYear = today.getFullYear();
   const { tasks, timelogs } = useTimer();
+  const [selectedMonth, setSelectedMonth] = useState<Date>(startOfMonth(today));
 
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: startOfMonth(today),
-    to: today,
+  const monthOptions = Array.from({ length: 25 }, (_, index) => {
+    const month = new Date(today.getFullYear(), today.getMonth() - index, 1);
+    return {
+      value: `${month.getFullYear()}-${month.getMonth() + 1}`,
+      label: formatMonthLabel(month, currentYear),
+    };
   });
 
-  // react-day-picker's DateRange allows undefined from/to; we keep a valid
-  // range in local state and only commit when both ends are selected.
-  const [pickerRange, setPickerRange] = useState<
-    DayPickerDateRange | undefined
-  >({
-    from: dateRange.from,
-    to: dateRange.to,
-  });
-  const [open, setOpen] = useState(false);
+  const selectedMonthValue = `${selectedMonth.getFullYear()}-${selectedMonth.getMonth() + 1}`;
+  const range = {
+    from: startOfMonth(selectedMonth),
+    to: isSameMonth(selectedMonth, today)
+      ? new Date(Math.min(endOfMonth(selectedMonth).getTime(), today.getTime()))
+      : endOfMonth(selectedMonth),
+  };
 
-  // ── computed metric values ────────────────────────────────────────────────
   const metricValues = useMemo(
     () =>
       [
-        getTotalHoursInRange(timelogs, dateRange.from, dateRange.to),
-        String(getTasksCompletedInRange(tasks, dateRange.from, dateRange.to)),
-        getAverageSessionLength(timelogs, dateRange.from, dateRange.to),
+        getTotalHoursInRange(timelogs, range.from, range.to),
+        String(getTasksCompletedInRange(tasks, range.from, range.to)),
+        getAverageSessionLength(timelogs, range.from, range.to),
       ] as const,
-    [timelogs, tasks, dateRange],
+    [range.from, range.to, tasks, timelogs],
   );
-
-  function handleSelect(range: DayPickerDateRange | undefined) {
-    setPickerRange(range);
-    if (range?.from && range?.to) {
-      setDateRange({ from: range.from, to: range.to });
-      setOpen(false);
-    }
-  }
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <header className="flex flex-col gap-4 md:flex-row pb-7 md:items-end md:justify-between">
+      <header className="flex flex-col gap-4 pb-7 md:items-end md:justify-between md:flex-row">
         <div>
           <h1 className="font-heading text-4xl font-semibold text-primary">
             Reports
@@ -96,26 +94,35 @@ export default function ReportsPage() {
           </p>
         </div>
 
-        {/* ── Date Range Picker ─────────────────────────────────────── */}
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger
-            render={
-              <button className="flex h-9 items-center gap-2 self-start rounded-lg border border-primary/10 bg-white px-3 text-xs font-semibold text-primary shadow-sm md:self-auto" />
+        <Select
+          value={selectedMonthValue}
+          onValueChange={(value) => {
+            if (!value) {
+              return;
             }
+
+            const [year, month] = value.split("-").map(Number);
+            setSelectedMonth(new Date(year, month - 1, 1));
+          }}
+        >
+          <SelectTrigger
+            className="flex h-9 items-center gap-2 self-start rounded-lg border border-primary/10 bg-white px-3 text-xs font-semibold text-primary shadow-sm md:self-auto"
+            size="default"
           >
             <CalendarDays className="size-3.5 text-[#47857a]" />
-            {formatDateRangeLabel(dateRange.from, dateRange.to)}
-            <ChevronDown className="w-4 h-4" />
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
-            <Calendar
-              mode="range"
-              selected={pickerRange}
-              onSelect={handleSelect}
-              numberOfMonths={2}
-            />
-          </PopoverContent>
-        </Popover>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="end">
+            <SelectGroup>
+              <SelectLabel>Months</SelectLabel>
+              {monthOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </header>
 
       <section className="grid gap-5 md:grid-cols-3">
@@ -125,17 +132,16 @@ export default function ReportsPage() {
             icon={def.icon}
             label={def.label}
             value={metricValues[index]}
-            dateRange={dateRange}
+            selectedMonth={selectedMonth}
           />
         ))}
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-2">
-        <ReportPieChart dateRange={dateRange} />
-        <ReportBarChart dateRange={dateRange} />
+      <section>
+        <ReportBarChart selectedMonth={selectedMonth} />
       </section>
 
-      <ReportTable dateRange={dateRange} />
+      <ReportTable selectedMonth={selectedMonth} />
     </div>
   );
 }
