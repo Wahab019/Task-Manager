@@ -86,6 +86,7 @@ export function TaskColumn({
     activeTaskId,
     isTracking,
     currentSeconds,
+    startTask,
     pauseActiveTask,
     resumeActiveTask,
     stopActiveTask,
@@ -315,6 +316,10 @@ export function TaskColumn({
 
             // Any task already marked in_progress should render as the ongoing card.
             if (task.status === "in_progress") {
+              const handleResumeTask = () => {
+                startTask(task.id);
+              };
+
               return (
                 <OngoingTask
                   key={task.id}
@@ -329,7 +334,11 @@ export function TaskColumn({
                       : task.elapsedSeconds
                   }
                   isTracking={task.id === activeTaskId ? isTracking : false}
-                  onPause={handleTogglePause}
+                  onPause={
+                    task.id === activeTaskId
+                      ? handleTogglePause
+                      : handleResumeTask
+                  }
                   onStop={stopActiveTask}
                 />
               );
