@@ -60,6 +60,43 @@ export function formatDueLabel(deadline: string): string {
   return `Due ${monthDayFormatter.format(dueDate)}`;
 }
 
+export function formatRelativeTime(timestamp: string | number | Date): string {
+  const time =
+    typeof timestamp === "number"
+      ? timestamp
+      : timestamp instanceof Date
+        ? timestamp.getTime()
+        : new Date(timestamp).getTime();
+
+  if (Number.isNaN(time)) {
+    return "";
+  }
+
+  const now = Date.now();
+  const diffSeconds = Math.max(0, Math.round((now - time) / 1000));
+  const minutes = Math.floor(diffSeconds / 60);
+  const hours = Math.floor(diffSeconds / 3600);
+  const days = Math.floor(diffSeconds / 86400);
+
+  if (diffSeconds < 60) {
+    return "just now";
+  }
+
+  if (minutes < 60) {
+    return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  }
+
+  if (hours < 24) {
+    return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  }
+
+  if (days === 1) {
+    return "yesterday";
+  }
+
+  return `${days} days ago`;
+}
+
 export function getDueDateColor(deadline: string): "red" | "yellow" | "green" {
   const now = new Date();
   const dueDate = new Date(`${deadline}T00:00:00`);

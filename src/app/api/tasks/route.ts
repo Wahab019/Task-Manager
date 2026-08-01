@@ -43,6 +43,7 @@ export async function POST(request: Request) {
         ? taskData.deadline.trim()
         : null,
     elapsedSeconds: 0,
+    $updatedAt: new Date().toISOString(),
   };
 
   tasks.push(task);

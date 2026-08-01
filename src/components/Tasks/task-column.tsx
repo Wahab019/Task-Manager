@@ -30,6 +30,7 @@ export type Task = {
   time: string;
   deadline: string | null;
   elapsedSeconds: number;
+  $updatedAt?: string;
 };
 
 type DraftTask = {
@@ -39,6 +40,8 @@ type DraftTask = {
   time: string;
   deadline: string;
 };
+
+type DoneScope = "This Week" | "today" | "all";
 
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
@@ -70,6 +73,7 @@ export function TaskColumn({
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: status });
   const [showForm, setShowForm] = useState(false);
+  const [doneScope, setDoneScope] = useState<DoneScope>("This Week");
   const [draftTask, setDraftTask] = useState<DraftTask>({
     priority: "",
     title: "",
@@ -96,8 +100,42 @@ export function TaskColumn({
     }
   };
 
-  const formattedCount = String(tasks.length).padStart(2, "0");
   const isToDoColumn = title === "To Do";
+  const isDoneColumn = title === "Done";
+
+  const filteredDoneTasks = isDoneColumn
+    ? tasks.filter((task) => {
+        if (!task.$updatedAt) {
+          return doneScope === "all";
+        }
+
+        const updatedAt = new Date(task.$updatedAt);
+        if (Number.isNaN(updatedAt.getTime())) {
+          return doneScope === "all";
+        }
+
+        if (doneScope === "all") {
+          return true;
+        }
+
+        const now = new Date();
+        if (doneScope === "today") {
+          return updatedAt.toDateString() === now.toDateString();
+        }
+
+        const sevenDaysAgo = new Date(now);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        return updatedAt.getTime() >= sevenDaysAgo.getTime();
+      })
+    : tasks;
+
+  const visibleTasks = isDoneColumn ? filteredDoneTasks : tasks;
+  const visibleCount = visibleTasks.length;
+  const totalDoneCount = tasks.length;
+  const isFilteringDoneTasks =
+    isDoneColumn && doneScope !== "all" && visibleCount < totalDoneCount;
+  const countDisplay = isDoneColumn ? visibleCount : tasks.length;
+  const formattedVisibleCount = String(countDisplay).padStart(2, "0");
 
   const handleAddTask = () => {
     if (
@@ -142,9 +180,27 @@ export function TaskColumn({
                   : "bg-[#ecebea] text-[#646964]"
             }`}
           >
-            {formattedCount}
+            {formattedVisibleCount}
           </span>
         </div>
+        {isDoneColumn && (
+          <Select
+            value={doneScope}
+            onValueChange={(value) => setDoneScope(value as DoneScope)}
+          >
+            <SelectTrigger className="h-7 w-auto border-primary/10 bg-white px-2 text-[11px] text-[#747974] shadow-sm">
+              <SelectValue
+                className={"font-semibold"}
+                placeholder="This Week"
+              />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="This Week">This Week</SelectItem>
+              <SelectItem value="Today">Today</SelectItem>
+              <SelectItem value="All time">All time</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         {isToDoColumn && (
           <button
             type="button"
@@ -244,7 +300,7 @@ export function TaskColumn({
         }`}
       >
         {tasks.length > 0 ? (
-          tasks.map((task) => {
+          visibleTasks.map((task) => {
             if (task.status === "done") {
               return (
                 <CompletedTask
@@ -252,6 +308,7 @@ export function TaskColumn({
                   title={task.title}
                   description={task.description}
                   time={formatSeconds(task.elapsedSeconds)}
+                  completedAt={task.$updatedAt ?? new Date().toISOString()}
                 />
               );
             }
@@ -295,6 +352,11 @@ export function TaskColumn({
           <p className="px-1 text-sm text-[#747974]">No tasks yet</p>
         )}
       </div>
+      {isFilteringDoneTasks && (
+        <p className="mt-3 px-1 text-xs text-[#8a908c]">
+          Showing {visibleCount} of {totalDoneCount} completed
+        </p>
+      )}
     </section>
   );
 }
