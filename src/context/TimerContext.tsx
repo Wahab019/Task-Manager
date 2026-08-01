@@ -21,6 +21,7 @@ export type Task = {
   time: string;
   deadline: string | null;
   elapsedSeconds: number;
+  $updatedAt?: string;
 };
 
 export type TimeLogEntry = {
@@ -407,6 +408,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       id: tempId,
       status: "todo",
       elapsedSeconds: 0,
+      $updatedAt: new Date().toISOString(),
       ...draft,
     };
     setTasks((current) => [...current, optimisticTask]);

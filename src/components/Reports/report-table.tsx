@@ -3,21 +3,21 @@
 import { useMemo } from "react";
 
 import { useTimer } from "@/context/TimerContext";
-import { getRecentEntriesInMonth } from "@/lib/utils";
+import { getRecentCompletedTasksInMonth } from "@/lib/utils";
 
 export const ReportTable = ({ selectedMonth }: { selectedMonth: Date }) => {
-  const { tasks, timelogs } = useTimer();
+  const { tasks } = useTimer();
 
   const entries = useMemo(
-    () => getRecentEntriesInMonth(timelogs, tasks, selectedMonth),
-    [timelogs, tasks, selectedMonth],
+    () => getRecentCompletedTasksInMonth(tasks, selectedMonth),
+    [tasks, selectedMonth],
   );
 
   return (
     <>
       <section className="overflow-hidden rounded-2xl border border-primary/10 bg-white">
         <h2 className="px-5 py-5 font-heading text-xl font-semibold text-primary">
-          Recent Time Log Entries
+          Recent Completed Tasks
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full min-w-150 text-left">
@@ -49,7 +49,7 @@ export const ReportTable = ({ selectedMonth }: { selectedMonth: Date }) => {
                     className="px-5 py-8 text-center text-sm text-[#6e746f]"
                     colSpan={3}
                   >
-                    No time logged this month.
+                    No tasks completed this month.
                   </td>
                 </tr>
               )}
