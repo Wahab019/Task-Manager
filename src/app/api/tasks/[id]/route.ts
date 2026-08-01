@@ -44,6 +44,7 @@ export async function PATCH(
   if (taskData.elapsedSeconds !== undefined) {
     task.elapsedSeconds = taskData.elapsedSeconds;
   }
+  task.$updatedAt = new Date().toISOString();
 
   return Response.json(task);
 }

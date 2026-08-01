@@ -60,6 +60,43 @@ export function formatDueLabel(deadline: string): string {
   return `Due ${monthDayFormatter.format(dueDate)}`;
 }
 
+export function formatRelativeTime(timestamp: string | number | Date): string {
+  const time =
+    typeof timestamp === "number"
+      ? timestamp
+      : timestamp instanceof Date
+        ? timestamp.getTime()
+        : new Date(timestamp).getTime();
+
+  if (Number.isNaN(time)) {
+    return "";
+  }
+
+  const now = Date.now();
+  const diffSeconds = Math.max(0, Math.round((now - time) / 1000));
+  const minutes = Math.floor(diffSeconds / 60);
+  const hours = Math.floor(diffSeconds / 3600);
+  const days = Math.floor(diffSeconds / 86400);
+
+  if (diffSeconds < 60) {
+    return "just now";
+  }
+
+  if (minutes < 60) {
+    return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  }
+
+  if (hours < 24) {
+    return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  }
+
+  if (days === 1) {
+    return "yesterday";
+  }
+
+  return `${days} days ago`;
+}
+
 export function getDueDateColor(deadline: string): "red" | "yellow" | "green" {
   const now = new Date();
   const dueDate = new Date(`${deadline}T00:00:00`);
@@ -226,19 +263,28 @@ export function getTotalHoursInRange(
 }
 
 /**
- * Count tasks with status "done".
- * Tasks do not currently carry a completion timestamp, so the full list is
- * counted regardless of date range. The from/to params are accepted for
- * forward-compatibility once a completedAt field is added.
+ * Count tasks with status "done" whose completion timestamp falls within [from, to].
  */
 export function getTasksCompletedInRange(
   tasks: Task[],
   from: Date,
   to: Date,
 ): number {
-  void from;
-  void to;
-  return tasks.filter((task) => task.status === "done").length;
+  const start = startOfDay(from).getTime();
+  const end = endOfDay(to).getTime();
+
+  return tasks.filter((task) => {
+    if (task.status !== "done" || !task.$updatedAt) {
+      return false;
+    }
+
+    const completedAt = new Date(task.$updatedAt).getTime();
+    if (Number.isNaN(completedAt)) {
+      return false;
+    }
+
+    return completedAt >= start && completedAt <= end;
+  }).length;
 }
 
 /**
@@ -287,4 +333,45 @@ export function getRecentEntriesInMonth(
         duration: formatReportDuration(log.duration),
       };
     });
+}
+
+export function getRecentCompletedTasksInMonth(
+  tasks: Task[],
+  month: Date,
+  limit: number = 5,
+): { id: string; taskName: string; date: string; duration: string }[] {
+  const today = new Date();
+  const monthStart = startOfMonth(month);
+  const monthEnd = isSameMonth(month, today)
+    ? new Date(Math.min(endOfMonth(month).getTime(), today.getTime()))
+    : endOfMonth(month);
+
+  return tasks
+    .filter((task) => {
+      if (task.status !== "done" || !task.$updatedAt) {
+        return false;
+      }
+
+      const completedAt = new Date(task.$updatedAt).getTime();
+      if (Number.isNaN(completedAt)) {
+        return false;
+      }
+
+      return (
+        completedAt >= monthStart.getTime() && completedAt <= monthEnd.getTime()
+      );
+    })
+    .slice()
+    .sort((a, b) => {
+      const aTime = new Date(a.$updatedAt ?? 0).getTime();
+      const bTime = new Date(b.$updatedAt ?? 0).getTime();
+      return bTime - aTime;
+    })
+    .slice(0, limit)
+    .map((task) => ({
+      id: task.id,
+      taskName: task.title,
+      date: formatReportDate(new Date(task.$updatedAt ?? Date.now())),
+      duration: formatReportDuration(task.elapsedSeconds),
+    }));
 }

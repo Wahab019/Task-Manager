@@ -10,6 +10,7 @@ export type Task = {
   time: string;
   deadline: string | null;
   elapsedSeconds: number;
+  $updatedAt: string;
 };
 
 export const tasks: Task[] = [];

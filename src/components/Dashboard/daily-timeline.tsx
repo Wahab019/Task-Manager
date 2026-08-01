@@ -100,7 +100,7 @@ export const DailyTimeline = () => {
 
   return (
     <>
-      <Card className="rounded-lg border border-primary/10 bg-white p-5 xl:col-span-7">
+      <Card className="rounded-lg border border-primary/10 bg-white p-5 xl:col-span-7 max-h-100 xl:max-h-[701.11px] scroll-fade daily-timeline overflow-auto">
         <CardContent>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-heading text-2xl font-semibold text-primary">
