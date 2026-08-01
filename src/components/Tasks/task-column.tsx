@@ -54,6 +54,26 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
+const formatEstimatedTime = (minutesValue: string) => {
+  const totalMinutes = Number(minutesValue);
+  if (!Number.isFinite(totalMinutes) || totalMinutes <= 0) {
+    return minutesValue;
+  }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours === 0) {
+    return `${totalMinutes} Minutes`;
+  }
+
+  if (minutes === 0) {
+    return `${hours}hr${hours === 1 ? "" : "s"}`;
+  }
+
+  return `${hours}hr ${minutes}Mins`;
+};
+
 export function TaskColumn({
   title,
   status,
@@ -247,6 +267,9 @@ export function TaskColumn({
             />
             <div className="space-y-1">
               <Input
+                type="number"
+                min={1}
+                step={1}
                 value={draftTask.time}
                 onChange={(event) =>
                   setDraftTask((currentTask) => ({
@@ -254,7 +277,7 @@ export function TaskColumn({
                     time: event.target.value,
                   }))
                 }
-                placeholder="Estimated Time"
+                placeholder="Estimated Time in Minutes"
               />
             </div>
             <div className="space-y-1">
@@ -326,7 +349,7 @@ export function TaskColumn({
                   id={task.id}
                   title={task.title}
                   description={task.description}
-                  time={task.time}
+                  time={formatEstimatedTime(task.time)}
                   deadline={task.deadline}
                   elapsedSeconds={
                     task.id === activeTaskId
