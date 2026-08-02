@@ -41,19 +41,22 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/40 backdrop-blur-sm lg:hidden"
-          onClick={close}
-          aria-hidden="true"
-        />
-      )}
+      <div
+        className={[
+          "fixed inset-0 z-20 bg-black/40 backdrop-blur-sm lg:hidden transition-opacity duration-300 ease-in-out",
+          isOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none",
+        ].join(" ")}
+        onClick={close}
+        aria-hidden="true"
+      />
 
       <aside
         className={[
           // Base styles
           "fixed top-0 left-0 z-30 flex min-h-full lg:max-h-screen flex-col border-r border-[#e5e7e3] bg-[#faf9f7] py-4 text-[#5f6762]",
-          "transition-[width,transform] duration-300 ease-in-out overflow-hidden",
+          "transform-gpu overflow-hidden motion-safe:transition-[width,transform] motion-safe:duration-300 motion-safe:ease-in-out motion-safe:will-change-transform",
           // Desktop behaviour: icon-only (w-16) vs expanded (w-56)
           "lg:relative lg:translate-x-0 lg:shrink-0",
           isOpen ? "lg:w-56" : "lg:w-16",
@@ -91,7 +94,7 @@ export function Sidebar() {
                   className={[
                     "whitespace-nowrap overflow-hidden transition-all duration-300",
                     isOpen
-                      ? "opacity-100 max-w-[200px]"
+                      ? "opacity-100 max-w-50"
                       : "opacity-0 max-w-0 lg:max-w-0",
                   ].join(" ")}
                 >
@@ -121,7 +124,7 @@ export function Sidebar() {
               className={[
                 "whitespace-nowrap overflow-hidden transition-all duration-300",
                 isOpen
-                  ? "opacity-100 max-w-[200px]"
+                  ? "opacity-100 max-w-50"
                   : "opacity-0 max-w-0 lg:max-w-0",
               ].join(" ")}
             >
