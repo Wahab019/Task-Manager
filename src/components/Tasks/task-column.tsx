@@ -27,7 +27,7 @@ export type Task = {
   description: string;
   priority: Priority;
   status: "todo" | "in_progress" | "done";
-  time: string;
+  estimatedMinutes: number | null;
   deadline: string | null;
   elapsedSeconds: number;
   $updatedAt?: string;
@@ -37,7 +37,7 @@ type DraftTask = {
   priority: Priority | "";
   title: string;
   description: string;
-  time: string;
+  time: string; // raw form input, string on purpose — converted to a number only at submission
   deadline: string;
 };
 
@@ -54,10 +54,9 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
-const formatEstimatedTime = (minutesValue: string) => {
-  const totalMinutes = Number(minutesValue);
-  if (!Number.isFinite(totalMinutes) || totalMinutes <= 0) {
-    return minutesValue;
+const formatEstimatedTime = (totalMinutes: number | null): string | null => {
+  if (!totalMinutes || totalMinutes <= 0) {
+    return null;
   }
 
   const hours = Math.floor(totalMinutes / 60);
@@ -87,7 +86,7 @@ export function TaskColumn({
     priority: Priority;
     title: string;
     description: string;
-    time: string;
+    estimatedMinutes: number | null;
     deadline: string | null;
   }) => void;
 }) {
@@ -112,7 +111,6 @@ export function TaskColumn({
     stopActiveTask,
   } = useTimer();
 
-  // Toggle between pause and resume for the OngoingTask card
   const handleTogglePause = () => {
     if (isTracking) {
       pauseActiveTask();
@@ -167,11 +165,19 @@ export function TaskColumn({
       return;
     }
 
+    const parsedMinutes = Number(draftTask.time);
+    const estimatedMinutes =
+      draftTask.time.trim() &&
+      Number.isFinite(parsedMinutes) &&
+      parsedMinutes > 0
+        ? parsedMinutes
+        : null;
+
     onAddTask?.({
       priority: draftTask.priority,
       title: draftTask.title,
       description: draftTask.description,
-      time: draftTask.time,
+      estimatedMinutes,
       deadline: draftTask.deadline || null,
     });
 
@@ -337,7 +343,6 @@ export function TaskColumn({
               );
             }
 
-            // Any task already marked in_progress should render as the ongoing card.
             if (task.status === "in_progress") {
               const handleResumeTask = () => {
                 startTask(task.id);
@@ -349,7 +354,7 @@ export function TaskColumn({
                   id={task.id}
                   title={task.title}
                   description={task.description}
-                  time={formatEstimatedTime(task.time)}
+                  time={formatEstimatedTime(task.estimatedMinutes)}
                   deadline={task.deadline}
                   elapsedSeconds={
                     task.id === activeTaskId

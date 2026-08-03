@@ -30,7 +30,7 @@ export function OngoingTask({
   id: string;
   title: string;
   description: string;
-  time: string;
+  time: string | null;
   deadline: string | null;
   elapsedSeconds: number;
   isTracking: boolean;
@@ -88,7 +88,7 @@ export function OngoingTask({
             <span className="text-right text-[9px] leading-3 tracking-wide text-[#6e746f] uppercase">
               Est. time
               <br />
-              <b className="text-xs text-primary">{time}</b>
+              <b className="text-xs text-primary">{time ?? "-"}</b>
             </span>
           </div>
           <div className="mt-5 flex gap-2">
@@ -102,7 +102,6 @@ export function OngoingTask({
                 onPause();
               }}
             >
-              {/* <Pause className="size-4 fill-current" /> */}
               {isTracking ? (
                 <>
                   <Pause className="size-4 fill-current" />
