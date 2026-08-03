@@ -10,7 +10,7 @@ import {
 import { useMemo } from "react";
 
 import { TaskColumn, type Task, type Priority } from "./task-column";
-import { useTimer } from "@/context/TimerContext";
+import { useTimer, type Task as TimerTask } from "@/context/TimerContext";
 
 const STATUS_LABELS: Record<Task["status"], string> = {
   todo: "To Do",
@@ -35,6 +35,26 @@ export function TaskBoard() {
     await addTask(draft);
   }
 
+  // Adapter to satisfy TaskColumn's onAddTask signature
+  function handleAddTaskForColumn(task: {
+    priority: Priority;
+    title: string;
+    description: string;
+    estimatedMinutes: number | null;
+    deadline: string | null;
+  }) {
+    const time =
+      task.estimatedMinutes != null ? String(task.estimatedMinutes) : "0";
+    // fire-and-forget to match expected void return
+    void addTask({
+      priority: task.priority,
+      title: task.title,
+      description: task.description,
+      time,
+      deadline: task.deadline,
+    });
+  }
+
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;
@@ -52,8 +72,11 @@ export function TaskBoard() {
       done: [],
     };
 
-    for (const task of tasks) {
-      grouped[task.status].push(task);
+    for (const task of tasks as TimerTask[]) {
+      grouped[task.status].push({
+        ...task,
+        estimatedMinutes: task.estimatedMinutes,
+      });
     }
 
     return grouped;
@@ -79,7 +102,9 @@ export function TaskBoard() {
                 status={status}
                 title={STATUS_LABELS[status]}
                 tasks={tasksByStatus[status]}
-                onAddTask={status === "todo" ? handleAddTask : undefined}
+                onAddTask={
+                  status === "todo" ? handleAddTaskForColumn : undefined
+                }
               />
             ))}
           </div>

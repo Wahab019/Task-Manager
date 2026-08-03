@@ -18,7 +18,7 @@ export type Task = {
   description: string;
   priority: Priority;
   status: "todo" | "in_progress" | "done";
-  time: string;
+  estimatedMinutes: number | null;
   deadline: string | null;
   elapsedSeconds: number;
   $updatedAt?: string;
@@ -404,18 +404,30 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     deadline: string | null;
   }) => {
     const tempId = `temp-${Date.now()}`;
+    const parsedMinutes = Number(draft.time);
     const optimisticTask: Task = {
       id: tempId,
+      title: draft.title,
+      description: draft.description,
+      priority: draft.priority,
       status: "todo",
+      estimatedMinutes:
+        draft.time.trim() && Number.isFinite(parsedMinutes) && parsedMinutes > 0
+          ? parsedMinutes
+          : null,
+      deadline: draft.deadline,
       elapsedSeconds: 0,
       $updatedAt: new Date().toISOString(),
-      ...draft,
     };
     setTasks((current) => [...current, optimisticTask]);
 
     try {
       const response = await axios.post<Task>("/api/tasks", {
-        ...draft,
+        priority: draft.priority,
+        title: draft.title,
+        description: draft.description,
+        estimatedMinutes: optimisticTask.estimatedMinutes,
+        deadline: draft.deadline,
         status: "todo",
       });
       setTasks((current) =>

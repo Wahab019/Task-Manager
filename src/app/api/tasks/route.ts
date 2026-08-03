@@ -31,13 +31,20 @@ export async function POST(request: Request) {
     );
   }
 
+  const estimatedMinutes =
+    typeof taskData.estimatedMinutes === "number" &&
+    Number.isFinite(taskData.estimatedMinutes) &&
+    taskData.estimatedMinutes > 0
+      ? taskData.estimatedMinutes
+      : null;
+
   const task: Task = {
     id: randomUUID(),
     title: taskData.title.trim(),
     description: taskData.description.trim(),
     priority: taskData.priority,
     status: taskData.status,
-    time: typeof taskData.time === "string" ? taskData.time.trim() : "",
+    estimatedMinutes,
     deadline:
       typeof taskData.deadline === "string" && taskData.deadline.trim()
         ? taskData.deadline.trim()

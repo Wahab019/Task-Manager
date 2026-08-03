@@ -7,7 +7,7 @@ export type Task = {
   description: string;
   priority: Priority;
   status: Status;
-  time: string;
+  estimatedMinutes: number | null;
   deadline: string | null;
   elapsedSeconds: number;
   $updatedAt: string;
