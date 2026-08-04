@@ -1,12 +1,65 @@
-import { randomUUID } from "node:crypto";
+import { ID, Query } from "node-appwrite";
 
-import { isPriority, isStatus, tasks, type Task } from "./store";
+import { databases } from "@/lib/appwrite-server";
+import { COLLECTIONS, DATABASE_ID } from "@/lib/appwrite-config";
+import { getCurrentUser } from "@/lib/auth";
+import { toTaskResponse } from "./response";
 
-export function GET() {
-  return Response.json(tasks);
+type Priority = "low" | "normal" | "high";
+type Status = "todo" | "in_progress" | "done";
+type TaskDocument = {
+  $id: string;
+  $updatedAt: string;
+  title: string;
+  description: string;
+  priority: Priority;
+  status: Status;
+  estimatedMinutes: number | null;
+  deadline: string | null;
+  elapsedSeconds: number;
+  assigned_to: string;
+};
+
+function isPriority(value: unknown): value is Priority {
+  return value === "low" || value === "normal" || value === "high";
+}
+
+function isStatus(value: unknown): value is Status {
+  return value === "todo" || value === "in_progress" || value === "done";
+}
+
+export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return Response.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  let result;
+  try {
+    result = await databases.listDocuments(DATABASE_ID, COLLECTIONS.TASKS, [
+      Query.equal("assigned_to", user.authUserId),
+    ]);
+  } catch (error) {
+    console.error("Failed to list tasks:", error);
+    return Response.json(
+      { error: "Something went wrong. Please try again." },
+      { status: 500 },
+    );
+  }
+
+  return Response.json(
+    result.documents.map((doc) =>
+      toTaskResponse(doc as unknown as TaskDocument),
+    ),
+  );
 }
 
 export async function POST(request: Request) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return Response.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   const body: unknown = await request.json().catch(() => null);
 
   if (!body || typeof body !== "object" || Array.isArray(body)) {
@@ -38,8 +91,7 @@ export async function POST(request: Request) {
       ? taskData.estimatedMinutes
       : null;
 
-  const task: Task = {
-    id: randomUUID(),
+  const validatedFields = {
     title: taskData.title.trim(),
     description: taskData.description.trim(),
     priority: taskData.priority,
@@ -49,10 +101,29 @@ export async function POST(request: Request) {
       typeof taskData.deadline === "string" && taskData.deadline.trim()
         ? taskData.deadline.trim()
         : null,
-    elapsedSeconds: 0,
-    $updatedAt: new Date().toISOString(),
   };
 
-  tasks.push(task);
-  return Response.json(task, { status: 201 });
+  let createdTask;
+  try {
+    createdTask = await databases.createDocument(
+      DATABASE_ID,
+      COLLECTIONS.TASKS,
+      ID.unique(),
+      {
+        ...validatedFields,
+        assigned_to: user.authUserId,
+        elapsedSeconds: 0,
+      },
+    );
+  } catch (error) {
+    console.error("Failed to create task:", error);
+    return Response.json(
+      { error: "Something went wrong. Please try again." },
+      { status: 500 },
+    );
+  }
+
+  return Response.json(toTaskResponse(createdTask as unknown as TaskDocument), {
+    status: 201,
+  });
 }

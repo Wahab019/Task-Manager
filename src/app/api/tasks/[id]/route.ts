@@ -1,9 +1,35 @@
-import { isStatus, tasks } from "../store";
+import { databases } from "@/lib/appwrite-server";
+import { COLLECTIONS, DATABASE_ID } from "@/lib/appwrite-config";
+import { getCurrentUser } from "@/lib/auth";
+import { toTaskResponse } from "../response";
+
+type Status = "todo" | "in_progress" | "done";
+type TaskDocument = {
+  $id: string;
+  $updatedAt: string;
+  status: Status;
+  elapsedSeconds: number;
+  assigned_to: string;
+  title: string;
+  description: string;
+  priority: "low" | "normal" | "high";
+  estimatedMinutes: number | null;
+  deadline: string | null;
+};
+
+function isStatus(value: unknown): value is Status {
+  return value === "todo" || value === "in_progress" || value === "done";
+}
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return Response.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   const { id } = await params;
   const body: unknown = await request.json().catch(() => null);
 
@@ -33,18 +59,42 @@ export async function PATCH(
     );
   }
 
-  const task = tasks.find((currentTask) => currentTask.id === id);
-  if (!task) {
+  let existingTask;
+  try {
+    existingTask = await databases.getDocument(
+      DATABASE_ID,
+      COLLECTIONS.TASKS,
+      id,
+    );
+  } catch {
     return Response.json({ error: "Task not found." }, { status: 404 });
   }
 
-  if (taskData.status !== undefined) {
-    task.status = taskData.status;
-  }
-  if (taskData.elapsedSeconds !== undefined) {
-    task.elapsedSeconds = taskData.elapsedSeconds;
-  }
-  task.$updatedAt = new Date().toISOString();
+  const taskDocument = existingTask as unknown as TaskDocument;
 
-  return Response.json(task);
+  if (taskDocument.assigned_to !== user.authUserId) {
+    return Response.json({ error: "Forbidden." }, { status: 403 });
+  }
+
+  const validatedUpdates: {
+    status?: "todo" | "in_progress" | "done";
+    elapsedSeconds?: number;
+  } = {};
+
+  if (taskData.status !== undefined) {
+    validatedUpdates.status = taskData.status;
+  }
+
+  if (taskData.elapsedSeconds !== undefined) {
+    validatedUpdates.elapsedSeconds = taskData.elapsedSeconds;
+  }
+
+  const updatedTask = await databases.updateDocument(
+    DATABASE_ID,
+    COLLECTIONS.TASKS,
+    id,
+    validatedUpdates,
+  );
+
+  return Response.json(toTaskResponse(updatedTask as unknown as TaskDocument));
 }
