@@ -39,10 +39,12 @@ export function TaskCard({
     .padStart(2, "0");
   const displayTotal = `${totalHours}:${totalMinutes}`;
   const deadlineLabel = deadline ? formatDueLabel(deadline) : "";
+  const isPending = id.startsWith("temp-");
 
   const handleAction = (event: React.MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
+    if (isPending) return;
     startTask(id);
   };
 
@@ -91,8 +93,10 @@ export function TaskCard({
             size="sm"
             onPointerDown={(event) => event.stopPropagation()}
             onClick={handleAction}
+            disabled={isPending}
           >
-            <Play className="size-3 fill-current" /> {action}
+            <Play className="size-3 fill-current" />{" "}
+            {isPending ? "Saving..." : action}
           </Button>
         </div>
       </CardContent>
