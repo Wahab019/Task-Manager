@@ -86,7 +86,9 @@ export async function PATCH(
   }
 
   if (taskData.elapsedSeconds !== undefined) {
-    validatedUpdates.elapsedSeconds = taskData.elapsedSeconds;
+    validatedUpdates.elapsedSeconds = Math.round(
+      Number(taskData.elapsedSeconds),
+    );
   }
 
   let updatedTask;

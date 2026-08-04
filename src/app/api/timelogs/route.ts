@@ -98,9 +98,9 @@ export async function POST(request: Request) {
       {
         taskId: timeLogData.taskId.trim(),
         userId: user.authUserId,
-        startTime: timeLogData.startTime,
-        endTime: timeLogData.endTime,
-        duration: Math.floor(timeLogData.duration),
+        startTime: Math.round(timeLogData.startTime),
+        endTime: Math.round(timeLogData.endTime),
+        duration: Math.round(timeLogData.duration),
       },
     );
   } catch (error) {

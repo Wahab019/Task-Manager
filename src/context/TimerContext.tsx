@@ -137,6 +137,14 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [hasHydratedLogs, setHasHydratedLogs] = useState(false);
   const [hasHydratedTimer, setHasHydratedTimer] = useState(false);
 
+  const getTotalDurationForTask = useCallback(
+    (taskId: string) =>
+      timelogs
+        .filter((log) => log.taskId === taskId && log.endTime !== null)
+        .reduce((sum, log) => sum + log.duration, 0),
+    [timelogs],
+  );
+
   const promoteTaskToInProgress = useCallback((taskId: string) => {
     setTasks((current) =>
       current.map((task) =>
@@ -175,6 +183,25 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(TIMELOGS_STORAGE_KEY, JSON.stringify(timelogs));
     }
   }, [hasHydratedLogs, timelogs]);
+
+  const persistPausedTimerSnapshot = useCallback(() => {
+    if (!activeTaskId || !activeTaskTitle) {
+      localStorage.removeItem(TIMING_STORAGE_KEY);
+      return;
+    }
+
+    const payload: PersistedTimerState = {
+      activeTaskId,
+      activeTaskTitle,
+      currentEntryStartTime: null,
+      currentEntryId: null,
+      isTracking: false,
+      currentSeconds,
+      persistedAt: Date.now(),
+    };
+
+    localStorage.setItem(TIMING_STORAGE_KEY, JSON.stringify(payload));
+  }, [activeTaskId, activeTaskTitle, currentSeconds]);
 
   const syncEntryToServer = useCallback(async (entry: TimeLogEntry) => {
     try {
@@ -242,6 +269,21 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     void fetchTimelogsFromServer();
   }, [fetchTimelogsFromServer]);
 
+  useEffect(() => {
+    const handlePageExit = () => {
+      if (!hasHydratedTimer) return;
+      persistPausedTimerSnapshot();
+    };
+
+    window.addEventListener("pagehide", handlePageExit);
+    window.addEventListener("beforeunload", handlePageExit);
+
+    return () => {
+      window.removeEventListener("pagehide", handlePageExit);
+      window.removeEventListener("beforeunload", handlePageExit);
+    };
+  }, [hasHydratedTimer, persistPausedTimerSnapshot]);
+
   const syncTaskElapsedSeconds = useCallback(
     (taskId: string, extraDuration = 0) => {
       const totalSeconds =
@@ -308,40 +350,44 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const parsed = JSON.parse(saved) as PersistedTimerState;
-      if (
-        parsed.activeTaskId &&
-        parsed.currentEntryStartTime &&
-        parsed.currentEntryId
-      ) {
-        const closedEntry = createClosedEntry(
-          parsed.activeTaskId,
-          parsed.currentEntryStartTime,
-          parsed.persistedAt || Date.now(),
-        );
-        closedEntry.id = parsed.currentEntryId;
+      if (parsed.activeTaskId) {
+        let totalSeconds = 0;
+        if (parsed.currentEntryStartTime && parsed.currentEntryId) {
+          const endTime = parsed.persistedAt || Date.now();
+          const closedEntry = createClosedEntry(
+            parsed.activeTaskId,
+            parsed.currentEntryStartTime,
+            endTime,
+          );
+          closedEntry.id = parsed.currentEntryId;
 
-        setTimelogs((current) => {
-          const filtered = current.filter((log) => log.id !== closedEntry.id);
-          return [...filtered, closedEntry];
-        });
-        void syncEntryToServer(closedEntry);
-        // A tab close is equivalent to Pause: retain the task as resumable.
+          setTimelogs((current) => {
+            const filtered = current.filter((log) => log.id !== closedEntry.id);
+            return [...filtered, closedEntry];
+          });
+          void syncEntryToServer(closedEntry);
+
+          const baseSeconds = parsed.currentSeconds ?? 0;
+          totalSeconds = baseSeconds + closedEntry.duration;
+        } else {
+          totalSeconds = parsed.currentSeconds ?? 0;
+        }
+
+        // Closing or reopening tab restores the task in a paused state with exact duration.
         setActiveTaskId(parsed.activeTaskId);
         setActiveTaskTitle(parsed.activeTaskTitle);
         setCurrentEntryStartTime(null);
         setCurrentEntryId(null);
         setIsTracking(false);
-        setCurrentSeconds(
-          parsed.currentSeconds ?? Math.floor(closedEntry.duration),
+        setCurrentSeconds(totalSeconds);
+
+        setTasks((current) =>
+          current.map((t) =>
+            t.id === parsed.activeTaskId
+              ? { ...t, status: "in_progress", elapsedSeconds: totalSeconds }
+              : t,
+          ),
         );
-      } else {
-        // Restore a paused timer exactly as it was persisted.
-        setActiveTaskId(parsed.activeTaskId);
-        setActiveTaskTitle(parsed.activeTaskTitle);
-        setCurrentEntryStartTime(parsed.currentEntryStartTime);
-        setCurrentEntryId(parsed.currentEntryId);
-        setIsTracking(parsed.isTracking);
-        setCurrentSeconds(parsed.currentSeconds ?? 0);
       }
     } catch (e) {
       console.error("Failed to parse saved timer state:", e);
@@ -350,7 +396,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       // Allow normal persistence after the initial restore pass.
       setHasHydratedTimer(true);
     }
-  }, []);
+  }, [syncEntryToServer]);
 
   useEffect(() => {
     if (!hasHydratedTimer) return;
@@ -372,16 +418,33 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval> | null = null;
-    if (isTracking && currentEntryStartTime) {
-      intervalId = setInterval(() => {
-        // Keep the accumulated task duration fresh while this segment runs.
-        setCurrentSeconds((seconds) => seconds + 1);
-      }, 1000);
+    if (isTracking && currentEntryStartTime && activeTaskId) {
+      const updateClock = () => {
+        const closedSeconds = getTotalDurationForTask(activeTaskId);
+        const segmentSeconds = Math.floor(
+          Math.max(0, (Date.now() - currentEntryStartTime) / 1000),
+        );
+        const total = closedSeconds + segmentSeconds;
+        setCurrentSeconds(total);
+        setTasks((current) =>
+          current.map((t) =>
+            t.id === activeTaskId ? { ...t, elapsedSeconds: total } : t,
+          ),
+        );
+      };
+
+      updateClock();
+      intervalId = setInterval(updateClock, 1000);
     }
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [isTracking, currentEntryStartTime]);
+  }, [
+    isTracking,
+    currentEntryStartTime,
+    activeTaskId,
+    getTotalDurationForTask,
+  ]);
 
   const evictTask = useCallback(
     (taskId: string) => {
@@ -401,29 +464,47 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   const validateAndSync = useCallback(
     (fetchedTasks: Task[]) => {
+      const savedTimerRaw = localStorage.getItem(TIMING_STORAGE_KEY);
+      let savedActiveId: string | null = null;
+      if (savedTimerRaw) {
+        try {
+          const parsed = JSON.parse(savedTimerRaw) as PersistedTimerState;
+          savedActiveId = parsed.activeTaskId;
+        } catch {
+          // ignore
+        }
+      }
+
       setTasks((current) => {
         const currentById = new Map(current.map((task) => [task.id, task]));
         return fetchedTasks.map((task) => {
           const existing = currentById.get(task.id);
-          if (!existing) {
-            return task;
-          }
+          const localClosedSeconds = Math.floor(
+            getTotalDurationForTask(task.id),
+          );
+          const effectiveSeconds = Math.round(
+            Math.max(
+              task.elapsedSeconds || 0,
+              existing?.elapsedSeconds || 0,
+              localClosedSeconds,
+            ),
+          );
 
-          if (existing.status !== task.status) {
-            return {
-              ...task,
-              status: existing.status,
-              elapsedSeconds: existing.elapsedSeconds,
-            };
-          }
+          const isPersistedActive =
+            savedActiveId === task.id || activeTaskIdRef.current === task.id;
+
+          const effectiveStatus = isPersistedActive
+            ? "in_progress"
+            : (existing?.status ?? task.status);
 
           return {
             ...task,
-            elapsedSeconds: existing.elapsedSeconds,
+            status: effectiveStatus,
+            elapsedSeconds: effectiveSeconds,
           };
         });
       });
-      const currentActive = activeTaskIdRef.current;
+      const currentActive = activeTaskIdRef.current || savedActiveId;
       if (currentActive && !isTemporaryTaskId(currentActive)) {
         const stillExists = fetchedTasks.some((t) => t.id === currentActive);
         if (!stillExists) {
@@ -432,7 +513,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         }
       }
     },
-    [clearActiveTimer],
+    [clearActiveTimer, getTotalDurationForTask],
   );
 
   useEffect(() => {
@@ -545,17 +626,19 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   };
 
   const startTimer = async (taskId: string, taskTitle: string) => {
-    if (activeTaskId && activeTaskId !== taskId) {
+    if (activeTaskId && activeTaskId !== taskId && isTracking) {
       await pauseTimer();
     }
 
     const entry = createOpenEntry(taskId, Date.now());
+    const baseSeconds = Math.round(getTotalDurationForTask(taskId));
+
     setActiveTaskId(taskId);
     setActiveTaskTitle(taskTitle);
     setCurrentEntryStartTime(entry.startTime);
     setCurrentEntryId(entry.id);
     setIsTracking(true);
-    setCurrentSeconds(Math.floor(getTotalDurationForTask(taskId)));
+    setCurrentSeconds(baseSeconds);
     promoteTaskToInProgress(taskId);
 
     if (isTemporaryTaskId(taskId)) {
@@ -565,7 +648,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     try {
       await axios.patch(
         `/api/tasks/${taskId}`,
-        { status: "in_progress" },
+        { status: "in_progress", elapsedSeconds: baseSeconds },
         { headers: await getAuthHeader() },
       );
     } catch (e) {
@@ -581,9 +664,13 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     if (!activeTaskId || !activeTaskTitle) return;
     const taskId = activeTaskId;
     const closedEntry = closeCurrentEntry();
-    if (!closedEntry) return;
 
-    const totalSeconds = syncTaskElapsedSeconds(taskId, closedEntry.duration);
+    const totalSeconds = Math.round(
+      closedEntry
+        ? syncTaskElapsedSeconds(taskId, 0)
+        : Math.floor(getTotalDurationForTask(taskId)),
+    );
+
     setCurrentSeconds(totalSeconds);
     setTasks((current) =>
       current.map((task) =>
@@ -591,11 +678,15 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           ? {
               ...task,
               status: "in_progress",
-              elapsedSeconds: Math.floor(totalSeconds),
+              elapsedSeconds: totalSeconds,
             }
           : task,
       ),
     );
+
+    setCurrentEntryStartTime(null);
+    setCurrentEntryId(null);
+    setIsTracking(false);
 
     if (isTemporaryTaskId(taskId)) {
       return;
@@ -604,7 +695,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     try {
       await axios.patch(
         `/api/tasks/${taskId}`,
-        { elapsedSeconds: Math.floor(totalSeconds) },
+        { status: "in_progress", elapsedSeconds: totalSeconds },
         { headers: await getAuthHeader() },
       );
     } catch (e) {
@@ -768,14 +859,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       }
     }
   };
-
-  const getTotalDurationForTask = useCallback(
-    (taskId: string) =>
-      timelogs
-        .filter((log) => log.taskId === taskId && log.endTime !== null)
-        .reduce((sum, log) => sum + log.duration, 0),
-    [timelogs],
-  );
 
   return (
     <TimerContext.Provider
