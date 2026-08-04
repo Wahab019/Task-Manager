@@ -106,6 +106,10 @@ function createOpenEntry(taskId: string, startTime: number) {
   };
 }
 
+function isTemporaryTaskId(taskId: string) {
+  return taskId.startsWith("temp-");
+}
+
 export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -487,6 +491,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setCurrentSeconds(Math.floor(getTotalDurationForTask(taskId)));
     promoteTaskToInProgress(taskId);
 
+    if (isTemporaryTaskId(taskId)) {
+      return;
+    }
+
     try {
       await axios.patch(
         `/api/tasks/${taskId}`,
@@ -521,6 +529,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           : task,
       ),
     );
+
+    if (isTemporaryTaskId(taskId)) {
+      return;
+    }
 
     try {
       await axios.patch(
@@ -572,6 +584,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       ),
     );
 
+    if (isTemporaryTaskId(taskId)) {
+      return;
+    }
+
     try {
       await axios.patch(
         `/api/tasks/${taskId}`,
@@ -621,6 +637,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         await pauseTimer();
         return;
       }
+    }
+
+    if (isTemporaryTaskId(taskId)) {
+      return;
     }
 
     try {
