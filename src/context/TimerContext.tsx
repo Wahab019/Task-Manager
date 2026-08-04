@@ -65,11 +65,12 @@ interface TimerContextType {
   startTimer: (taskId: string, taskTitle: string) => Promise<void>;
   pauseTimer: () => Promise<void>;
   resumeTimer: () => Promise<void>;
-  stopTimer: () => Promise<void>;
+  stopTimer: (taskId?: string) => Promise<void>;
   startTask: (taskId: string) => Promise<void>;
+  stopTask: (taskId: string) => Promise<void>;
   pauseActiveTask: () => Promise<void>;
   resumeActiveTask: () => Promise<void>;
-  stopActiveTask: () => Promise<void>;
+  stopActiveTask: (taskId?: string) => Promise<void>;
   updateTaskStatus: (
     taskId: string,
     newStatus: Task["status"],
@@ -333,6 +334,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     [activeTaskId, clearActiveTimer],
   );
 
+  const activeTaskIdRef = React.useRef<string | null>(activeTaskId);
+  useEffect(() => {
+    activeTaskIdRef.current = activeTaskId;
+  }, [activeTaskId]);
+
   const validateAndSync = useCallback(
     (fetchedTasks: Task[]) => {
       setTasks((current) => {
@@ -357,15 +363,16 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           };
         });
       });
-      if (activeTaskId) {
-        const stillExists = fetchedTasks.some((t) => t.id === activeTaskId);
+      const currentActive = activeTaskIdRef.current;
+      if (currentActive && !isTemporaryTaskId(currentActive)) {
+        const stillExists = fetchedTasks.some((t) => t.id === currentActive);
         if (!stillExists) {
           clearActiveTimer();
           localStorage.removeItem(TIMING_STORAGE_KEY);
         }
       }
     },
-    [activeTaskId, clearActiveTimer],
+    [clearActiveTimer],
   );
 
   useEffect(() => {
@@ -560,43 +567,78 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     promoteTaskToInProgress(taskId);
   };
 
-  const stopTimer = async () => {
-    if (!activeTaskId || !activeTaskTitle) return;
-    const taskId = activeTaskId;
-    const closedEntry = closeCurrentEntry();
-    if (!closedEntry) {
+  const stopTimer = async (targetTaskId?: string) => {
+    const taskIdToStop = targetTaskId || activeTaskId;
+    if (!taskIdToStop) return;
+
+    if (activeTaskId === taskIdToStop) {
+      const closedEntry = closeCurrentEntry();
+      const totalSeconds = closedEntry
+        ? syncTaskElapsedSeconds(taskIdToStop, closedEntry.duration)
+        : Math.floor(getTotalDurationForTask(taskIdToStop));
+
       clearActiveTimer();
-      return;
-    }
-
-    const totalSeconds = syncTaskElapsedSeconds(taskId, closedEntry.duration);
-    clearActiveTimer();
-    setCurrentSeconds(totalSeconds);
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              status: "done",
-              elapsedSeconds: Math.floor(totalSeconds),
-            }
-          : task,
-      ),
-    );
-
-    if (isTemporaryTaskId(taskId)) {
-      return;
-    }
-
-    try {
-      await axios.patch(
-        `/api/tasks/${taskId}`,
-        { status: "done", elapsedSeconds: totalSeconds },
-        { headers: await getAuthHeader() },
+      setCurrentSeconds(totalSeconds);
+      setTasks((current) =>
+        current.map((task) =>
+          task.id === taskIdToStop
+            ? {
+                ...task,
+                status: "done",
+                elapsedSeconds: Math.floor(totalSeconds),
+              }
+            : task,
+        ),
       );
-    } catch (e) {
-      if ((e as AxiosError)?.response?.status !== 404) {
-        console.error("Failed to stop task:", e);
+
+      if (isTemporaryTaskId(taskIdToStop)) {
+        return;
+      }
+
+      try {
+        await axios.patch(
+          `/api/tasks/${taskIdToStop}`,
+          { status: "done", elapsedSeconds: totalSeconds },
+          { headers: await getAuthHeader() },
+        );
+      } catch (e) {
+        if ((e as AxiosError)?.response?.status !== 404) {
+          console.error("Failed to stop task:", e);
+        }
+      }
+    } else {
+      const targetTask = tasks.find((t) => t.id === taskIdToStop);
+      const totalSeconds = Math.floor(
+        getTotalDurationForTask(taskIdToStop) ||
+          (targetTask?.elapsedSeconds ?? 0),
+      );
+
+      setTasks((current) =>
+        current.map((task) =>
+          task.id === taskIdToStop
+            ? {
+                ...task,
+                status: "done",
+                elapsedSeconds: totalSeconds,
+              }
+            : task,
+        ),
+      );
+
+      if (isTemporaryTaskId(taskIdToStop)) {
+        return;
+      }
+
+      try {
+        await axios.patch(
+          `/api/tasks/${taskIdToStop}`,
+          { status: "done", elapsedSeconds: totalSeconds },
+          { headers: await getAuthHeader() },
+        );
+      } catch (e) {
+        if ((e as AxiosError)?.response?.status !== 404) {
+          console.error("Failed to stop task:", e);
+        }
       }
     }
   };
@@ -606,6 +648,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     if (!task) return;
     promoteTaskToInProgress(taskId);
     await startTimer(taskId, task.title);
+  };
+
+  const stopTask = async (taskId: string) => {
+    await stopTimer(taskId);
   };
 
   const pauseActiveTask = pauseTimer;
@@ -690,6 +736,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         resumeTimer,
         stopTimer,
         startTask,
+        stopTask,
         pauseActiveTask,
         resumeActiveTask,
         stopActiveTask,
