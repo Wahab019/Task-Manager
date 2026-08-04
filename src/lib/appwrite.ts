@@ -11,3 +11,12 @@ if (endpoint && projectId) {
 
 export const account = new Account(client);
 export { client };
+
+export async function getAuthHeader(): Promise<Record<string, string>> {
+  try {
+    const jwt = await account.createJWT();
+    return { Authorization: `Bearer ${jwt.jwt}` };
+  } catch {
+    return {};
+  }
+}
