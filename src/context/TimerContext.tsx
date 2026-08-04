@@ -766,7 +766,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
     const totalSeconds = Math.round(
       closedEntry
-        ? syncTaskElapsedSeconds(taskId, 0)
+        ? syncTaskElapsedSeconds(taskId, closedEntry.duration)
         : Math.floor(getTotalDurationForTask(taskId)),
     );
 
@@ -896,7 +896,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const startTask = async (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
-    promoteTaskToInProgress(taskId);
     await startTimer(taskId, task.title);
   };
 

@@ -39,6 +39,7 @@ export function OngoingTask({
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id });
+  const isPending = id.startsWith("temp-");
 
   return (
     <>
@@ -97,12 +98,19 @@ export function OngoingTask({
               variant="heritage-outline"
               size="lg"
               onPointerDown={(event) => event.stopPropagation()}
+              disabled={isPending}
               onClick={(event) => {
                 event.stopPropagation();
+                if (isPending) return;
                 onPause();
               }}
             >
-              {isTracking ? (
+              {isPending ? (
+                <>
+                  <Play className="size-4 fill-current" />
+                  <span>Saving...</span>
+                </>
+              ) : isTracking ? (
                 <>
                   <Pause className="size-4 fill-current" />
                   <span>Pause</span>
@@ -119,12 +127,15 @@ export function OngoingTask({
               variant="heritage"
               size="lg"
               onPointerDown={(event) => event.stopPropagation()}
+              disabled={isPending}
               onClick={(event) => {
                 event.stopPropagation();
+                if (isPending) return;
                 onStop();
               }}
             >
-              <Square className="size-3 fill-current" /> Stop
+              <Square className="size-3 fill-current" />{" "}
+              {isPending ? "Saving..." : "Stop"}
             </Button>
           </div>
         </CardContent>
