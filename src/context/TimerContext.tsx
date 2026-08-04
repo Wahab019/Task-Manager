@@ -35,6 +35,7 @@ export type TimeLogEntry = {
 };
 
 type PersistedTimerState = {
+  version?: number;
   activeTaskId: string | null;
   activeTaskTitle: string | null;
   currentEntryStartTime: number | null;
@@ -91,6 +92,7 @@ const TimerContext = createContext<TimerContextType | undefined>(undefined);
 
 const TIMING_STORAGE_KEY = "timer_state";
 const TIMELOGS_STORAGE_KEY = "timer_timelogs";
+const TIMER_STATE_VERSION = 2;
 
 function createEntryId() {
   return `entry-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -120,6 +122,15 @@ function isTemporaryTaskId(taskId: string) {
   return taskId.startsWith("temp-");
 }
 
+function computeLiveSeconds(
+  baseSeconds: number,
+  startTime: number | null,
+  now = Date.now(),
+) {
+  if (!startTime) return baseSeconds;
+  return baseSeconds + Math.floor(Math.max(0, (now - startTime) / 1000));
+}
+
 export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -136,6 +147,16 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [timelogs, setTimelogs] = useState<TimeLogEntry[]>([]);
   const [hasHydratedLogs, setHasHydratedLogs] = useState(false);
   const [hasHydratedTimer, setHasHydratedTimer] = useState(false);
+
+  const currentSecondsRef = React.useRef(0);
+  useEffect(() => {
+    currentSecondsRef.current = currentSeconds;
+  }, [currentSeconds]);
+
+  const currentEntryStartTimeRef = React.useRef<number | null>(null);
+  useEffect(() => {
+    currentEntryStartTimeRef.current = currentEntryStartTime;
+  }, [currentEntryStartTime]);
 
   const getTotalDurationForTask = useCallback(
     (taskId: string) =>
@@ -159,13 +180,20 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const persistTimerState = useCallback(() => {
+    // Save the base seconds (closed entries only), NOT including the running segment.
+    // The hydration logic adds the running segment duration on top.
+    const baseSeconds = activeTaskId
+      ? getTotalDurationForTask(activeTaskId)
+      : 0;
+
     const payload: PersistedTimerState = {
+      version: TIMER_STATE_VERSION,
       activeTaskId,
       activeTaskTitle,
       currentEntryStartTime,
       currentEntryId,
       isTracking,
-      currentSeconds,
+      currentSeconds: baseSeconds,
       persistedAt: Date.now(),
     };
     localStorage.setItem(TIMING_STORAGE_KEY, JSON.stringify(payload));
@@ -174,7 +202,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     activeTaskTitle,
     currentEntryStartTime,
     currentEntryId,
-    currentSeconds,
+    getTotalDurationForTask,
     isTracking,
   ]);
 
@@ -183,25 +211,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(TIMELOGS_STORAGE_KEY, JSON.stringify(timelogs));
     }
   }, [hasHydratedLogs, timelogs]);
-
-  const persistPausedTimerSnapshot = useCallback(() => {
-    if (!activeTaskId || !activeTaskTitle) {
-      localStorage.removeItem(TIMING_STORAGE_KEY);
-      return;
-    }
-
-    const payload: PersistedTimerState = {
-      activeTaskId,
-      activeTaskTitle,
-      currentEntryStartTime: null,
-      currentEntryId: null,
-      isTracking: false,
-      currentSeconds,
-      persistedAt: Date.now(),
-    };
-
-    localStorage.setItem(TIMING_STORAGE_KEY, JSON.stringify(payload));
-  }, [activeTaskId, activeTaskTitle, currentSeconds]);
 
   const syncEntryToServer = useCallback(async (entry: TimeLogEntry) => {
     try {
@@ -219,6 +228,78 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       console.error("Failed to sync timelog:", error);
     }
   }, []);
+
+  const persistPausedTimerSnapshot = useCallback(() => {
+    if (!activeTaskId || !activeTaskTitle) {
+      localStorage.removeItem(TIMING_STORAGE_KEY);
+      return;
+    }
+
+    const now = Date.now();
+    let closedEntry: TimeLogEntry | null = null;
+
+    // Close the open entry so it's not orphaned.
+    // This ensures getTotalDurationForTask includes it on next load.
+    if (currentEntryStartTime && currentEntryId) {
+      closedEntry = {
+        id: currentEntryId,
+        taskId: activeTaskId,
+        startTime: currentEntryStartTime,
+        endTime: now,
+        duration: Math.floor(Math.max(0, (now - currentEntryStartTime) / 1000)),
+      };
+
+      // Update in-memory timelogs so persistTimelogs won't overwrite with the stale open entry.
+      setTimelogs((current) => {
+        const filtered = current.filter((log) => log.id !== currentEntryId);
+        return [...filtered, closedEntry!];
+      });
+      void syncEntryToServer(closedEntry);
+
+      const savedLogs = localStorage.getItem(TIMELOGS_STORAGE_KEY);
+      if (savedLogs) {
+        try {
+          const logs = JSON.parse(savedLogs) as TimeLogEntry[];
+          const filtered = logs.filter((log) => log.id !== currentEntryId);
+          localStorage.setItem(
+            TIMELOGS_STORAGE_KEY,
+            JSON.stringify([...filtered, closedEntry]),
+          );
+        } catch {
+          // ignore parse errors
+        }
+      }
+    }
+
+    // Compute the exact elapsed seconds from timestamps, not the last interval tick.
+    // This ensures the timer is accurate even if the page is closed mid-second.
+    const baseSeconds = getTotalDurationForTask(activeTaskId);
+    const liveSeconds = computeLiveSeconds(
+      baseSeconds,
+      currentEntryStartTime,
+      now,
+    );
+
+    const payload: PersistedTimerState = {
+      version: TIMER_STATE_VERSION,
+      activeTaskId,
+      activeTaskTitle,
+      currentEntryStartTime: null,
+      currentEntryId: null,
+      isTracking: false,
+      currentSeconds: liveSeconds,
+      persistedAt: now,
+    };
+
+    localStorage.setItem(TIMING_STORAGE_KEY, JSON.stringify(payload));
+  }, [
+    activeTaskId,
+    activeTaskTitle,
+    currentEntryStartTime,
+    currentEntryId,
+    getTotalDurationForTask,
+    syncEntryToServer,
+  ]);
 
   const fetchTimelogsFromServer = useCallback(async () => {
     try {
@@ -368,7 +449,13 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           void syncEntryToServer(closedEntry);
 
           const baseSeconds = parsed.currentSeconds ?? 0;
-          totalSeconds = baseSeconds + closedEntry.duration;
+          // v2: currentSeconds is base (closed entries only), so add the segment duration.
+          // Legacy (no version): currentSeconds already included the running segment,
+          // so adding the segment again would double-count.
+          totalSeconds =
+            parsed.version === TIMER_STATE_VERSION
+              ? baseSeconds + closedEntry.duration
+              : Math.max(baseSeconds, closedEntry.duration);
         } else {
           totalSeconds = parsed.currentSeconds ?? 0;
         }
@@ -482,16 +569,28 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           const localClosedSeconds = Math.floor(
             getTotalDurationForTask(task.id),
           );
+
+          const isPersistedActive =
+            savedActiveId === task.id || activeTaskIdRef.current === task.id;
+
+          // For the active task, compute the live seconds from timestamps.
+          // This prevents the timer from rolling backward when the server
+          // returns a stale elapsedSeconds value.
+          let liveSeconds = localClosedSeconds;
+          if (isPersistedActive) {
+            liveSeconds = computeLiveSeconds(
+              localClosedSeconds,
+              currentEntryStartTimeRef.current,
+            );
+          }
+
           const effectiveSeconds = Math.round(
             Math.max(
               task.elapsedSeconds || 0,
               existing?.elapsedSeconds || 0,
-              localClosedSeconds,
+              liveSeconds,
             ),
           );
-
-          const isPersistedActive =
-            savedActiveId === task.id || activeTaskIdRef.current === task.id;
 
           const effectiveStatus = isPersistedActive
             ? "in_progress"
