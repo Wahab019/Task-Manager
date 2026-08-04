@@ -109,6 +109,7 @@ export function TaskColumn({
     pauseActiveTask,
     resumeActiveTask,
     stopActiveTask,
+    stopTask,
   } = useTimer();
 
   const handleTogglePause = () => {
@@ -367,7 +368,7 @@ export function TaskColumn({
                       ? handleTogglePause
                       : handleResumeTask
                   }
-                  onStop={stopActiveTask}
+                  onStop={() => stopTask(task.id)}
                 />
               );
             }

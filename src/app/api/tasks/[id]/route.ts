@@ -89,12 +89,24 @@ export async function PATCH(
     validatedUpdates.elapsedSeconds = taskData.elapsedSeconds;
   }
 
-  const updatedTask = await databases.updateDocument(
-    DATABASE_ID,
-    COLLECTIONS.TASKS,
-    id,
-    validatedUpdates,
-  );
+  let updatedTask;
+  try {
+    updatedTask = await databases.updateDocument(
+      DATABASE_ID,
+      COLLECTIONS.TASKS,
+      id,
+      validatedUpdates,
+    );
+  } catch (error) {
+    console.error("Failed to update task document:", error);
+    return Response.json(
+      {
+        error:
+          "Failed to update task. Database connection timed out or failed.",
+      },
+      { status: 500 },
+    );
+  }
 
   return Response.json(toTaskResponse(updatedTask as unknown as TaskDocument));
 }
