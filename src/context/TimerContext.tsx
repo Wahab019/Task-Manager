@@ -44,6 +44,15 @@ type PersistedTimerState = {
   persistedAt: number;
 };
 
+type TimeLogResponse = {
+  id: string;
+  taskId: string;
+  userId: string;
+  startTime: number;
+  endTime: number;
+  duration: number;
+};
+
 interface TimerContextType {
   tasks: Task[];
   isLoading: boolean;
@@ -93,7 +102,7 @@ function createClosedEntry(taskId: string, startTime: number, endTime: number) {
     taskId,
     startTime,
     endTime,
-    duration: Math.max(0, (endTime - startTime) / 1000),
+    duration: Math.floor(Math.max(0, (endTime - startTime) / 1000)),
   };
 }
 
@@ -167,6 +176,49 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [hasHydratedLogs, timelogs]);
 
+  const syncEntryToServer = useCallback(async (entry: TimeLogEntry) => {
+    try {
+      await axios.post(
+        "/api/timelogs",
+        {
+          taskId: entry.taskId,
+          startTime: entry.startTime,
+          endTime: entry.endTime,
+          duration: entry.duration,
+        },
+        { headers: await getAuthHeader() },
+      );
+    } catch (error) {
+      console.error("Failed to sync timelog:", error);
+    }
+  }, []);
+
+  const fetchTimelogsFromServer = useCallback(async () => {
+    try {
+      const response = await axios.get<TimeLogResponse[]>("/api/timelogs", {
+        headers: await getAuthHeader(),
+      });
+      setTimelogs((current) => {
+        const currentById = new Map(current.map((entry) => [entry.id, entry]));
+        const merged = [...current];
+        for (const entry of response.data) {
+          if (!currentById.has(entry.id)) {
+            merged.push({
+              id: entry.id,
+              taskId: entry.taskId,
+              startTime: entry.startTime,
+              endTime: entry.endTime,
+              duration: entry.duration,
+            });
+          }
+        }
+        return merged;
+      });
+    } catch (error) {
+      console.error("Failed to load timelogs:", error);
+    }
+  }, []);
+
   useEffect(() => {
     const saved = localStorage.getItem(TIMELOGS_STORAGE_KEY);
     if (saved) {
@@ -185,6 +237,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     persistTimelogs();
   }, [persistTimelogs]);
+
+  useEffect(() => {
+    void fetchTimelogsFromServer();
+  }, [fetchTimelogsFromServer]);
 
   const syncTaskElapsedSeconds = useCallback(
     (taskId: string, extraDuration = 0) => {
@@ -215,13 +271,16 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         taskId: activeTaskId,
         startTime: currentEntryStartTime,
         endTime,
-        duration: Math.max(0, (endTime - currentEntryStartTime) / 1000),
+        duration: Math.floor(
+          Math.max(0, (endTime - currentEntryStartTime) / 1000),
+        ),
       } satisfies TimeLogEntry;
 
       setTimelogs((current) => {
         const filtered = current.filter((log) => log.id !== currentEntryId);
         return [...filtered, closedEntry];
       });
+      void syncEntryToServer(closedEntry);
 
       setCurrentEntryStartTime(null);
       setCurrentEntryId(null);
@@ -265,6 +324,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           const filtered = current.filter((log) => log.id !== closedEntry.id);
           return [...filtered, closedEntry];
         });
+        void syncEntryToServer(closedEntry);
         // A tab close is equivalent to Pause: retain the task as resumable.
         setActiveTaskId(parsed.activeTaskId);
         setActiveTaskTitle(parsed.activeTaskTitle);
