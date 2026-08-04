@@ -14,9 +14,11 @@ export { client };
 
 export async function getAuthHeader(): Promise<Record<string, string>> {
   try {
+    await account.get();
     const jwt = await account.createJWT();
     return { Authorization: `Bearer ${jwt.jwt}` };
-  } catch {
+  } catch (error) {
+    console.error("Failed to create Appwrite auth header:", error);
     return {};
   }
 }
