@@ -1,0 +1,6 @@
+export const DATABASE_ID = process.env.APPWRITE_DATABASE_ID!;
+
+export const COLLECTIONS = {
+  TASKS: process.env.APPWRITE_TASKS_COLLECTION_ID!,
+  TIMELOGS: process.env.APPWRITE_TIMELOGS_COLLECTION_ID!,
+};

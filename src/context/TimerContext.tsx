@@ -10,6 +10,8 @@ import React, {
   useState,
 } from "react";
 
+import { getAuthHeader } from "@/lib/appwrite";
+
 export type Priority = "low" | "normal" | "high";
 
 export type Task = {
@@ -366,7 +368,9 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     let isMounted = true;
     async function fetchTasks() {
       try {
-        const response = await axios.get<Task[]>("/api/tasks");
+        const response = await axios.get<Task[]>("/api/tasks", {
+          headers: await getAuthHeader(),
+        });
         if (!isMounted) return;
         validateAndSync(response.data);
       } catch {
@@ -385,7 +389,9 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     const handleVisibility = async () => {
       if (document.visibilityState !== "visible") return;
       try {
-        const response = await axios.get<Task[]>("/api/tasks");
+        const response = await axios.get<Task[]>("/api/tasks", {
+          headers: await getAuthHeader(),
+        });
         validateAndSync(response.data);
       } catch {
         // ignore
@@ -422,14 +428,18 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setTasks((current) => [...current, optimisticTask]);
 
     try {
-      const response = await axios.post<Task>("/api/tasks", {
-        priority: draft.priority,
-        title: draft.title,
-        description: draft.description,
-        estimatedMinutes: optimisticTask.estimatedMinutes,
-        deadline: draft.deadline,
-        status: "todo",
-      });
+      const response = await axios.post<Task>(
+        "/api/tasks",
+        {
+          priority: draft.priority,
+          title: draft.title,
+          description: draft.description,
+          estimatedMinutes: optimisticTask.estimatedMinutes,
+          deadline: draft.deadline,
+          status: "todo",
+        },
+        { headers: await getAuthHeader() },
+      );
       setTasks((current) =>
         current.map((task) => {
           if (task.id !== tempId) return task;
@@ -446,9 +456,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         setActiveTaskTitle(response.data.title);
         promoteTaskToInProgress(response.data.id);
         try {
-          await axios.patch(`/api/tasks/${response.data.id}`, {
-            status: "in_progress",
-          });
+          await axios.patch(
+            `/api/tasks/${response.data.id}`,
+            { status: "in_progress" },
+            { headers: await getAuthHeader() },
+          );
         } catch (e) {
           if ((e as AxiosError)?.response?.status === 404) {
             evictTask(response.data.id);
@@ -476,9 +488,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     promoteTaskToInProgress(taskId);
 
     try {
-      await axios.patch(`/api/tasks/${taskId}`, {
-        status: "in_progress",
-      });
+      await axios.patch(
+        `/api/tasks/${taskId}`,
+        { status: "in_progress" },
+        { headers: await getAuthHeader() },
+      );
     } catch (e) {
       if ((e as AxiosError)?.response?.status === 404) {
         evictTask(taskId);
@@ -509,9 +523,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     );
 
     try {
-      await axios.patch(`/api/tasks/${taskId}`, {
-        elapsedSeconds: Math.floor(totalSeconds),
-      });
+      await axios.patch(
+        `/api/tasks/${taskId}`,
+        { elapsedSeconds: Math.floor(totalSeconds) },
+        { headers: await getAuthHeader() },
+      );
     } catch (e) {
       if ((e as AxiosError)?.response?.status === 404) {
         evictTask(taskId);
@@ -557,10 +573,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     );
 
     try {
-      await axios.patch(`/api/tasks/${taskId}`, {
-        status: "done",
-        elapsedSeconds: totalSeconds,
-      });
+      await axios.patch(
+        `/api/tasks/${taskId}`,
+        { status: "done", elapsedSeconds: totalSeconds },
+        { headers: await getAuthHeader() },
+      );
     } catch (e) {
       if ((e as AxiosError)?.response?.status !== 404) {
         console.error("Failed to stop task:", e);
@@ -607,9 +624,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      await axios.patch(`/api/tasks/${taskId}`, {
-        status: newStatus,
-      });
+      await axios.patch(
+        `/api/tasks/${taskId}`,
+        { status: newStatus },
+        { headers: await getAuthHeader() },
+      );
     } catch (e) {
       if ((e as AxiosError)?.response?.status === 404) {
         evictTask(taskId);
