@@ -13,6 +13,8 @@ type TimeLogDocument = {
   duration: number;
 };
 
+const PAGE_SIZE = 100;
+
 function toTimeLogResponse(doc: TimeLogDocument) {
   return {
     id: doc.$id,
@@ -30,11 +32,33 @@ export async function GET() {
     return Response.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  let result;
+  const documents: TimeLogDocument[] = [];
+  let cursor: string | null = null;
+  let hasMore = true;
+
   try {
-    result = await databases.listDocuments(DATABASE_ID, COLLECTIONS.TIMELOGS, [
-      Query.equal("userId", user.authUserId),
-    ]);
+    while (hasMore) {
+      const queries = [
+        Query.equal("userId", user.authUserId),
+        Query.orderDesc("startTime"),
+        Query.limit(PAGE_SIZE),
+      ];
+
+      if (cursor) {
+        queries.push(Query.cursorAfter(cursor));
+      }
+
+      const result = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTIONS.TIMELOGS,
+        queries,
+      );
+
+      const page = result.documents as unknown as TimeLogDocument[];
+      documents.push(...page);
+      cursor = page.at(-1)?.$id ?? null;
+      hasMore = page.length === PAGE_SIZE && cursor !== null;
+    }
   } catch (error) {
     console.error("Failed to list timelogs:", error);
     return Response.json(
@@ -43,11 +67,7 @@ export async function GET() {
     );
   }
 
-  return Response.json(
-    result.documents.map((doc) =>
-      toTimeLogResponse(doc as unknown as TimeLogDocument),
-    ),
-  );
+  return Response.json(documents.map((doc) => toTimeLogResponse(doc)));
 }
 
 export async function POST(request: Request) {
