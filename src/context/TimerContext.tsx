@@ -301,54 +301,57 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     syncEntryToServer,
   ]);
 
-  const fetchTimelogsFromServer = useCallback(async () => {
-    try {
-      const response = await axios.get<TimeLogResponse[]>("/api/timelogs", {
-        headers: await getAuthHeader(),
-      });
-      setTimelogs((current) => {
-        const currentById = new Map(current.map((entry) => [entry.id, entry]));
-        const merged = [...current];
-        for (const entry of response.data) {
-          if (!currentById.has(entry.id)) {
-            merged.push({
-              id: entry.id,
-              taskId: entry.taskId,
-              startTime: entry.startTime,
-              endTime: entry.endTime,
-              duration: entry.duration,
-            });
-          }
-        }
-        return merged;
-      });
-    } catch (error) {
-      console.error("Failed to load timelogs:", error);
-    }
-  }, []);
-
   useEffect(() => {
-    const saved = localStorage.getItem(TIMELOGS_STORAGE_KEY);
-    if (saved) {
+    let isMounted = true;
+
+    const readCachedLogs = () => {
+      const saved = localStorage.getItem(TIMELOGS_STORAGE_KEY);
+      if (!saved) return [];
+
       try {
-        const parsed = JSON.parse(saved) as TimeLogEntry[];
-        // Hydrate saved logs from localStorage on first client render.
-        setTimelogs(parsed);
+        return JSON.parse(saved) as TimeLogEntry[];
       } catch (e) {
         console.error("Failed to parse saved time logs:", e);
+        return [];
+      }
+    };
+
+    async function loadTimelogs() {
+      try {
+        const response = await axios.get<TimeLogResponse[]>("/api/timelogs", {
+          headers: await getAuthHeader(),
+        });
+        if (!isMounted) return;
+        setTimelogs(
+          response.data.map((entry) => ({
+            id: entry.id,
+            taskId: entry.taskId,
+            startTime: entry.startTime,
+            endTime: entry.endTime,
+            duration: entry.duration,
+          })),
+        );
+      } catch (error) {
+        console.error("Failed to load timelogs:", error);
+        if (!isMounted) return;
+        setTimelogs(readCachedLogs());
+      } finally {
+        if (isMounted) {
+          setHasHydratedLogs(true);
+        }
       }
     }
-    // Mark hydration complete so persistence can start.
-    setHasHydratedLogs(true);
+
+    void loadTimelogs();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
     persistTimelogs();
   }, [persistTimelogs]);
-
-  useEffect(() => {
-    void fetchTimelogsFromServer();
-  }, [fetchTimelogsFromServer]);
 
   useEffect(() => {
     const handlePageExit = () => {
@@ -410,7 +413,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       setIsTracking(false);
       return closedEntry;
     },
-    [activeTaskId, currentEntryId, currentEntryStartTime],
+    [activeTaskId, currentEntryId, currentEntryStartTime, syncEntryToServer],
   );
 
   const clearActiveTimer = useCallback(() => {
