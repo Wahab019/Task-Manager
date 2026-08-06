@@ -95,7 +95,7 @@ export function TaskColumn({
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: status });
   const [showForm, setShowForm] = useState(false);
-  const [doneScope, setDoneScope] = useState<DoneScope>("this-week");
+  const [doneScope, setDoneScope] = useState<DoneScope>("today");
   const [draftTask, setDraftTask] = useState<DraftTask>({
     priority: "",
     title: "",
