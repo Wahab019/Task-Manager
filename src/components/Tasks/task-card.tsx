@@ -65,12 +65,7 @@ export function TaskCard({
       <CardContent>
         <div className="flex items-start justify-between">
           <Pill>{priority} PRIORITY</Pill>
-          <button
-            type="button"
-            aria-label={`Options for ${title}`}
-            className="text-[#aeb2ad]"
-            onClick={(event) => event.stopPropagation()}
-          >
+          <button type="button" aria-label="options" className="text-[#aeb2ad]">
             <Ellipsis className="size-5" />
           </button>
         </div>

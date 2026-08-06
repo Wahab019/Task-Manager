@@ -1,5 +1,5 @@
 import { Pill } from "./pill";
-import { CalendarClock, Pause, Play, Square } from "lucide-react";
+import { CalendarClock, Pause, Play, Square, Ellipsis } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDraggable } from "@dnd-kit/core";
@@ -69,7 +69,16 @@ export function OngoingTask({
               ></span>
             </span>
           </span>
-          <Pill>In Progress</Pill>
+          <div className="flex items-start justify-between mt-5">
+            <Pill>In Progress</Pill>
+            <button
+              type="button"
+              aria-label="options"
+              className="text-[#aeb2ad]"
+            >
+              <Ellipsis className="size-5" />
+            </button>
+          </div>
           <h2 className="mt-5 font-heading text-xl font-semibold text-primary">
             {title}
           </h2>
