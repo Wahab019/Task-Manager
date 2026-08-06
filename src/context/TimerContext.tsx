@@ -170,12 +170,17 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     currentEntryStartTimeRef.current = currentEntryStartTime;
   }, [currentEntryStartTime]);
 
+  const timelogsRef = React.useRef(timelogs);
+  useEffect(() => {
+    timelogsRef.current = timelogs;
+  }, [timelogs]);
+
   const getTotalDurationForTask = useCallback(
     (taskId: string) =>
-      timelogs
+      timelogsRef.current
         .filter((log) => log.taskId === taskId && log.endTime !== null)
         .reduce((sum, log) => sum + log.duration, 0),
-    [timelogs],
+    [],
   );
 
   const promoteTaskToInProgress = useCallback((taskId: string) => {
@@ -220,9 +225,12 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   const persistTimelogs = useCallback(() => {
     if (hasHydratedLogs) {
-      localStorage.setItem(TIMELOGS_STORAGE_KEY, JSON.stringify(timelogs));
+      localStorage.setItem(
+        TIMELOGS_STORAGE_KEY,
+        JSON.stringify(timelogsRef.current),
+      );
     }
-  }, [hasHydratedLogs, timelogs]);
+  }, [hasHydratedLogs]);
 
   const readCachedLogs = useCallback(() => {
     const saved = localStorage.getItem(TIMELOGS_STORAGE_KEY);
@@ -351,57 +359,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   ]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const readCachedLogs = () => {
-      const saved = localStorage.getItem(TIMELOGS_STORAGE_KEY);
-      if (!saved) return [];
-
-      try {
-        return JSON.parse(saved) as TimeLogEntry[];
-      } catch (e) {
-        console.error("Failed to parse saved time logs:", e);
-        return [];
-      }
-    };
-
-    async function loadTimelogs() {
-      try {
-        const response = await axios.get<TimeLogResponse[]>("/api/timelogs", {
-          headers: await getAuthHeader(),
-        });
-        if (!isMounted) return;
-        setTimelogs(
-          response.data.map((entry) => ({
-            id: entry.id,
-            taskId: entry.taskId,
-            startTime: entry.startTime,
-            endTime: entry.endTime,
-            duration: entry.duration,
-          })),
-        );
-        if (!isMounted) return;
-        setError(null);
-      } catch (error) {
-        console.error("Failed to load timelogs:", error);
-        if (!isMounted) return;
-        setTimelogs(readCachedLogs());
-        setError("Couldn't load time logs. Try again.");
-      } finally {
-        if (isMounted) {
-          setHasHydratedLogs(true);
-        }
-      }
-    }
-
-    void loadTimelogs();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
     persistTimelogs();
   }, [persistTimelogs]);
 
@@ -423,7 +380,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const syncTaskElapsedSeconds = useCallback(
     (taskId: string, extraDuration = 0) => {
       const totalSeconds =
-        timelogs
+        timelogsRef.current
           .filter((log) => log.taskId === taskId && log.endTime !== null)
           .reduce((sum, log) => sum + log.duration, 0) + extraDuration;
 
@@ -435,7 +392,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       );
       return normalized;
     },
-    [timelogs],
+    [],
   );
 
   const closeCurrentEntry = useCallback(
@@ -670,17 +627,22 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     [clearActiveTimer, getTotalDurationForTask],
   );
 
+  const validateAndSyncRef = React.useRef(validateAndSync);
+  useEffect(() => {
+    validateAndSyncRef.current = validateAndSync;
+  }, [validateAndSync]);
+
   const fetchTasks = useCallback(async () => {
     try {
       const response = await axios.get<Task[]>("/api/tasks", {
         headers: await getAuthHeader(),
       });
       setError(null);
-      validateAndSync(response.data);
+      validateAndSyncRef.current(response.data);
     } catch {
       setError("Couldn't load tasks. Try refreshing.");
     }
-  }, [validateAndSync]);
+  }, []);
 
   const reloadData = useCallback(async () => {
     setIsLoading(true);
@@ -718,7 +680,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         const response = await axios.get<Task[]>("/api/tasks", {
           headers: await getAuthHeader(),
         });
-        validateAndSync(response.data);
+        validateAndSyncRef.current(response.data);
       } catch {
         // ignore
       }
@@ -726,7 +688,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     document.addEventListener("visibilitychange", handleVisibility);
     return () =>
       document.removeEventListener("visibilitychange", handleVisibility);
-  }, [validateAndSync]);
+  }, []);
 
   const addTask = async (draft: {
     priority: Priority;
