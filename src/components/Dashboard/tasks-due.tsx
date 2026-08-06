@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { MoreHorizontal } from "lucide-react";
 
 import { Card, CardContent } from "../ui/card";
 
@@ -51,7 +50,6 @@ export const TasksDue = ({ tasks }: { tasks: Task[] }) => {
                       </span>
                     </span>
                   </span>
-                  <MoreHorizontal className="size-4 text-[#6e746f] opacity-0 transition group-hover:opacity-100" />
                 </button>
               );
             })

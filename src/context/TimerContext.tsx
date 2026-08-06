@@ -85,6 +85,18 @@ interface TimerContextType {
     taskId: string,
     newStatus: Task["status"],
   ) => Promise<void>;
+  updateTask: (
+    taskId: string,
+    updates: {
+      title: string;
+      description: string;
+      priority: Priority;
+      estimatedMinutes: number | null;
+      deadline: string | null;
+    },
+  ) => Promise<void>;
+  deleteTask: (taskId: string) => Promise<void>;
+  reloadData: () => Promise<void>;
   getTotalDurationForTask: (taskId: string) => number;
 }
 
@@ -158,12 +170,17 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     currentEntryStartTimeRef.current = currentEntryStartTime;
   }, [currentEntryStartTime]);
 
+  const timelogsRef = React.useRef(timelogs);
+  useEffect(() => {
+    timelogsRef.current = timelogs;
+  }, [timelogs]);
+
   const getTotalDurationForTask = useCallback(
     (taskId: string) =>
-      timelogs
+      timelogsRef.current
         .filter((log) => log.taskId === taskId && log.endTime !== null)
         .reduce((sum, log) => sum + log.duration, 0),
-    [timelogs],
+    [],
   );
 
   const promoteTaskToInProgress = useCallback((taskId: string) => {
@@ -208,9 +225,48 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   const persistTimelogs = useCallback(() => {
     if (hasHydratedLogs) {
-      localStorage.setItem(TIMELOGS_STORAGE_KEY, JSON.stringify(timelogs));
+      localStorage.setItem(
+        TIMELOGS_STORAGE_KEY,
+        JSON.stringify(timelogsRef.current),
+      );
     }
-  }, [hasHydratedLogs, timelogs]);
+  }, [hasHydratedLogs]);
+
+  const readCachedLogs = useCallback(() => {
+    const saved = localStorage.getItem(TIMELOGS_STORAGE_KEY);
+    if (!saved) return [];
+
+    try {
+      return JSON.parse(saved) as TimeLogEntry[];
+    } catch (e) {
+      console.error("Failed to parse saved time logs:", e);
+      return [];
+    }
+  }, []);
+
+  const loadTimelogs = useCallback(async () => {
+    try {
+      const response = await axios.get<TimeLogResponse[]>("/api/timelogs", {
+        headers: await getAuthHeader(),
+      });
+      setTimelogs(
+        response.data.map((entry) => ({
+          id: entry.id,
+          taskId: entry.taskId,
+          startTime: entry.startTime,
+          endTime: entry.endTime,
+          duration: entry.duration,
+        })),
+      );
+      setError(null);
+    } catch (error) {
+      console.error("Failed to load timelogs:", error);
+      setTimelogs(readCachedLogs());
+      setError("Couldn't load time logs. Try again.");
+    } finally {
+      setHasHydratedLogs(true);
+    }
+  }, [readCachedLogs]);
 
   const syncEntryToServer = useCallback(async (entry: TimeLogEntry) => {
     try {
@@ -226,6 +282,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       );
     } catch (error) {
       console.error("Failed to sync timelog:", error);
+      setError("Couldn't sync time log. Try again.");
     }
   }, []);
 
@@ -302,54 +359,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   ]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const readCachedLogs = () => {
-      const saved = localStorage.getItem(TIMELOGS_STORAGE_KEY);
-      if (!saved) return [];
-
-      try {
-        return JSON.parse(saved) as TimeLogEntry[];
-      } catch (e) {
-        console.error("Failed to parse saved time logs:", e);
-        return [];
-      }
-    };
-
-    async function loadTimelogs() {
-      try {
-        const response = await axios.get<TimeLogResponse[]>("/api/timelogs", {
-          headers: await getAuthHeader(),
-        });
-        if (!isMounted) return;
-        setTimelogs(
-          response.data.map((entry) => ({
-            id: entry.id,
-            taskId: entry.taskId,
-            startTime: entry.startTime,
-            endTime: entry.endTime,
-            duration: entry.duration,
-          })),
-        );
-      } catch (error) {
-        console.error("Failed to load timelogs:", error);
-        if (!isMounted) return;
-        setTimelogs(readCachedLogs());
-      } finally {
-        if (isMounted) {
-          setHasHydratedLogs(true);
-        }
-      }
-    }
-
-    void loadTimelogs();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
     persistTimelogs();
   }, [persistTimelogs]);
 
@@ -371,7 +380,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const syncTaskElapsedSeconds = useCallback(
     (taskId: string, extraDuration = 0) => {
       const totalSeconds =
-        timelogs
+        timelogsRef.current
           .filter((log) => log.taskId === taskId && log.endTime !== null)
           .reduce((sum, log) => sum + log.duration, 0) + extraDuration;
 
@@ -383,7 +392,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       );
       return normalized;
     },
-    [timelogs],
+    [],
   );
 
   const closeCurrentEntry = useCallback(
@@ -618,26 +627,51 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     [clearActiveTimer, getTotalDurationForTask],
   );
 
+  const validateAndSyncRef = React.useRef(validateAndSync);
+  useEffect(() => {
+    validateAndSyncRef.current = validateAndSync;
+  }, [validateAndSync]);
+
+  const fetchTasks = useCallback(async () => {
+    try {
+      const response = await axios.get<Task[]>("/api/tasks", {
+        headers: await getAuthHeader(),
+      });
+      setError(null);
+      validateAndSyncRef.current(response.data);
+    } catch {
+      setError("Couldn't load tasks. Try refreshing.");
+    }
+  }, []);
+
+  const reloadData = useCallback(async () => {
+    setIsLoading(true);
+    await Promise.all([fetchTasks(), loadTimelogs()]);
+    setIsLoading(false);
+  }, [fetchTasks, loadTimelogs]);
+
   useEffect(() => {
     let isMounted = true;
-    async function fetchTasks() {
+    async function initialLoad() {
       try {
-        const response = await axios.get<Task[]>("/api/tasks", {
-          headers: await getAuthHeader(),
-        });
+        await fetchTasks();
         if (!isMounted) return;
-        validateAndSync(response.data);
-      } catch {
-        if (isMounted) setError("Couldn't load tasks. Try refreshing.");
+        await loadTimelogs();
       } finally {
         if (isMounted) setIsLoading(false);
       }
     }
-    fetchTasks();
+    initialLoad();
     return () => {
       isMounted = false;
     };
-  }, [validateAndSync]);
+  }, [fetchTasks, loadTimelogs]);
+
+  useEffect(() => {
+    if (!error) return;
+    const timeoutId = window.setTimeout(() => setError(null), 8000);
+    return () => window.clearTimeout(timeoutId);
+  }, [error]);
 
   useEffect(() => {
     const handleVisibility = async () => {
@@ -646,7 +680,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         const response = await axios.get<Task[]>("/api/tasks", {
           headers: await getAuthHeader(),
         });
-        validateAndSync(response.data);
+        validateAndSyncRef.current(response.data);
       } catch {
         // ignore
       }
@@ -654,7 +688,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     document.addEventListener("visibilitychange", handleVisibility);
     return () =>
       document.removeEventListener("visibilitychange", handleVisibility);
-  }, [validateAndSync]);
+  }, []);
 
   const addTask = async (draft: {
     priority: Priority;
@@ -758,6 +792,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         evictTask(taskId);
       } else {
         console.error("Failed to start timer:", e);
+        setError("Couldn't start timer. Try again.");
       }
     }
   };
@@ -805,6 +840,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         evictTask(taskId);
       } else {
         console.error("Failed to pause timer:", e);
+        setError("Couldn't pause timer. Try again.");
       }
     }
   };
@@ -891,6 +927,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {
         if ((e as AxiosError)?.response?.status !== 404) {
           console.error("Failed to stop task:", e);
+          setError("Couldn't stop timer. Try again.");
         }
       }
     }
@@ -957,7 +994,84 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           ),
         );
         console.error("Failed to update status:", e);
+        setError("Couldn't update task status. Try again.");
       }
+    }
+  };
+
+  const updateTask = async (
+    taskId: string,
+    updates: {
+      title: string;
+      description: string;
+      priority: Priority;
+      estimatedMinutes: number | null;
+      deadline: string | null;
+    },
+  ) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task || isTemporaryTaskId(taskId)) return;
+
+    const previousTask = task;
+
+    setTasks((current) =>
+      current.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
+    );
+
+    try {
+      const response = await axios.patch<Task>(
+        `/api/tasks/${taskId}`,
+        updates,
+        { headers: await getAuthHeader() },
+      );
+      setTasks((current) =>
+        current.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                ...response.data,
+                elapsedSeconds: t.elapsedSeconds,
+                status: t.status,
+              }
+            : t,
+        ),
+      );
+      if (activeTaskId === taskId) {
+        setActiveTaskTitle(response.data.title);
+      }
+    } catch (e) {
+      setTasks((current) =>
+        current.map((t) => (t.id === taskId ? previousTask : t)),
+      );
+      if ((e as AxiosError<{ error?: string }>)?.response?.status === 404) {
+        evictTask(taskId);
+      }
+      setError("Couldn't update the task. Try again.");
+      throw new Error(
+        (e as AxiosError<{ error?: string }>)?.response?.data?.error ??
+          "Couldn't update the task. Try again.",
+      );
+    }
+  };
+
+  const deleteTask = async (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task || isTemporaryTaskId(taskId)) return;
+
+    try {
+      await axios.delete(`/api/tasks/${taskId}`, {
+        headers: await getAuthHeader(),
+      });
+      evictTask(taskId);
+    } catch (e) {
+      if ((e as AxiosError<{ error?: string }>)?.response?.status === 404) {
+        evictTask(taskId);
+      }
+      setError("Couldn't delete the task. Try again.");
+      throw new Error(
+        (e as AxiosError<{ error?: string }>)?.response?.data?.error ??
+          "Couldn't delete the task. Try again.",
+      );
     }
   };
 
@@ -985,6 +1099,9 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         resumeActiveTask,
         stopActiveTask,
         updateTaskStatus,
+        updateTask,
+        deleteTask,
+        reloadData,
         getTotalDurationForTask,
       }}
     >

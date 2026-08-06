@@ -9,6 +9,7 @@ import {
 } from "@dnd-kit/core";
 import { useMemo } from "react";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { TaskColumn, type Task, type Priority } from "./task-column";
 import { useTimer, type Task as TimerTask } from "@/context/TimerContext";
 
@@ -83,7 +84,26 @@ export function TaskBoard() {
   }, [tasks]);
 
   if (isLoading) {
-    return <p className="px-1 text-sm text-[#747974]">Loading tasks…</p>;
+    return (
+      <div className="grid gap-6 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div
+            key={index}
+            className="space-y-4 rounded-2xl border border-primary/10 bg-white p-4 shadow-sm"
+          >
+            <div className="space-y-3">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-8" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-5/6" />
+              </div>
+              <Skeleton className="h-9" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   return (

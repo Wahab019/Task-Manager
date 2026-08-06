@@ -1,9 +1,20 @@
+"use client";
+
+import { useState } from "react";
 import { Pill } from "./pill";
-import { CalendarClock, Pause, Play, Square } from "lucide-react";
+import { CalendarClock, Pause, Play, Square, Ellipsis } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useDraggable } from "@dnd-kit/core";
 import { formatDueLabel } from "@/lib/utils";
+import { EditTaskDialog, type TaskEditUpdates } from "./edit-task-dialog";
+import { useTimer, type Priority, type Task } from "@/context/TimerContext";
 
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
@@ -18,8 +29,10 @@ const formatSeconds = (seconds: number) => {
 
 export function OngoingTask({
   id,
+  priority = "normal",
   title,
   description,
+  estimatedMinutes = null,
   time,
   deadline,
   elapsedSeconds,
@@ -28,8 +41,10 @@ export function OngoingTask({
   onStop,
 }: {
   id: string;
+  priority?: Priority;
   title: string;
   description: string;
+  estimatedMinutes?: number | null;
   time: string | null;
   deadline: string | null;
   elapsedSeconds: number;
@@ -39,7 +54,24 @@ export function OngoingTask({
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id });
+  const { updateTask } = useTimer();
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const isPending = id.startsWith("temp-");
+
+  const task: Task = {
+    id,
+    priority,
+    title,
+    description,
+    status: "in_progress",
+    estimatedMinutes,
+    deadline,
+    elapsedSeconds,
+  };
+
+  const handleSave = async (updates: TaskEditUpdates) => {
+    await updateTask(id, updates);
+  };
 
   return (
     <>
@@ -69,7 +101,31 @@ export function OngoingTask({
               ></span>
             </span>
           </span>
-          <Pill>In Progress</Pill>
+          <div className="flex items-start justify-between mt-5">
+            <Pill>In Progress</Pill>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                type="button"
+                aria-label="options"
+                className="text-[#aeb2ad] cursor-pointer"
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
+                disabled={isPending}
+              >
+                <Ellipsis className="size-5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setIsEditOpen(true);
+                  }}
+                >
+                  Edit
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           <h2 className="mt-5 font-heading text-xl font-semibold text-primary">
             {title}
           </h2>
@@ -140,6 +196,12 @@ export function OngoingTask({
           </div>
         </CardContent>
       </Card>
+      <EditTaskDialog
+        task={task}
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        onSave={handleSave}
+      />
     </>
   );
 }
