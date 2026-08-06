@@ -17,6 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useTimer } from "@/context/TimerContext";
 import {
   getAverageSessionLength,
@@ -53,7 +55,7 @@ const metricDefs = [
 export default function ReportsPage() {
   const today = new Date();
   const currentYear = today.getFullYear();
-  const { tasks, timelogs } = useTimer();
+  const { tasks, timelogs, isLoading, error, reloadData } = useTimer();
   const [selectedMonth, setSelectedMonth] = useState<Date>(startOfMonth(today));
 
   const monthOptions = Array.from({ length: 25 }, (_, index) => {
@@ -82,8 +84,48 @@ export default function ReportsPage() {
     [range.from, range.to, tasks, timelogs],
   );
 
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="grid gap-5 md:grid-cols-3">
+          {Array.from({ length: 3 }, (_, index) => (
+            <div
+              key={index}
+              className="rounded-2xl border border-primary/10 bg-white p-5 shadow-sm"
+            >
+              <div className="h-5 w-24 rounded-md bg-[#eae7e7]" />
+              <div className="mt-5 h-10 rounded-md bg-[#eae7e7]" />
+            </div>
+          ))}
+        </div>
+        <div className="rounded-2xl border border-primary/10 bg-white p-6 shadow-sm">
+          <div className="h-8 w-40 rounded-md bg-[#eae7e7]" />
+          <div className="mt-5 h-72 rounded-md bg-[#eae7e7]" />
+        </div>
+        <div className="rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="mt-4 h-4 rounded-md bg-[#eae7e7] first:mt-0"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-7xl space-y-6">
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <p>Something went wrong loading reports.</p>
+            <Button variant="outline" size="sm" onClick={reloadData}>
+              Try again
+            </Button>
+          </div>
+        </div>
+      )}
       <header className="flex flex-col gap-4 pb-7 md:items-end md:justify-between md:flex-row">
         <div>
           <h1 className="font-heading text-4xl font-semibold text-primary">

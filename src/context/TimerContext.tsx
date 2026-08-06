@@ -96,6 +96,7 @@ interface TimerContextType {
     },
   ) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
+  reloadData: () => Promise<void>;
   getTotalDurationForTask: (taskId: string) => number;
 }
 
@@ -223,6 +224,42 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [hasHydratedLogs, timelogs]);
 
+  const readCachedLogs = useCallback(() => {
+    const saved = localStorage.getItem(TIMELOGS_STORAGE_KEY);
+    if (!saved) return [];
+
+    try {
+      return JSON.parse(saved) as TimeLogEntry[];
+    } catch (e) {
+      console.error("Failed to parse saved time logs:", e);
+      return [];
+    }
+  }, []);
+
+  const loadTimelogs = useCallback(async () => {
+    try {
+      const response = await axios.get<TimeLogResponse[]>("/api/timelogs", {
+        headers: await getAuthHeader(),
+      });
+      setTimelogs(
+        response.data.map((entry) => ({
+          id: entry.id,
+          taskId: entry.taskId,
+          startTime: entry.startTime,
+          endTime: entry.endTime,
+          duration: entry.duration,
+        })),
+      );
+      setError(null);
+    } catch (error) {
+      console.error("Failed to load timelogs:", error);
+      setTimelogs(readCachedLogs());
+      setError("Couldn't load time logs. Try again.");
+    } finally {
+      setHasHydratedLogs(true);
+    }
+  }, [readCachedLogs]);
+
   const syncEntryToServer = useCallback(async (entry: TimeLogEntry) => {
     try {
       await axios.post(
@@ -237,6 +274,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       );
     } catch (error) {
       console.error("Failed to sync timelog:", error);
+      setError("Couldn't sync time log. Try again.");
     }
   }, []);
 
@@ -342,10 +380,13 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
             duration: entry.duration,
           })),
         );
+        if (!isMounted) return;
+        setError(null);
       } catch (error) {
         console.error("Failed to load timelogs:", error);
         if (!isMounted) return;
         setTimelogs(readCachedLogs());
+        setError("Couldn't load time logs. Try again.");
       } finally {
         if (isMounted) {
           setHasHydratedLogs(true);
@@ -629,26 +670,46 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     [clearActiveTimer, getTotalDurationForTask],
   );
 
+  const fetchTasks = useCallback(async () => {
+    try {
+      const response = await axios.get<Task[]>("/api/tasks", {
+        headers: await getAuthHeader(),
+      });
+      setError(null);
+      validateAndSync(response.data);
+    } catch {
+      setError("Couldn't load tasks. Try refreshing.");
+    }
+  }, [validateAndSync]);
+
+  const reloadData = useCallback(async () => {
+    setIsLoading(true);
+    await Promise.all([fetchTasks(), loadTimelogs()]);
+    setIsLoading(false);
+  }, [fetchTasks, loadTimelogs]);
+
   useEffect(() => {
     let isMounted = true;
-    async function fetchTasks() {
+    async function initialLoad() {
       try {
-        const response = await axios.get<Task[]>("/api/tasks", {
-          headers: await getAuthHeader(),
-        });
+        await fetchTasks();
         if (!isMounted) return;
-        validateAndSync(response.data);
-      } catch {
-        if (isMounted) setError("Couldn't load tasks. Try refreshing.");
+        await loadTimelogs();
       } finally {
         if (isMounted) setIsLoading(false);
       }
     }
-    fetchTasks();
+    initialLoad();
     return () => {
       isMounted = false;
     };
-  }, [validateAndSync]);
+  }, [fetchTasks, loadTimelogs]);
+
+  useEffect(() => {
+    if (!error) return;
+    const timeoutId = window.setTimeout(() => setError(null), 8000);
+    return () => window.clearTimeout(timeoutId);
+  }, [error]);
 
   useEffect(() => {
     const handleVisibility = async () => {
@@ -769,6 +830,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         evictTask(taskId);
       } else {
         console.error("Failed to start timer:", e);
+        setError("Couldn't start timer. Try again.");
       }
     }
   };
@@ -816,6 +878,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         evictTask(taskId);
       } else {
         console.error("Failed to pause timer:", e);
+        setError("Couldn't pause timer. Try again.");
       }
     }
   };
@@ -902,6 +965,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {
         if ((e as AxiosError)?.response?.status !== 404) {
           console.error("Failed to stop task:", e);
+          setError("Couldn't stop timer. Try again.");
         }
       }
     }
@@ -968,6 +1032,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           ),
         );
         console.error("Failed to update status:", e);
+        setError("Couldn't update task status. Try again.");
       }
     }
   };
@@ -1019,6 +1084,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       if ((e as AxiosError<{ error?: string }>)?.response?.status === 404) {
         evictTask(taskId);
       }
+      setError("Couldn't update the task. Try again.");
       throw new Error(
         (e as AxiosError<{ error?: string }>)?.response?.data?.error ??
           "Couldn't update the task. Try again.",
@@ -1039,6 +1105,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       if ((e as AxiosError<{ error?: string }>)?.response?.status === 404) {
         evictTask(taskId);
       }
+      setError("Couldn't delete the task. Try again.");
       throw new Error(
         (e as AxiosError<{ error?: string }>)?.response?.data?.error ??
           "Couldn't delete the task. Try again.",
@@ -1072,6 +1139,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         updateTaskStatus,
         updateTask,
         deleteTask,
+        reloadData,
         getTotalDurationForTask,
       }}
     >

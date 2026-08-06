@@ -3,6 +3,7 @@
 import { Fragment, useMemo, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { TimeLogEntry, useTimer } from "@/context/TimerContext";
 
 const dayFormatter = new Intl.DateTimeFormat("en-US", {
@@ -112,7 +113,7 @@ export function DateRow({
 }
 
 export const LogTable = () => {
-  const { tasks, timelogs } = useTimer();
+  const { tasks, timelogs, isLoading, error, reloadData } = useTimer();
   const today = startOfDay(new Date());
   const todayKey = today.toISOString();
   const currentWeekMonday = startOfWeek(new Date());
@@ -221,8 +222,39 @@ export const LogTable = () => {
     }));
   }
 
+  if (isLoading) {
+    return (
+      <section className="mt-10 overflow-hidden rounded-lg border border-primary/10 bg-white shadow-sm">
+        <div className="p-5 space-y-4">
+          <Skeleton className="h-6 w-48" />
+          <div className="overflow-x-auto">
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} className="h-14" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="mt-10 overflow-hidden rounded-lg border border-primary/10 bg-white shadow-sm">
+      {error && (
+        <div className="border-b border-red-200 bg-red-50 px-5 py-4 text-sm text-red-800">
+          <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
+            <span>Something went wrong loading time logs.</span>
+            <button
+              type="button"
+              className="rounded-md border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-800 transition hover:bg-red-50"
+              onClick={reloadData}
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col gap-4 border-b border-primary/10 p-5 md:flex-row md:items-center md:justify-between">
         <div className="flex w-fit items-center rounded-xl bg-[#f7f6f4] px-3 py-1">
           <button
