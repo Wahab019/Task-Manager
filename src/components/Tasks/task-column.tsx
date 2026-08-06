@@ -41,7 +41,7 @@ type DraftTask = {
   deadline: string;
 };
 
-type DoneScope = "This Week" | "today" | "all";
+type DoneScope = "this-week" | "today" | "all";
 
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
@@ -73,6 +73,9 @@ const formatEstimatedTime = (totalMinutes: number | null): string | null => {
   return `${hours}hr ${minutes}Mins`;
 };
 
+const isWithinDateRange = (date: Date, start: Date, end: Date) =>
+  date.getTime() >= start.getTime() && date.getTime() < end.getTime();
+
 export function TaskColumn({
   title,
   status,
@@ -92,7 +95,7 @@ export function TaskColumn({
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: status });
   const [showForm, setShowForm] = useState(false);
-  const [doneScope, setDoneScope] = useState<DoneScope>("This Week");
+  const [doneScope, setDoneScope] = useState<DoneScope>("this-week");
   const [draftTask, setDraftTask] = useState<DraftTask>({
     priority: "",
     title: "",
@@ -139,13 +142,22 @@ export function TaskColumn({
         }
 
         const now = new Date();
+        const startOfToday = new Date(now);
+        startOfToday.setHours(0, 0, 0, 0);
+
         if (doneScope === "today") {
-          return updatedAt.toDateString() === now.toDateString();
+          const startOfTomorrow = new Date(startOfToday);
+          startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+
+          return isWithinDateRange(updatedAt, startOfToday, startOfTomorrow);
         }
 
-        const sevenDaysAgo = new Date(now);
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        return updatedAt.getTime() >= sevenDaysAgo.getTime();
+        const startOfWeek = new Date(startOfToday);
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        const startOfNextWeek = new Date(startOfWeek);
+        startOfNextWeek.setDate(startOfNextWeek.getDate() + 7);
+
+        return isWithinDateRange(updatedAt, startOfWeek, startOfNextWeek);
       })
     : tasks;
 
@@ -223,9 +235,9 @@ export function TaskColumn({
               />
             </SelectTrigger>
             <SelectContent align="end">
-              <SelectItem value="This Week">This Week</SelectItem>
-              <SelectItem value="Today">Today</SelectItem>
-              <SelectItem value="All time">All time</SelectItem>
+              <SelectItem value="this-week">This Week</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="all">All time</SelectItem>
             </SelectContent>
           </Select>
         )}
