@@ -365,8 +365,10 @@ export function TaskColumn({
                 <OngoingTask
                   key={task.id}
                   id={task.id}
+                  priority={task.priority}
                   title={task.title}
                   description={task.description}
+                  estimatedMinutes={task.estimatedMinutes}
                   time={formatEstimatedTime(task.estimatedMinutes)}
                   deadline={task.deadline}
                   elapsedSeconds={
@@ -393,6 +395,7 @@ export function TaskColumn({
                 priority={task.priority}
                 title={task.title}
                 description={task.description}
+                estimatedMinutes={task.estimatedMinutes}
                 deadline={task.deadline}
                 action={actionText}
               />

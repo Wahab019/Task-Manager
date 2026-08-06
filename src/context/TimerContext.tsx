@@ -85,6 +85,17 @@ interface TimerContextType {
     taskId: string,
     newStatus: Task["status"],
   ) => Promise<void>;
+  updateTask: (
+    taskId: string,
+    updates: {
+      title: string;
+      description: string;
+      priority: Priority;
+      estimatedMinutes: number | null;
+      deadline: string | null;
+    },
+  ) => Promise<void>;
+  deleteTask: (taskId: string) => Promise<void>;
   getTotalDurationForTask: (taskId: string) => number;
 }
 
@@ -961,6 +972,80 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateTask = async (
+    taskId: string,
+    updates: {
+      title: string;
+      description: string;
+      priority: Priority;
+      estimatedMinutes: number | null;
+      deadline: string | null;
+    },
+  ) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task || isTemporaryTaskId(taskId)) return;
+
+    const previousTask = task;
+
+    setTasks((current) =>
+      current.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
+    );
+
+    try {
+      const response = await axios.patch<Task>(
+        `/api/tasks/${taskId}`,
+        updates,
+        { headers: await getAuthHeader() },
+      );
+      setTasks((current) =>
+        current.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                ...response.data,
+                elapsedSeconds: t.elapsedSeconds,
+                status: t.status,
+              }
+            : t,
+        ),
+      );
+      if (activeTaskId === taskId) {
+        setActiveTaskTitle(response.data.title);
+      }
+    } catch (e) {
+      setTasks((current) =>
+        current.map((t) => (t.id === taskId ? previousTask : t)),
+      );
+      if ((e as AxiosError<{ error?: string }>)?.response?.status === 404) {
+        evictTask(taskId);
+      }
+      throw new Error(
+        (e as AxiosError<{ error?: string }>)?.response?.data?.error ??
+          "Couldn't update the task. Try again.",
+      );
+    }
+  };
+
+  const deleteTask = async (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task || isTemporaryTaskId(taskId)) return;
+
+    try {
+      await axios.delete(`/api/tasks/${taskId}`, {
+        headers: await getAuthHeader(),
+      });
+      evictTask(taskId);
+    } catch (e) {
+      if ((e as AxiosError<{ error?: string }>)?.response?.status === 404) {
+        evictTask(taskId);
+      }
+      throw new Error(
+        (e as AxiosError<{ error?: string }>)?.response?.data?.error ??
+          "Couldn't delete the task. Try again.",
+      );
+    }
+  };
+
   return (
     <TimerContext.Provider
       value={{
@@ -985,6 +1070,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         resumeActiveTask,
         stopActiveTask,
         updateTaskStatus,
+        updateTask,
+        deleteTask,
         getTotalDurationForTask,
       }}
     >
