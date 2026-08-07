@@ -41,7 +41,7 @@ type DraftTask = {
   deadline: string;
 };
 
-type DoneScope = "this-week" | "today" | "all";
+type DoneScope = "this-week" | "today";
 
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
@@ -129,16 +129,12 @@ export function TaskColumn({
   const filteredDoneTasks = isDoneColumn
     ? tasks.filter((task) => {
         if (!task.$updatedAt) {
-          return doneScope === "all";
+          return false;
         }
 
         const updatedAt = new Date(task.$updatedAt);
         if (Number.isNaN(updatedAt.getTime())) {
-          return doneScope === "all";
-        }
-
-        if (doneScope === "all") {
-          return true;
+          return false;
         }
 
         const now = new Date();
@@ -164,8 +160,7 @@ export function TaskColumn({
   const visibleTasks = isDoneColumn ? filteredDoneTasks : tasks;
   const visibleCount = visibleTasks.length;
   const totalDoneCount = tasks.length;
-  const isFilteringDoneTasks =
-    isDoneColumn && doneScope !== "all" && visibleCount < totalDoneCount;
+  const isFilteringDoneTasks = isDoneColumn && visibleCount < totalDoneCount;
   const countDisplay = isDoneColumn ? visibleCount : tasks.length;
   const formattedVisibleCount = String(countDisplay).padStart(2, "0");
 
@@ -237,7 +232,6 @@ export function TaskColumn({
             <SelectContent align="end">
               <SelectItem value="this-week">This Week</SelectItem>
               <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="all">All time</SelectItem>
             </SelectContent>
           </Select>
         )}
