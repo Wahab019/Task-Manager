@@ -363,9 +363,16 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   }, [persistTimelogs]);
 
   useEffect(() => {
-    const handlePageExit = () => {
+    const handlePageExit = (
+      event?: PageTransitionEvent | BeforeUnloadEvent,
+    ) => {
       if (!hasHydratedTimer) return;
       persistPausedTimerSnapshot();
+
+      if (isTracking && event?.type === "beforeunload") {
+        event.preventDefault();
+        event.returnValue = "";
+      }
     };
 
     window.addEventListener("pagehide", handlePageExit);
@@ -375,7 +382,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("pagehide", handlePageExit);
       window.removeEventListener("beforeunload", handlePageExit);
     };
-  }, [hasHydratedTimer, persistPausedTimerSnapshot]);
+  }, [hasHydratedTimer, isTracking, persistPausedTimerSnapshot]);
 
   const syncTaskElapsedSeconds = useCallback(
     (taskId: string, extraDuration = 0) => {
