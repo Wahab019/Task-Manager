@@ -10,6 +10,7 @@ import React, {
   useState,
 } from "react";
 
+import { formatSeconds } from "@/lib/utils";
 import { getAuthHeader } from "@/lib/appwrite";
 
 export type Priority = "low" | "normal" | "high";
@@ -383,6 +384,22 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("beforeunload", handlePageExit);
     };
   }, [hasHydratedTimer, isTracking, persistPausedTimerSnapshot]);
+
+  useEffect(() => {
+    const defaultTitle = "Task Manager";
+
+    if (isTracking && activeTaskTitle) {
+      document.title = `${formatSeconds(currentSeconds)} – ${activeTaskTitle}`;
+      return () => {
+        document.title = defaultTitle;
+      };
+    }
+
+    document.title = defaultTitle;
+    return () => {
+      document.title = defaultTitle;
+    };
+  }, [activeTaskTitle, currentSeconds, isTracking]);
 
   const syncTaskElapsedSeconds = useCallback(
     (taskId: string, extraDuration = 0) => {

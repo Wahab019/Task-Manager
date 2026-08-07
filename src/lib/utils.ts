@@ -97,6 +97,17 @@ export function formatRelativeTime(timestamp: string | number | Date): string {
   return `${days} days ago`;
 }
 
+export function formatSeconds(seconds: number): string {
+  const h = Math.floor(seconds / 3600)
+    .toString()
+    .padStart(2, "0");
+  const m = Math.floor((seconds % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const s = (seconds % 60).toString().padStart(2, "0");
+  return `${h}:${m}:${s}`;
+}
+
 export function getDueDateColor(deadline: string): "red" | "yellow" | "green" {
   const now = new Date();
   const dueDate = new Date(`${deadline}T00:00:00`);
