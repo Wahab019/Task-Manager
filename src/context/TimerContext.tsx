@@ -716,6 +716,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
             ...response.data,
             status: isActiveTempTask ? "in_progress" : task.status,
             elapsedSeconds: task.elapsedSeconds,
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+            estimatedMinutes: task.estimatedMinutes,
+            deadline: task.deadline,
           };
         }),
       );
@@ -992,13 +997,17 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     },
   ) => {
     const task = tasks.find((t) => t.id === taskId);
-    if (!task || isTemporaryTaskId(taskId)) return;
+    if (!task) return;
 
     const previousTask = task;
 
     setTasks((current) =>
       current.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
     );
+
+    if (isTemporaryTaskId(taskId)) {
+      return;
+    }
 
     try {
       const response = await axios.patch<Task>(

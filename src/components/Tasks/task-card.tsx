@@ -130,7 +130,6 @@ export function TaskCard({
                 className="text-[#aeb2ad] cursor-pointer"
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => event.stopPropagation()}
-                disabled={isPending}
               >
                 <Ellipsis className="size-5" />
               </DropdownMenuTrigger>
