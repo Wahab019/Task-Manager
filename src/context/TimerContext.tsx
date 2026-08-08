@@ -287,120 +287,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const persistPausedTimerSnapshot = useCallback(() => {
-    if (!activeTaskId || !activeTaskTitle) {
-      localStorage.removeItem(TIMING_STORAGE_KEY);
-      return;
-    }
-
-    const now = Date.now();
-    let closedEntry: TimeLogEntry | null = null;
-
-    // Close the open entry so it's not orphaned.
-    // This ensures getTotalDurationForTask includes it on next load.
-    if (currentEntryStartTime && currentEntryId) {
-      closedEntry = {
-        id: currentEntryId,
-        taskId: activeTaskId,
-        startTime: currentEntryStartTime,
-        endTime: now,
-        duration: Math.floor(Math.max(0, (now - currentEntryStartTime) / 1000)),
-      };
-
-      // Update in-memory timelogs so persistTimelogs won't overwrite with the stale open entry.
-      setTimelogs((current) => {
-        const filtered = current.filter((log) => log.id !== currentEntryId);
-        return [...filtered, closedEntry!];
-      });
-      void syncEntryToServer(closedEntry);
-
-      const savedLogs = localStorage.getItem(TIMELOGS_STORAGE_KEY);
-      if (savedLogs) {
-        try {
-          const logs = JSON.parse(savedLogs) as TimeLogEntry[];
-          const filtered = logs.filter((log) => log.id !== currentEntryId);
-          localStorage.setItem(
-            TIMELOGS_STORAGE_KEY,
-            JSON.stringify([...filtered, closedEntry]),
-          );
-        } catch {
-          // ignore parse errors
-        }
-      }
-    }
-
-    // Compute the exact elapsed seconds from timestamps, not the last interval tick.
-    // This ensures the timer is accurate even if the page is closed mid-second.
-    const baseSeconds = getTotalDurationForTask(activeTaskId);
-    const liveSeconds = computeLiveSeconds(
-      baseSeconds,
-      currentEntryStartTime,
-      now,
-    );
-
-    const payload: PersistedTimerState = {
-      version: TIMER_STATE_VERSION,
-      activeTaskId,
-      activeTaskTitle,
-      currentEntryStartTime: null,
-      currentEntryId: null,
-      isTracking: false,
-      currentSeconds: liveSeconds,
-      persistedAt: now,
-    };
-
-    localStorage.setItem(TIMING_STORAGE_KEY, JSON.stringify(payload));
-  }, [
-    activeTaskId,
-    activeTaskTitle,
-    currentEntryStartTime,
-    currentEntryId,
-    getTotalDurationForTask,
-    syncEntryToServer,
-  ]);
-
-  useEffect(() => {
-    persistTimelogs();
-  }, [persistTimelogs]);
-
-  useEffect(() => {
-    const handlePageExit = (
-      event?: PageTransitionEvent | BeforeUnloadEvent,
-    ) => {
-      if (!hasHydratedTimer) return;
-      persistPausedTimerSnapshot();
-
-      if (isTracking && event?.type === "beforeunload") {
-        event.preventDefault();
-        event.returnValue = "";
-      }
-    };
-
-    window.addEventListener("pagehide", handlePageExit);
-    window.addEventListener("beforeunload", handlePageExit);
-
-    return () => {
-      window.removeEventListener("pagehide", handlePageExit);
-      window.removeEventListener("beforeunload", handlePageExit);
-    };
-  }, [hasHydratedTimer, isTracking, persistPausedTimerSnapshot]);
-
-  useEffect(() => {
-    const defaultTitle = "Task Manager";
-
-    if (isTracking && activeTaskTitle) {
-      document.title = `${formatSeconds(currentSeconds)} – ${activeTaskTitle}`;
-      return () => {
-        document.title = defaultTitle;
-      };
-    }
-
-    document.title = defaultTitle;
-    return () => {
-      document.title = defaultTitle;
-    };
-  }, [activeTaskTitle, currentSeconds, isTracking]);
-
   const syncTaskElapsedSeconds = useCallback(
     (taskId: string, extraDuration = 0) => {
       const totalSeconds =
@@ -421,7 +307,12 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   const closeCurrentEntry = useCallback(
     (endTime = Date.now()) => {
-      if (!activeTaskId || !currentEntryStartTime || !currentEntryId) {
+      if (
+        !activeTaskId ||
+        !currentEntryStartTime ||
+        !currentEntryId ||
+        !currentEntryStartTimeRef.current
+      ) {
         return null;
       }
 
@@ -434,6 +325,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           Math.max(0, (endTime - currentEntryStartTime) / 1000),
         ),
       } satisfies TimeLogEntry;
+
+      currentEntryStartTimeRef.current = null;
 
       setTimelogs((current) => {
         const filtered = current.filter((log) => log.id !== currentEntryId);
@@ -449,10 +342,73 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     [activeTaskId, currentEntryId, currentEntryStartTime, syncEntryToServer],
   );
 
+  const persistPausedTimerSnapshot = useCallback(() => {
+    if (!activeTaskId || !activeTaskTitle) {
+      localStorage.removeItem(TIMING_STORAGE_KEY);
+      return;
+    }
+
+    const closedEntry = closeCurrentEntry();
+    if (!closedEntry) {
+      return;
+    }
+
+    const taskId = activeTaskId;
+    const totalSeconds = Math.round(
+      syncTaskElapsedSeconds(taskId, closedEntry.duration),
+    );
+
+    setCurrentSeconds(totalSeconds);
+    setTasks((current) =>
+      current.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              status: "in_progress",
+              elapsedSeconds: totalSeconds,
+            }
+          : task,
+      ),
+    );
+
+    const savedLogs = localStorage.getItem(TIMELOGS_STORAGE_KEY);
+    if (savedLogs) {
+      try {
+        const logs = JSON.parse(savedLogs) as TimeLogEntry[];
+        const filtered = logs.filter((log) => log.id !== closedEntry.id);
+        localStorage.setItem(
+          TIMELOGS_STORAGE_KEY,
+          JSON.stringify([...filtered, closedEntry]),
+        );
+      } catch {
+        // ignore parse errors
+      }
+    }
+
+    const payload: PersistedTimerState = {
+      version: TIMER_STATE_VERSION,
+      activeTaskId: taskId,
+      activeTaskTitle,
+      currentEntryStartTime: null,
+      currentEntryId: null,
+      isTracking: false,
+      currentSeconds: totalSeconds,
+      persistedAt: Date.now(),
+    };
+
+    localStorage.setItem(TIMING_STORAGE_KEY, JSON.stringify(payload));
+  }, [
+    activeTaskId,
+    activeTaskTitle,
+    closeCurrentEntry,
+    syncTaskElapsedSeconds,
+  ]);
+
   const clearActiveTimer = useCallback(() => {
     setActiveTaskId(null);
     setActiveTaskTitle(null);
     setCurrentEntryStartTime(null);
+    currentEntryStartTimeRef.current = null;
     setCurrentEntryId(null);
     setIsTracking(false);
   }, []);
@@ -760,6 +716,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
             ...response.data,
             status: isActiveTempTask ? "in_progress" : task.status,
             elapsedSeconds: task.elapsedSeconds,
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+            estimatedMinutes: task.estimatedMinutes,
+            deadline: task.deadline,
           };
         }),
       );
@@ -796,6 +757,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setActiveTaskId(taskId);
     setActiveTaskTitle(taskTitle);
     setCurrentEntryStartTime(entry.startTime);
+    currentEntryStartTimeRef.current = entry.startTime;
     setCurrentEntryId(entry.id);
     setIsTracking(true);
     setCurrentSeconds(baseSeconds);
@@ -874,6 +836,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     const taskId = activeTaskId;
     const entry = createOpenEntry(taskId, Date.now());
     setCurrentEntryStartTime(entry.startTime);
+    currentEntryStartTimeRef.current = entry.startTime;
     setCurrentEntryId(entry.id);
     setIsTracking(true);
     setCurrentSeconds(Math.floor(getTotalDurationForTask(taskId)));
@@ -1034,13 +997,17 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     },
   ) => {
     const task = tasks.find((t) => t.id === taskId);
-    if (!task || isTemporaryTaskId(taskId)) return;
+    if (!task) return;
 
     const previousTask = task;
 
     setTasks((current) =>
       current.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
     );
+
+    if (isTemporaryTaskId(taskId)) {
+      return;
+    }
 
     try {
       const response = await axios.patch<Task>(
