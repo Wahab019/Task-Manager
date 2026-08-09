@@ -58,13 +58,13 @@ export const Header = () => {
         </h1>
       </div>
 
-      <label className="relative hidden lg:block">
+      {/* <label className="relative hidden lg:block">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#6e746f]" />
         <input
           className="h-9 w-100 rounded-lg border border-primary/20 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-secondary/30"
           placeholder="Search tasks…"
         />
-      </label>
+      </label> */}
       <div className="flex items-center ">
         <div
           title={user?.email || name}
