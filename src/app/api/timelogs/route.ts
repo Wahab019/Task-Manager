@@ -109,12 +109,24 @@ export async function POST(request: Request) {
     );
   }
 
+  // If the client sent its own entry ID, use it as the Appwrite document ID.
+  // This makes client ID == server ID so a subsequent GET /api/timelogs can
+  // deduplicate by ID and never double-count a locally-held entry that raced
+  // ahead of the server response (the root cause of the jump-on-resume bug).
+  const rawClientId =
+    typeof timeLogData.clientId === "string" ? timeLogData.clientId.trim() : "";
+  // Appwrite document IDs: alphanumeric, hyphens, dots, underscores; 1–36 chars.
+  const documentId =
+    rawClientId && /^[a-zA-Z0-9._-]{1,36}$/.test(rawClientId)
+      ? rawClientId
+      : ID.unique();
+
   let createdTimeLog;
   try {
     createdTimeLog = await databases.createDocument(
       DATABASE_ID,
       COLLECTIONS.TIMELOGS,
-      ID.unique(),
+      documentId,
       {
         taskId: timeLogData.taskId.trim(),
         userId: user.authUserId,
@@ -124,6 +136,30 @@ export async function POST(request: Request) {
       },
     );
   } catch (error) {
+    // If the document already exists under this ID (e.g. a duplicate POST
+    // caused by a network retry), fetch and return the existing document
+    // instead of surfacing a 500 that would mislead the client.
+    const appwriteErr = error as { code?: number; message?: string };
+    const isAlreadyExists =
+      appwriteErr?.code === 409 ||
+      (appwriteErr?.message ?? "").toLowerCase().includes("already exists");
+
+    if (rawClientId && isAlreadyExists) {
+      try {
+        const existing = await databases.getDocument(
+          DATABASE_ID,
+          COLLECTIONS.TIMELOGS,
+          documentId,
+        );
+        return Response.json(
+          toTimeLogResponse(existing as unknown as TimeLogDocument),
+          { status: 200 },
+        );
+      } catch {
+        // fall through to the generic error response below
+      }
+    }
+
     console.error("Failed to create timelog:", error);
     return Response.json(
       { error: "Something went wrong. Please try again." },
