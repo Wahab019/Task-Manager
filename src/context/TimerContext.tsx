@@ -10,7 +10,6 @@ import React, {
   useState,
 } from "react";
 
-import { formatSeconds } from "@/lib/utils";
 import { getAuthHeader } from "@/lib/appwrite";
 
 export type Priority = "low" | "normal" | "high";
@@ -250,15 +249,22 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       const response = await axios.get<TimeLogResponse[]>("/api/timelogs", {
         headers: await getAuthHeader(),
       });
-      setTimelogs(
-        response.data.map((entry) => ({
-          id: entry.id,
-          taskId: entry.taskId,
-          startTime: entry.startTime,
-          endTime: entry.endTime,
-          duration: entry.duration,
-        })),
+      const serverEntries: TimeLogEntry[] = response.data.map((entry) => ({
+        id: entry.id,
+        taskId: entry.taskId,
+        startTime: entry.startTime,
+        endTime: entry.endTime,
+        duration: entry.duration,
+      }));
+      // Merge: server is source of truth for entries it already knows about,
+      // but any locally-held entry whose id is NOT yet in the server response
+      // (i.e. a just-closed segment whose POST hasn't finished yet) is kept
+      // so it isn't silently discarded by a racing GET.
+      const serverIds = new Set(serverEntries.map((e) => e.id));
+      const localOnlyEntries = timelogsRef.current.filter(
+        (local) => !serverIds.has(local.id),
       );
+      setTimelogs([...serverEntries, ...localOnlyEntries]);
       setError(null);
     } catch (error) {
       console.error("Failed to load timelogs:", error);
@@ -274,6 +280,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       await axios.post(
         "/api/timelogs",
         {
+          // Send the client-generated ID so the server stores the document
+          // under the same ID.  This makes client ID == server ID, which lets
+          // loadTimelogs deduplicate correctly and prevents the double-count
+          // that caused the timer to jump forward on Resume after a refresh.
+          clientId: entry.id,
           taskId: entry.taskId,
           startTime: entry.startTime,
           endTime: entry.endTime,
@@ -413,6 +424,32 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setIsTracking(false);
   }, []);
 
+  // At the moment the page is hidden (tab closed, refreshed, or navigated
+  // away), stamp persistedAt with the exact current timestamp.  This ensures
+  // the hydration effect on the next load computes an accurate segment
+  // duration instead of relying on the last timer-tick value, which can be
+  // up to 1 second behind the actual close time.
+  useEffect(() => {
+    const handlePageHide = () => {
+      const saved = localStorage.getItem(TIMING_STORAGE_KEY);
+      if (!saved) return;
+      try {
+        const parsed = JSON.parse(saved) as PersistedTimerState;
+        if (parsed.isTracking && parsed.currentEntryStartTime) {
+          const updated: PersistedTimerState = {
+            ...parsed,
+            persistedAt: Date.now(),
+          };
+          localStorage.setItem(TIMING_STORAGE_KEY, JSON.stringify(updated));
+        }
+      } catch {
+        // ignore
+      }
+    };
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
+  }, []);
+
   useEffect(() => {
     const saved = localStorage.getItem(TIMING_STORAGE_KEY);
     if (!saved) {
@@ -434,10 +471,17 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           );
           closedEntry.id = parsed.currentEntryId;
 
-          setTimelogs((current) => {
-            const filtered = current.filter((log) => log.id !== closedEntry.id);
-            return [...filtered, closedEntry];
-          });
+          // Compute the updated list eagerly and write it to both state and
+          // the ref immediately.  The direct ref update means
+          // getTotalDurationForTask sees the correct total synchronously —
+          // before the next React render and before loadTimelogs can arrive
+          // with a server response that might not yet contain this entry.
+          const hydratedPrior = timelogsRef.current.filter(
+            (log) => log.id !== closedEntry.id,
+          );
+          const hydratedLogs = [...hydratedPrior, closedEntry];
+          setTimelogs(hydratedLogs);
+          timelogsRef.current = hydratedLogs;
           void syncEntryToServer(closedEntry);
 
           const baseSeconds = parsed.currentSeconds ?? 0;
@@ -503,7 +547,12 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         const segmentSeconds = Math.floor(
           Math.max(0, (Date.now() - currentEntryStartTime) / 1000),
         );
-        const total = closedSeconds + segmentSeconds;
+        const computed = closedSeconds + segmentSeconds;
+        // Never tick the displayed counter backward.  In cross-device
+        // scenarios the local timelogs sum may temporarily undercount until
+        // it catches up to server state; clamping to the last displayed value
+        // keeps the counter monotonically increasing until they converge.
+        const total = Math.max(computed, currentSecondsRef.current);
         setCurrentSeconds(total);
         setTasks((current) =>
           current.map((t) =>
@@ -752,7 +801,14 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
 
     const entry = createOpenEntry(taskId, Date.now());
-    const baseSeconds = Math.round(getTotalDurationForTask(taskId));
+    const localTotal = Math.round(getTotalDurationForTask(taskId));
+    // Use the larger of: local timelogs sum vs the server-backed
+    // elapsedSeconds already in state (set by validateAndSync to the
+    // max of server and local).  This prevents a backward jump when
+    // starting from a fresh device where local timelogs may be missing
+    // a session that ran — and was saved to the server — on another device.
+    const taskInState = tasks.find((t) => t.id === taskId);
+    const baseSeconds = Math.max(localTotal, taskInState?.elapsedSeconds ?? 0);
 
     setActiveTaskId(taskId);
     setActiveTaskTitle(taskTitle);
@@ -835,11 +891,17 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     if (!activeTaskId || !activeTaskTitle || currentEntryStartTime) return;
     const taskId = activeTaskId;
     const entry = createOpenEntry(taskId, Date.now());
+    // Same floor logic as startTimer: take the larger of local timelogs sum
+    // vs the server-backed elapsedSeconds so that resuming never jumps
+    // backward, whether on the same device or a different one.
+    const localTotal = Math.floor(getTotalDurationForTask(taskId));
+    const taskInState = tasks.find((t) => t.id === taskId);
+    const resumeFrom = Math.max(localTotal, taskInState?.elapsedSeconds ?? 0);
     setCurrentEntryStartTime(entry.startTime);
     currentEntryStartTimeRef.current = entry.startTime;
     setCurrentEntryId(entry.id);
     setIsTracking(true);
-    setCurrentSeconds(Math.floor(getTotalDurationForTask(taskId)));
+    setCurrentSeconds(resumeFrom);
     promoteTaskToInProgress(taskId);
   };
 
