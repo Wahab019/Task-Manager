@@ -46,7 +46,7 @@ export const Header = () => {
   const initials = getInitials(name);
 
   return (
-    <header className="flex flex-row gap-4 border-b border-primary/10 py-4 px-4 lg:px-8 lg:flex-row lg:items-center justify-between">
+    <header className="print:hidden flex flex-row gap-4 border-b border-primary/10 py-4 px-4 lg:px-8 lg:flex-row lg:items-center justify-between">
       <div className="flex items-center gap-3">
         {/* Sidebar toggle button */}
         <ToolbarButton label="Toggle sidebar" onClick={toggle}>
@@ -65,7 +65,7 @@ export const Header = () => {
           placeholder="Search tasks…"
         />
       </label> */}
-      <div className="flex items-center ">
+      <div className="flex items-center print:hidden">
         <div
           title={user?.email || name}
           className="flex size-9 items-center justify-center rounded-full border-2 border-secondary/30 bg-primary text-xs font-bold text-white uppercase"

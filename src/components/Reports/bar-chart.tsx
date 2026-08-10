@@ -95,7 +95,10 @@ export function ReportBarChart({ selectedMonth }: { selectedMonth: Date }) {
       </CardHeader>
 
       <CardContent className="pt-6">
-        <ChartContainer config={chartConfig} className="h-65 w-full">
+        <ChartContainer
+          config={chartConfig}
+          className="h-65 w-full print:h-auto print:min-h-[24rem]"
+        >
           <BarChart
             data={hoursData}
             margin={{ left: -20, right: 8, top: 8, bottom: 0 }}

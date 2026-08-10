@@ -43,7 +43,7 @@ export function Sidebar() {
       {/* Mobile backdrop */}
       <div
         className={[
-          "fixed inset-0 z-20 bg-black/40 backdrop-blur-sm lg:hidden transition-opacity duration-300 ease-in-out",
+          "fixed inset-0 z-20 bg-black/40 backdrop-blur-sm lg:hidden transition-opacity duration-300 ease-in-out print:hidden",
           isOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none",
@@ -58,7 +58,7 @@ export function Sidebar() {
           "fixed top-0 left-0 z-30 flex min-h-full lg:max-h-screen flex-col border-r border-[#e5e7e3] bg-[#faf9f7] py-4 text-[#5f6762]",
           "transform-gpu overflow-hidden motion-safe:transition-[width,transform] motion-safe:duration-300 motion-safe:ease-in-out motion-safe:will-change-transform",
           // Desktop behaviour: icon-only (w-16) vs expanded (w-56)
-          "lg:relative lg:translate-x-0 lg:shrink-0",
+          "lg:relative lg:translate-x-0 lg:shrink-0 print:hidden",
           isOpen ? "lg:w-56" : "lg:w-16",
           // Mobile behaviour: fully off-screen vs fully visible (w-64)
           isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64",
