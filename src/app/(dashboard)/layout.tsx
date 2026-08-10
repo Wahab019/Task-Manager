@@ -37,11 +37,11 @@ function DashboardGuard({ children }: { children: ReactNode }) {
   return (
     <TimerProvider>
       <SidebarProvider>
-        <div className="flex h-screen flex-col overflow-hidden">
+        <div className="flex h-screen flex-col overflow-hidden print:overflow-visible print:h-auto print:min-h-full">
           <Header />
-          <div className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden print:overflow-visible">
             <Sidebar />
-            <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+            <main className="flex-1 overflow-y-auto p-4 lg:p-8 print:overflow-visible print:p-0">
               {children}
             </main>
           </div>

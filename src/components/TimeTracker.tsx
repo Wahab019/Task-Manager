@@ -108,7 +108,7 @@ export const TimeTracker = () => {
 
   return (
     <aside
-      className="fixed z-10 hidden lg:flex min-w-67 cursor-grab items-center gap-5 rounded-xl bg-[#003b2d] px-5 py-4 text-white shadow-[0_18px_40px_rgba(11,59,46,0.25)] active:cursor-grabbing"
+      className="fixed z-10 hidden lg:flex min-w-67 cursor-grab items-center gap-5 rounded-xl bg-[#003b2d] px-5 py-4 text-white shadow-[0_18px_40px_rgba(11,59,46,0.25)] active:cursor-grabbing print:hidden"
       style={{
         bottom: `${position.bottom}px`,
         right: `${position.right}px`,

@@ -74,6 +74,12 @@ export default function ReportsPage() {
       : endOfMonth(selectedMonth),
   };
 
+  const reportDateLabel = today.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
   const metricValues = useMemo(
     () =>
       [
@@ -126,7 +132,7 @@ export default function ReportsPage() {
           </div>
         </div>
       )}
-      <header className="flex flex-col gap-4 pb-7 md:items-end md:justify-between md:flex-row">
+      <header className="print:hidden flex flex-col gap-4 pb-7 md:items-end md:justify-between md:flex-row">
         <div>
           <h1 className="font-heading text-4xl font-semibold text-primary">
             Reports
@@ -136,36 +142,56 @@ export default function ReportsPage() {
           </p>
         </div>
 
-        <Select
-          value={selectedMonthValue}
-          onValueChange={(value) => {
-            if (!value) {
-              return;
-            }
+        <div className="flex flex-col items-start gap-3 print:hidden md:items-end md:flex-row md:gap-2">
+          <Select
+            value={selectedMonthValue}
+            onValueChange={(value) => {
+              if (!value) {
+                return;
+              }
 
-            const [year, month] = value.split("-").map(Number);
-            setSelectedMonth(new Date(year, month - 1, 1));
-          }}
-        >
-          <SelectTrigger
-            className="flex h-9 items-center gap-2 self-start rounded-lg border border-primary/10 bg-white px-3 text-xs font-semibold text-primary shadow-sm md:self-auto"
-            size="default"
+              const [year, month] = value.split("-").map(Number);
+              setSelectedMonth(new Date(year, month - 1, 1));
+            }}
           >
-            <CalendarDays className="size-3.5 text-[#47857a]" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent align="end">
-            <SelectGroup>
-              <SelectLabel>Months</SelectLabel>
-              {monthOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+            <SelectTrigger
+              className="flex h-9 items-center gap-2 rounded-lg border border-primary/10 bg-white px-3 text-xs font-semibold text-primary shadow-sm"
+              size="default"
+            >
+              <CalendarDays className="size-3.5 text-[#47857a]" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectGroup>
+                <SelectLabel>Months</SelectLabel>
+                {monthOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => window.print()}
+            className="h-9 rounded-lg border-primary/10 bg-white px-3 text-xs font-semibold text-primary shadow-sm"
+          >
+            Print Report
+          </Button>
+        </div>
       </header>
+
+      <div className="hidden print:block rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
+        <h2 className="font-heading text-2xl font-semibold text-primary">
+          Report for {formatMonthLabel(selectedMonth, currentYear)}
+        </h2>
+        <p className="mt-1 text-sm text-[#47857a]">
+          Generated on {reportDateLabel}
+        </p>
+      </div>
 
       <section className="grid gap-5 md:grid-cols-3">
         {metricDefs.map((def, index) => (
