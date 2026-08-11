@@ -184,7 +184,7 @@ export default function ReportsPage() {
         </div>
       </header>
 
-      <div className="hidden print:block rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
+      <div className="hidden print:block rounded-2xl print:border-0 border border-primary/10 bg-white p-5 shadow-sm print:shadow-none">
         <h2 className="font-heading text-2xl font-semibold text-primary">
           Report for {formatMonthLabel(selectedMonth, currentYear)}
         </h2>
@@ -205,7 +205,7 @@ export default function ReportsPage() {
         ))}
       </section>
 
-      <section>
+      <section className="print:hidden">
         <ReportBarChart selectedMonth={selectedMonth} />
       </section>
 
