@@ -114,7 +114,7 @@ export function TaskBoard() {
         </p>
       )}
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <div className="overflow-x-auto min-h-screen">
+        <div className="overflow-x-auto min-h-screen scroll-fade-x">
           <div className="grid min-w-max grid-flow-col auto-cols-[minmax(320px,1fr)] gap-8">
             {(["todo", "in_progress", "done"] as const).map((status) => (
               <TaskColumn

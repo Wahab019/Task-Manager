@@ -111,7 +111,7 @@ export function TaskCard({
         ref={setNodeRef}
         {...listeners}
         {...attributes}
-        className={`touch-none rounded-lg border border-primary/10 bg-white p-5 shadow-sm transition-opacity ${
+        className={`max-w-100 touch-none rounded-lg border border-primary/10 bg-white p-5 shadow-sm transition-opacity ${
           isDragging ? "cursor-grabbing opacity-50" : "cursor-grab"
         }`}
         style={{

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { CalendarDays, CheckCircle2, Clock3 } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock3, Download } from "lucide-react";
 
 import {
   ReportBarChart,
@@ -142,7 +142,7 @@ export default function ReportsPage() {
           </p>
         </div>
 
-        <div className="flex flex-col items-start gap-3 print:hidden md:items-end md:flex-row md:gap-2">
+        <div className="flex flex-col items-start gap-3 print:hidden md:items-center md:flex-row md:gap-2">
           <Select
             value={selectedMonthValue}
             onValueChange={(value) => {
@@ -174,17 +174,17 @@ export default function ReportsPage() {
           </Select>
 
           <Button
-            variant="outline"
-            size="lg"
+            variant="heritage-outline"
+            size="sm"
             onClick={() => window.print()}
-            className="h-9 rounded-lg border-primary/10 bg-white px-3 text-xs font-semibold text-primary shadow-sm"
+            className="h-8 rounded-lg border-primary/10 bg-white px-3 text-xs font-semibold text-primary shadow-lg"
           >
-            Print Report
+            <Download /> Print Report
           </Button>
         </div>
       </header>
 
-      <div className="hidden print:block rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
+      <div className="hidden print:block rounded-2xl print:border-0 border border-primary/10 bg-white p-5 shadow-sm print:shadow-none">
         <h2 className="font-heading text-2xl font-semibold text-primary">
           Report for {formatMonthLabel(selectedMonth, currentYear)}
         </h2>
@@ -205,7 +205,7 @@ export default function ReportsPage() {
         ))}
       </section>
 
-      <section>
+      <section className="print:hidden">
         <ReportBarChart selectedMonth={selectedMonth} />
       </section>
 

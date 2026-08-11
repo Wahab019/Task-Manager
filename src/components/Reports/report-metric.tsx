@@ -14,18 +14,29 @@ export function ReportMetric({
 }) {
   void selectedMonth;
   return (
-    <Card className="rounded-2xl border border-primary/10 bg-white p-5 shadow-sm">
-      <CardContent>
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] font-bold tracking-[0.08em] text-[#47857a] uppercase">
-            {label}
+    <>
+      <Card className="rounded-2xl border-0 border-primary/10 bg-white p-5 shadow-sm print:hidden">
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-bold tracking-[0.08em] text-[#47857a] uppercase">
+              {label}
+            </p>
+            <Icon className="size-5 text-[#ce9f38]" />
+          </div>
+          <p className="mt-3 font-heading text-3xl font-semibold text-primary">
+            {value}
           </p>
-          <Icon className="size-5 text-[#ce9f38]" />
-        </div>
-        <p className="mt-3 font-heading text-3xl font-semibold text-primary">
+        </CardContent>
+      </Card>
+
+      <div className="hidden print:flex items-center gap-10 px-5">
+        <p className="text-xs font-bold tracking-[0.08em] text-[#47857a] uppercase">
+          {label}
+        </p>
+        <p className="font-heading text-xl font-semibold text-primary">
           {value}
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </>
   );
 }

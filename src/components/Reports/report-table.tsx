@@ -15,7 +15,7 @@ export const ReportTable = ({ selectedMonth }: { selectedMonth: Date }) => {
 
   return (
     <>
-      <section className="overflow-hidden rounded-2xl border border-primary/10 bg-white">
+      <section className="overflow-hidden rounded-2xl border print:border-0 border-primary/10 bg-white">
         <h2 className="px-5 py-5 font-heading text-xl font-semibold text-primary">
           Recent Completed Tasks
         </h2>
