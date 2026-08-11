@@ -70,7 +70,7 @@ export function EditTaskDialog({
       deadline: task.deadline ?? "",
     });
     setError(null);
-  }, [open, task]);
+  }, [open, task.id]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
