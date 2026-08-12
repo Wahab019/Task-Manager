@@ -16,6 +16,7 @@ import { formatDueLabel } from "@/lib/utils";
 import { EditTaskDialog, type TaskEditUpdates } from "./edit-task-dialog";
 import { useTimer, type Priority, type Task } from "@/context/TimerContext";
 
+// Formats seconds into a clock-style duration label.
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -27,6 +28,8 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
+// Renders the expanded active task card for in-progress work.
+// It exposes pause, stop, edit, and complete actions without starting a drag.
 export function OngoingTask({
   id,
   priority = "normal",
@@ -69,6 +72,8 @@ export function OngoingTask({
     elapsedSeconds,
   };
 
+  // Persists edited form or task values through the owner-provided save callback.
+  // Local saving state prevents duplicate submissions.
   const handleSave = async (updates: TaskEditUpdates) => {
     await updateTask(id, updates);
   };
@@ -79,7 +84,7 @@ export function OngoingTask({
         ref={setNodeRef}
         {...listeners}
         {...attributes}
-        className={`relative overflow-hidden touch-none rounded-lg border border-[#9f7a2c] bg-white p-5 shadow-[0_8px_18px_rgba(11,59,46,0.09)] transition-opacity ${
+        className={`max-w-100 relative overflow-hidden touch-none rounded-lg border border-[#9f7a2c] bg-white p-5 shadow-[0_8px_18px_rgba(11,59,46,0.09)] transition-opacity ${
           isDragging ? "cursor-grabbing opacity-50" : "cursor-grab"
         }`}
         style={{

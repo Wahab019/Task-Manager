@@ -12,6 +12,7 @@ const SESSION_COOKIE = `a_session_${PROJECT_ID}`;
 
 const PUBLIC_PATHS = ["/login", "/reset-password"];
 
+// Redirects users based on authentication state before protected or public pages render.
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 

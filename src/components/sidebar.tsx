@@ -21,6 +21,8 @@ const navigationItems = [
   { label: "Reports", icon: ChartNoAxesColumn, href: "/reports" },
 ];
 
+// Renders the main navigation sidebar and greeting.
+// It highlights the active route and closes itself after mobile navigation.
 export function Sidebar() {
   const pathname = usePathname();
   const { logout, user } = useAuth();

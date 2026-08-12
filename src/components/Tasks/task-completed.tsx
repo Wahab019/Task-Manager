@@ -2,6 +2,8 @@ import { CheckCircle2, Clock3 } from "lucide-react";
 import { Pill } from "./pill";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatRelativeTime } from "@/lib/utils";
+// Renders a compact completed task summary.
+// It shows title, description, and priority in the done column.
 export function CompletedTask({
   title,
   description,
@@ -16,7 +18,7 @@ export function CompletedTask({
   const completedLabel = formatRelativeTime(completedAt);
 
   return (
-    <Card className="rounded-lg border border-primary/10 bg-white p-5 opacity-55">
+    <Card className="rounded-lg border border-primary/10 bg-white p-5 opacity-55 max-w-100">
       <CardContent>
         <div className="flex items-center gap-2">
           <CheckCircle2 className="size-4 fill-[#606560] text-white" />

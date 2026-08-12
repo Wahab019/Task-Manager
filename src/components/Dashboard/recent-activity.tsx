@@ -6,6 +6,8 @@ import { UserRoundCheck } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { useTimer } from "@/context/TimerContext";
 
+// Formats logged seconds into a compact minutes or hours label.
+// Recent activity uses it to keep each row readable.
 function formatLogDuration(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -21,6 +23,7 @@ function formatLogDuration(totalSeconds: number) {
   return `${minutes}m`;
 }
 
+// Formats a timestamp as a short human-readable relative time string.
 function formatRelativeTime(endTime: number) {
   const now = Date.now();
   const diffSeconds = Math.max(0, Math.round((now - endTime) / 1000));
@@ -41,6 +44,8 @@ function formatRelativeTime(endTime: number) {
   return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
+// Lists the latest completed timer sessions with task names and relative completion times.
+// It joins timelogs against tasks for user-friendly labels.
 export const RecentActivity = () => {
   const { tasks, timelogs } = useTimer();
 

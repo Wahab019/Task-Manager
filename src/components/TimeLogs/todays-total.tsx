@@ -3,6 +3,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useTimer } from "@/context/TimerContext";
 
+// Displays the total duration of time logs that started today.
+// It recomputes from TimerContext timelogs on render.
 export const TodaysTotal = () => {
   const { timeLogs } = useTimer();
   const mounted = typeof window !== "undefined";

@@ -24,6 +24,7 @@ type FieldErrors = {
   password?: string;
 };
 
+// Renders the Next.js page component for this route.
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -34,6 +35,8 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
 
+  // Creates an Appwrite email/password session from the login form.
+  // It clears stale sessions first so repeated logins do not collide.
   const createSession = async () => {
     if (typeof account.createEmailPasswordSession === "function") {
       await account.createEmailPasswordSession(email, password);
@@ -44,6 +47,8 @@ export default function LoginPage() {
     }
   };
 
+  // Validates and submits the current form state.
+  // The exact side effect depends on the page or dialog that owns the handler.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});

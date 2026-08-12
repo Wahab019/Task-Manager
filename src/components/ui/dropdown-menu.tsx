@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 const DropdownMenu = MenuPrimitive.Root;
 const DropdownMenuTrigger = MenuPrimitive.Trigger;
 
+// Renders the positioned dropdown menu panel with app styling and animations.
+// It wraps Base UI menu popup behavior.
 function DropdownMenuContent({
   className,
   side = "bottom",
@@ -38,6 +40,8 @@ function DropdownMenuContent({
   );
 }
 
+// Renders one clickable dropdown menu item.
+// It includes shared spacing, focus, disabled, and inset styles.
 function DropdownMenuItem({ className, ...props }: MenuPrimitive.Item.Props) {
   return (
     <MenuPrimitive.Item

@@ -46,6 +46,8 @@ const buttonVariants = cva(
   },
 );
 
+// Renders the shared button primitive with variant and size support.
+// It combines app styles with optional slot rendering for composed controls.
 function Button({
   className,
   variant = "default",

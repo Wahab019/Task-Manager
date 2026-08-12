@@ -12,6 +12,7 @@ if (endpoint && projectId) {
 export const account = new Account(client);
 export { client };
 
+// Builds the Authorization header used by API requests that need the Appwrite JWT.
 export async function getAuthHeader(): Promise<Record<string, string>> {
   try {
     await account.get();

@@ -10,6 +10,8 @@ import { Header } from "@/components/Header";
 import { Loader2 } from "lucide-react";
 import { TimerProvider } from "@/context/TimerContext";
 
+// Checks auth state before protected dashboard content renders.
+// It redirects signed-out users to login and shows a loading state while auth is unknown.
 function DashboardGuard({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -52,6 +54,8 @@ function DashboardGuard({ children }: { children: ReactNode }) {
   );
 }
 
+// Provides auth context to all dashboard routes before DashboardGuard renders the app shell.
+// Child pages are only shown after the guard confirms there is a signed-in user.
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>

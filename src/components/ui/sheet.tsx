@@ -7,22 +7,32 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { XIcon } from "lucide-react";
 
+// Provides the root state for a sliding sheet.
+// It wraps Base UI dialog behavior for sheet-style panels.
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }
 
+// Marks the element that opens a sheet.
+// It forwards trigger behavior to the Base UI dialog primitive.
 function SheetTrigger({ ...props }: SheetPrimitive.Trigger.Props) {
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
 }
 
+// Marks an element that closes the sheet.
+// It delegates close behavior to the Base UI dialog primitive.
 function SheetClose({ ...props }: SheetPrimitive.Close.Props) {
   return <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
 }
 
+// Ports sheet overlay and content to the document layer expected by dialogs.
+// It keeps sheet markup outside normal layout flow.
 function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
 }
 
+// Renders the translucent backdrop behind a sheet.
+// It uses shared open/close animation classes.
 function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   return (
     <SheetPrimitive.Backdrop
@@ -36,6 +46,8 @@ function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   );
 }
 
+// Renders the sliding sheet panel for the requested side.
+// It combines side-specific positioning with dialog accessibility behavior.
 function SheetContent({
   className,
   children,
@@ -79,6 +91,8 @@ function SheetContent({
   );
 }
 
+// Renders the top content area of a sheet.
+// It standardizes spacing for sheet titles and descriptions.
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -89,6 +103,8 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Renders the bottom action area of a sheet.
+// It keeps sheet controls aligned and padded consistently.
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -99,6 +115,8 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Renders the accessible sheet title.
+// It applies the shared dialog heading typography.
 function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
   return (
     <SheetPrimitive.Title
@@ -112,6 +130,8 @@ function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
   );
 }
 
+// Renders supporting sheet text with muted styling.
+// It gives users context for sheet content.
 function SheetDescription({
   className,
   ...props

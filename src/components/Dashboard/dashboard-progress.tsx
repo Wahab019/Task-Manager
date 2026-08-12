@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Pause, Play, Square } from "lucide-react";
 import { useTimer } from "@/context/TimerContext";
 
+// Renders a small initials avatar with the requested visual tone.
+// Dashboard progress uses it beside active task metadata.
 export function Avatar({ initials, tone }: { initials: string; tone: string }) {
   return (
     <span
@@ -15,6 +17,7 @@ export function Avatar({ initials, tone }: { initials: string; tone: string }) {
   );
 }
 
+// Formats seconds into a clock-style duration label.
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -26,6 +29,8 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
+// Displays the active or in-progress task and exposes pause, resume, and stop controls.
+// It keeps the dashboard connected to TimerContext state.
 export const DashboardProgress = () => {
   const {
     tasks,
@@ -64,6 +69,8 @@ export const DashboardProgress = () => {
     }
   };
 
+  // Stops the active dashboard task through TimerContext.
+  // The guard keeps the control inert when there is no task to stop.
   const handleStop = () => {
     if (!displayedTask) return;
     if (isActive) {

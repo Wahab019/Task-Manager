@@ -1,6 +1,8 @@
 import { Client, Account } from "node-appwrite";
 import { headers } from "next/headers";
 
+// Returns the currently authenticated Appwrite user or null when no session exists.
+// Appwrite's built-in jwt flow: "appwrite jwt auth" used rather than a generic JWT library. the JWT is being created and consumed by Appwrite SDKs, not by a standalone package like jsonwebtoken
 export async function getCurrentUser() {
   const headersList = await headers();
   const authHeader = headersList.get("authorization");

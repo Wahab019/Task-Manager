@@ -7,9 +7,12 @@ import { useTimer } from "@/context/TimerContext";
 const MIN_OFFSET = 24;
 const MAX_OFFSET = 300;
 
+// Constrains the floating timer offset so it stays within the viewport.
+// Dragging uses it to avoid losing the control off-screen.
 const clampOffset = (value: number) =>
   Math.min(Math.max(value, MIN_OFFSET), MAX_OFFSET);
 
+// Formats seconds into a clock-style duration label.
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -21,6 +24,8 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
+// Renders the draggable floating timer control for the active task.
+// It switches between pause and resume actions based on tracking state.
 export const TimeTracker = () => {
   const [position, setPosition] = useState({
     bottom: MIN_OFFSET,
@@ -45,6 +50,8 @@ export const TimeTracker = () => {
   } = useTimer();
 
   useEffect(() => {
+    // Updates the floating timer position during a drag gesture.
+    // It uses the saved drag origin to calculate a bounded offset.
     const handlePointerMove = (event: PointerEvent) => {
       if (dragState.current.pointerId === null) {
         return;
@@ -59,6 +66,8 @@ export const TimeTracker = () => {
       });
     };
 
+    // Ends pointer capture and finalizes click-versus-drag state.
+    // This keeps dragging the floating timer from accidentally triggering controls.
     const handlePointerUp = (event: PointerEvent) => {
       if (dragState.current.pointerId === event.pointerId) {
         dragState.current.pointerId = null;
@@ -74,6 +83,8 @@ export const TimeTracker = () => {
     };
   }, []);
 
+  // Starts pointer capture for dragging the floating timer.
+  // It records the initial pointer and panel offset before movement begins.
   const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
     if ((event.target as HTMLElement).closest("button")) {
       return;
@@ -90,6 +101,8 @@ export const TimeTracker = () => {
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
+  // Ends pointer capture and finalizes click-versus-drag state.
+  // This keeps dragging the floating timer from accidentally triggering controls.
   const handlePointerUp = (event: React.PointerEvent<HTMLElement>) => {
     if (dragState.current.pointerId === event.pointerId) {
       dragState.current.pointerId = null;

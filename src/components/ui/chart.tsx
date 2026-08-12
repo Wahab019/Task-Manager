@@ -29,6 +29,8 @@ type ChartContextProps = {
 
 const ChartContext = React.createContext<ChartContextProps | null>(null);
 
+// Reads chart configuration from context for tooltip and legend helpers.
+// It fails fast when chart subcomponents are used outside ChartContainer.
 function useChart() {
   const context = React.useContext(ChartContext);
 
@@ -39,6 +41,8 @@ function useChart() {
   return context;
 }
 
+// Wraps Recharts content with generated theme styles and chart config context.
+// It gives nested tooltip and legend components access to shared metadata.
 function ChartContainer({
   id,
   className,
@@ -81,6 +85,8 @@ function ChartContainer({
   );
 }
 
+// Generates scoped CSS variables for chart series colors.
+// This lets each chart instance theme itself without leaking styles globally.
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme ?? config.color,
@@ -116,6 +122,8 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
+// Renders the app-styled Recharts tooltip using chart config labels and icons.
+// It handles single-series and multi-series payload layouts.
 function ChartTooltipContent({
   active,
   payload,
@@ -272,6 +280,8 @@ function ChartTooltipContent({
 
 const ChartLegend = RechartsPrimitive.Legend;
 
+// Renders a legend from Recharts payload data and app chart config.
+// It hides empty series and keeps color indicators consistent with the chart.
 function ChartLegendContent({
   className,
   hideIcon = false,
@@ -327,6 +337,8 @@ function ChartLegendContent({
   );
 }
 
+// Finds the chart config entry that matches a Recharts payload item.
+// Tooltip and legend rendering use it to resolve labels, icons, and colors.
 function getPayloadConfigFromPayload(
   config: ChartConfig,
   payload: unknown,

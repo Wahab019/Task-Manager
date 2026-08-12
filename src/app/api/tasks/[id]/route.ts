@@ -18,14 +18,17 @@ type TaskDocument = {
   deadline: string | null;
 };
 
+// Checks whether the provided value matches the status condition.
 function isStatus(value: unknown): value is Status {
   return value === "todo" || value === "in_progress" || value === "done";
 }
 
+// Checks whether the provided value matches the priority condition.
 function isPriority(value: unknown): value is Priority {
   return value === "low" || value === "normal" || value === "high";
 }
 
+// Handles PATCH requests for this route and applies partial updates.
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -197,6 +200,7 @@ export async function PATCH(
   return Response.json(toTaskResponse(updatedTask as unknown as TaskDocument));
 }
 
+// Handles DELETE requests for this route and removes the requested resource.
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },

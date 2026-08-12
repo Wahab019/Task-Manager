@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { Task, TimeLogEntry } from "@/context/TimerContext";
 
+// Combines conditional class names and resolves Tailwind class conflicts.
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -17,6 +18,7 @@ export function getTimeBasedGreeting(): string {
   return "Good night";
 }
 
+// Converts an ISO deadline into a compact relative due-date label.
 export function formatDueLabel(deadline: string): string {
   const now = new Date();
   const dueDate = new Date(`${deadline}T00:00:00`);
@@ -60,6 +62,7 @@ export function formatDueLabel(deadline: string): string {
   return `Due ${monthDayFormatter.format(dueDate)}`;
 }
 
+// Formats a timestamp as a short human-readable relative time string.
 export function formatRelativeTime(timestamp: string | number | Date): string {
   const time =
     typeof timestamp === "number"
@@ -97,6 +100,7 @@ export function formatRelativeTime(timestamp: string | number | Date): string {
   return `${days} days ago`;
 }
 
+// Formats seconds into a clock-style duration label.
 export function formatSeconds(seconds: number): string {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -108,6 +112,7 @@ export function formatSeconds(seconds: number): string {
   return `${h}:${m}:${s}`;
 }
 
+// Maps a task deadline to the UI urgency color used by due-date pills.
 export function getDueDateColor(deadline: string): "red" | "yellow" | "green" {
   const now = new Date();
   const dueDate = new Date(`${deadline}T00:00:00`);
@@ -135,6 +140,8 @@ export function getDueDateColor(deadline: string): "red" | "yellow" | "green" {
   return "green";
 }
 
+// Returns unfinished tasks with valid deadlines, sorted from nearest to farthest.
+// Dashboard due-date widgets use this to show the most urgent work first.
 export function getTasksDueSoon<
   T extends { status: string; deadline: string | null },
 >(tasks: T[]): T[] {
@@ -148,18 +155,21 @@ export function getTasksDueSoon<
     });
 }
 
+// Normalizes a date to the first millisecond of its local day.
 function startOfDay(date: Date): Date {
   const normalized = new Date(date);
   normalized.setHours(0, 0, 0, 0);
   return normalized;
 }
 
+// Normalizes a date to the final millisecond of its local day.
 function endOfDay(date: Date): Date {
   const normalized = new Date(date);
   normalized.setHours(23, 59, 59, 999);
   return normalized;
 }
 
+// Builds week ranges that cover the selected month for reports.
 export function getWeeksInMonth(
   month: Date,
 ): { label: string; from: Date; to: Date }[] {
@@ -191,6 +201,7 @@ export function getWeeksInMonth(
   ];
 }
 
+// Aggregates timelog durations into daily hour totals for a date range.
 export function getHoursByDayInRange(
   timelogs: TimeLogEntry[],
   from: Date,
@@ -214,18 +225,22 @@ export function getHoursByDayInRange(
   }));
 }
 
+// Normalizes a date to the first day of its month.
 function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
+// Normalizes a date to the last day of its month.
 function endOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
+// Checks whether two dates fall within the same month and year.
 function isSameMonth(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
+// Formats report dates in the short month/day style used by tables.
 function formatReportDate(date: Date) {
   return date.toLocaleDateString("en-US", {
     month: "short",
@@ -313,6 +328,7 @@ export function getAverageSessionLength(
   return formatReportDuration(Math.round(totalSeconds / filtered.length));
 }
 
+// Builds recent report rows by joining monthly timelogs to their tasks.
 export function getRecentEntriesInMonth(
   timelogs: TimeLogEntry[],
   tasks: Task[],
@@ -346,6 +362,7 @@ export function getRecentEntriesInMonth(
     });
 }
 
+// Returns recently completed tasks for the selected report month.
 export function getRecentCompletedTasksInMonth(
   tasks: Task[],
   month: Date,

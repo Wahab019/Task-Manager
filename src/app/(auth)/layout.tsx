@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+// Wraps authentication routes in the centered card layout.
+// Login and reset-password pages render their own form content inside this shell.
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <main className="min-h-screen bg-[#f5f1e8] px-4 py-8 text-[#1a1a1a] sm:px-6">

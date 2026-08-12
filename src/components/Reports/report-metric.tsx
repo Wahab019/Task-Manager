@@ -1,6 +1,8 @@
 import { Clock3 } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 
+// Renders one compact reports summary metric with icon, value, and label.
+// ReportsPage passes in the calculated metric data.
 export function ReportMetric({
   icon: Icon,
   label,

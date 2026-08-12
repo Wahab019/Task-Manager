@@ -20,6 +20,8 @@ const colorClasses = {
   },
 } as const;
 
+// Shows unfinished tasks with the nearest deadlines.
+// It relies on due-date utilities so urgency labels and colors stay consistent.
 export const TasksDue = ({ tasks }: { tasks: Task[] }) => {
   const dueTasks = getTasksDueSoon(tasks).slice(0, 3);
 

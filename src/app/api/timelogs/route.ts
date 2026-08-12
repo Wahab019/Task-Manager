@@ -15,6 +15,8 @@ type TimeLogDocument = {
 
 const PAGE_SIZE = 100;
 
+// Converts an Appwrite timelog document into the API response shape.
+// It strips Appwrite metadata the frontend does not need.
 function toTimeLogResponse(doc: TimeLogDocument) {
   return {
     id: doc.$id,
@@ -26,6 +28,7 @@ function toTimeLogResponse(doc: TimeLogDocument) {
   };
 }
 
+// Handles GET requests for this route and returns the requested JSON response.
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) {
@@ -70,6 +73,7 @@ export async function GET() {
   return Response.json(documents.map((doc) => toTimeLogResponse(doc)));
 }
 
+// Handles POST requests for this route and creates the requested resource.
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) {

@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "A focused workspace for executive task management.",
 };
 
+// Defines the required root layout for every Next.js route.
+// It installs the global font variables and renders all pages inside the document body.
 export default function RootLayout({
   children,
 }: Readonly<{

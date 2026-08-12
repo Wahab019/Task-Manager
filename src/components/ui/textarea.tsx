@@ -2,6 +2,8 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// Renders the shared textarea with consistent focus, disabled, and validation styling.
+// Forms use it for longer task text fields.
 function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
     <textarea

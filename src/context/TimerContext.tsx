@@ -106,10 +106,12 @@ const TIMING_STORAGE_KEY = "timer_state";
 const TIMELOGS_STORAGE_KEY = "timer_timelogs";
 const TIMER_STATE_VERSION = 2;
 
+// Creates a stable-enough client-side ID for optimistic time log entries before the server stores them.
 function createEntryId() {
   return `entry-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+// Builds a completed time log entry and calculates its duration from the start and end timestamps.
 function createClosedEntry(taskId: string, startTime: number, endTime: number) {
   return {
     id: createEntryId(),
@@ -120,6 +122,7 @@ function createClosedEntry(taskId: string, startTime: number, endTime: number) {
   };
 }
 
+// Builds a running time log entry with no end time so the timer can be resumed or closed later.
 function createOpenEntry(taskId: string, startTime: number) {
   return {
     id: createEntryId(),
@@ -130,10 +133,12 @@ function createOpenEntry(taskId: string, startTime: number) {
   };
 }
 
+// Detects optimistic tasks that exist only in local state and should not be patched on the server yet.
 function isTemporaryTaskId(taskId: string) {
   return taskId.startsWith("temp-");
 }
 
+// Adds the currently running segment to closed-log seconds so displayed elapsed time stays current.
 function computeLiveSeconds(
   baseSeconds: number,
   startTime: number | null,
@@ -143,6 +148,7 @@ function computeLiveSeconds(
   return baseSeconds + Math.floor(Math.max(0, (now - startTime) / 1000));
 }
 
+// Owns task, timer, persistence, and sync state for the whole app through React context.
 export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -175,6 +181,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     timelogsRef.current = timelogs;
   }, [timelogs]);
 
+  // Totals all closed time log durations for one task from the latest timelog ref.
   const getTotalDurationForTask = useCallback(
     (taskId: string) =>
       timelogsRef.current
@@ -183,6 +190,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  // Moves a task into the in-progress column locally when timing starts or resumes.
   const promoteTaskToInProgress = useCallback((taskId: string) => {
     setTasks((current) =>
       current.map((task) =>
@@ -196,6 +204,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  // Writes the active timer snapshot to localStorage so refreshes can restore the session accurately.
   const persistTimerState = useCallback(() => {
     // Save the base seconds (closed entries only), NOT including the running segment.
     // The hydration logic adds the running segment duration on top.
@@ -223,15 +232,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     isTracking,
   ]);
 
-  const persistTimelogs = useCallback(() => {
-    if (hasHydratedLogs) {
-      localStorage.setItem(
-        TIMELOGS_STORAGE_KEY,
-        JSON.stringify(timelogsRef.current),
-      );
-    }
-  }, [hasHydratedLogs]);
-
+  // Reads cached time logs from localStorage as an offline fallback when the API request fails.
   const readCachedLogs = useCallback(() => {
     const saved = localStorage.getItem(TIMELOGS_STORAGE_KEY);
     if (!saved) return [];
@@ -244,6 +245,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Loads server time logs and merges unsynced local entries without double-counting known server entries.
   const loadTimelogs = useCallback(async () => {
     try {
       const response = await axios.get<TimeLogResponse[]>("/api/timelogs", {
@@ -275,6 +277,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [readCachedLogs]);
 
+  // Posts a completed local time log to the API while preserving the client-generated ID for dedupe.
   const syncEntryToServer = useCallback(async (entry: TimeLogEntry) => {
     try {
       await axios.post(
@@ -298,6 +301,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Recomputes and stores the elapsed seconds for a task after a timer segment closes.
   const syncTaskElapsedSeconds = useCallback(
     (taskId: string, extraDuration = 0) => {
       const totalSeconds =
@@ -316,6 +320,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  // Closes the active running entry, saves it locally, queues server sync, and pauses tracking state.
   const closeCurrentEntry = useCallback(
     (endTime = Date.now()) => {
       if (
@@ -353,68 +358,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     [activeTaskId, currentEntryId, currentEntryStartTime, syncEntryToServer],
   );
 
-  const persistPausedTimerSnapshot = useCallback(() => {
-    if (!activeTaskId || !activeTaskTitle) {
-      localStorage.removeItem(TIMING_STORAGE_KEY);
-      return;
-    }
-
-    const closedEntry = closeCurrentEntry();
-    if (!closedEntry) {
-      return;
-    }
-
-    const taskId = activeTaskId;
-    const totalSeconds = Math.round(
-      syncTaskElapsedSeconds(taskId, closedEntry.duration),
-    );
-
-    setCurrentSeconds(totalSeconds);
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              status: "in_progress",
-              elapsedSeconds: totalSeconds,
-            }
-          : task,
-      ),
-    );
-
-    const savedLogs = localStorage.getItem(TIMELOGS_STORAGE_KEY);
-    if (savedLogs) {
-      try {
-        const logs = JSON.parse(savedLogs) as TimeLogEntry[];
-        const filtered = logs.filter((log) => log.id !== closedEntry.id);
-        localStorage.setItem(
-          TIMELOGS_STORAGE_KEY,
-          JSON.stringify([...filtered, closedEntry]),
-        );
-      } catch {
-        // ignore parse errors
-      }
-    }
-
-    const payload: PersistedTimerState = {
-      version: TIMER_STATE_VERSION,
-      activeTaskId: taskId,
-      activeTaskTitle,
-      currentEntryStartTime: null,
-      currentEntryId: null,
-      isTracking: false,
-      currentSeconds: totalSeconds,
-      persistedAt: Date.now(),
-    };
-
-    localStorage.setItem(TIMING_STORAGE_KEY, JSON.stringify(payload));
-  }, [
-    activeTaskId,
-    activeTaskTitle,
-    closeCurrentEntry,
-    syncTaskElapsedSeconds,
-  ]);
-
+  // Clears active task metadata after a timer is stopped or invalidated.
   const clearActiveTimer = useCallback(() => {
     setActiveTaskId(null);
     setActiveTaskTitle(null);
@@ -430,6 +374,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   // duration instead of relying on the last timer-tick value, which can be
   // up to 1 second behind the actual close time.
   useEffect(() => {
+    // Refreshes the persisted timestamp right before the browser hides the page.
+    // That gives the next hydration pass an exact stop point for the running segment.
     const handlePageHide = () => {
       const saved = localStorage.getItem(TIMING_STORAGE_KEY);
       if (!saved) return;
@@ -542,6 +488,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval> | null = null;
     if (isTracking && currentEntryStartTime && activeTaskId) {
+      // Recomputes the live timer display from closed logs plus the open segment.
+      // It also mirrors the same value onto the active task so every UI surface stays aligned.
       const updateClock = () => {
         const closedSeconds = getTotalDurationForTask(activeTaskId);
         const segmentSeconds = Math.floor(
@@ -574,6 +522,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     getTotalDurationForTask,
   ]);
 
+  // Removes a task from local state and clears timer state if that task was currently active.
   const evictTask = useCallback(
     (taskId: string) => {
       setTasks((current) => current.filter((t) => t.id !== taskId));
@@ -590,6 +539,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     activeTaskIdRef.current = activeTaskId;
   }, [activeTaskId]);
 
+  // Merges freshly fetched tasks with local timer state so server data cannot rewind active elapsed time.
   const validateAndSync = useCallback(
     (fetchedTasks: Task[]) => {
       const savedTimerRaw = localStorage.getItem(TIMING_STORAGE_KEY);
@@ -661,6 +611,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     validateAndSyncRef.current = validateAndSync;
   }, [validateAndSync]);
 
+  // Fetches tasks from the API and runs the local/server reconciliation pass.
   const fetchTasks = useCallback(async () => {
     try {
       const response = await axios.get<Task[]>("/api/tasks", {
@@ -673,6 +624,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Reloads both task and timelog data while exposing a loading state to consumers.
   const reloadData = useCallback(async () => {
     setIsLoading(true);
     await Promise.all([fetchTasks(), loadTimelogs()]);
@@ -681,6 +633,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    // Performs the first task and timelog fetch after the provider mounts.
     async function initialLoad() {
       try {
         await fetchTasks();
@@ -703,6 +656,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   }, [error]);
 
   useEffect(() => {
+    // Revalidates tasks when the tab becomes visible again.
+    // This picks up changes made elsewhere without interrupting the current local timer.
     const handleVisibility = async () => {
       if (document.visibilityState !== "visible") return;
       try {
@@ -719,6 +674,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
 
+  // Creates a task optimistically so the board updates immediately, then swaps in the server copy.
+  // If the API request fails, the temporary task is removed and the provider exposes an error message.
   const addTask = async (draft: {
     priority: Priority;
     title: string;
@@ -795,6 +752,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Starts a new running time entry for a task and pauses any other actively running timer first.
   const startTimer = async (taskId: string, taskTitle: string) => {
     if (activeTaskId && activeTaskId !== taskId && isTracking) {
       await pauseTimer();
@@ -839,6 +797,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Closes the active time entry while keeping the task in progress for later resume.
   const pauseTimer = async () => {
     if (!activeTaskId || !activeTaskTitle) return;
     const taskId = activeTaskId;
@@ -887,6 +846,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Starts a fresh running entry for the paused active task without resetting its accumulated duration.
   const resumeTimer = async () => {
     if (!activeTaskId || !activeTaskTitle || currentEntryStartTime) return;
     const taskId = activeTaskId;
@@ -905,6 +865,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     promoteTaskToInProgress(taskId);
   };
 
+  // Completes the target task, closes any active entry, and persists the final elapsed seconds.
   const stopTimer = async (targetTaskId?: string) => {
     const taskIdToStop = targetTaskId || activeTaskId;
     if (!taskIdToStop) return;
@@ -982,12 +943,14 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Convenience wrapper that finds a task title before starting its timer.
   const startTask = async (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
     await startTimer(taskId, task.title);
   };
 
+  // Convenience wrapper that stops a task by ID through the shared stopTimer flow.
   const stopTask = async (taskId: string) => {
     await stopTimer(taskId);
   };
@@ -996,6 +959,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const resumeActiveTask = resumeTimer;
   const stopActiveTask = stopTimer;
 
+  // Applies guarded task status transitions and persists valid changes to the server.
+  // Timer-driven transitions are routed through pause/stop so elapsed time is closed correctly.
   const updateTaskStatus = async (
     taskId: string,
     newStatus: Task["status"],
@@ -1048,6 +1013,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Updates task details with an optimistic local change while preserving timer-derived fields.
+  // If persistence fails, the previous task snapshot is restored before the error is rethrown.
   const updateTask = async (
     taskId: string,
     updates: {
@@ -1107,6 +1074,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Deletes a persisted task through the API and removes it from local state.
   const deleteTask = async (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId);
     if (!task || isTemporaryTaskId(taskId)) return;
@@ -1163,6 +1131,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Returns the timer context and fails loudly when called outside TimerProvider.
 export function useTimer() {
   const context = useContext(TimerContext);
   if (context === undefined) {

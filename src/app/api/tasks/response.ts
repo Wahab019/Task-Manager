@@ -22,6 +22,8 @@ type AppwriteTaskDoc = {
   $updatedAt: string;
 };
 
+// Converts an Appwrite task document into the frontend task response shape.
+// It normalizes optional fields and metadata names.
 export function toTaskResponse(doc: AppwriteTaskDoc): TaskResponse {
   return {
     id: doc.$id,

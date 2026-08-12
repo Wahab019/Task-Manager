@@ -10,6 +10,8 @@ const AlertDialog = AlertDialogPrimitive.Root;
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 const AlertDialogCancel = AlertDialogPrimitive.Close;
 
+// Renders the centered alert dialog panel and overlay.
+// It wraps Base UI dialog content with app animation and spacing styles.
 function AlertDialogContent({
   className,
   children,
@@ -31,6 +33,8 @@ function AlertDialogContent({
   );
 }
 
+// Renders the alert dialog heading area.
+// It stacks title and description consistently across confirmation dialogs.
 function AlertDialogHeader({
   className,
   ...props
@@ -43,6 +47,8 @@ function AlertDialogHeader({
   );
 }
 
+// Renders the alert dialog action row.
+// It handles responsive button ordering for mobile and desktop.
 function AlertDialogFooter({
   className,
   ...props
@@ -58,6 +64,8 @@ function AlertDialogFooter({
   );
 }
 
+// Renders the accessible title for an alert dialog.
+// It applies the shared dialog heading typography.
 function AlertDialogTitle({
   className,
   ...props
@@ -73,6 +81,8 @@ function AlertDialogTitle({
   );
 }
 
+// Renders explanatory alert dialog text.
+// It applies muted body styling for secondary copy.
 function AlertDialogDescription({
   className,
   ...props
@@ -85,6 +95,8 @@ function AlertDialogDescription({
   );
 }
 
+// Renders the primary action button inside an alert dialog.
+// It reuses the app button styles on the Base UI close primitive.
 function AlertDialogAction({
   className,
   ...props

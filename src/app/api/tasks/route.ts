@@ -20,14 +20,17 @@ type TaskDocument = {
   assigned_to: string;
 };
 
+// Checks whether the provided value matches the priority condition.
 function isPriority(value: unknown): value is Priority {
   return value === "low" || value === "normal" || value === "high";
 }
 
+// Checks whether the provided value matches the status condition.
 function isStatus(value: unknown): value is Status {
   return value === "todo" || value === "in_progress" || value === "done";
 }
 
+// Handles GET requests for this route and returns the requested JSON response.
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) {
@@ -54,6 +57,7 @@ export async function GET() {
   );
 }
 
+// Handles POST requests for this route and creates the requested resource.
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) {

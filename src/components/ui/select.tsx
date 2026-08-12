@@ -8,6 +8,8 @@ import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react";
 
 const Select = SelectPrimitive.Root;
 
+// Groups related select items inside the app select menu.
+// It passes styling through to the Base UI group primitive.
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
     <SelectPrimitive.Group
@@ -18,6 +20,8 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   );
 }
 
+// Renders the selected value area for the app select trigger.
+// It inherits text styling from the shared select system.
 function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
   return (
     <SelectPrimitive.Value
@@ -28,6 +32,8 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
   );
 }
 
+// Renders the clickable select control with chevron and focus styling.
+// It opens the menu and displays the current selected value.
 function SelectTrigger({
   className,
   size = "default",
@@ -56,6 +62,8 @@ function SelectTrigger({
   );
 }
 
+// Renders the positioned select popup with viewport, scroll buttons, and animation classes.
+// It supports both popper and item-aligned positioning.
 function SelectContent({
   className,
   children,
@@ -98,6 +106,8 @@ function SelectContent({
   );
 }
 
+// Renders non-interactive label text inside a select menu.
+// It gives grouped options a consistent heading style.
 function SelectLabel({
   className,
   ...props
@@ -111,6 +121,8 @@ function SelectLabel({
   );
 }
 
+// Renders an individual selectable option with checkmark state.
+// It wires Base UI item behavior to the app option layout.
 function SelectItem({
   className,
   children,
@@ -139,6 +151,8 @@ function SelectItem({
   );
 }
 
+// Renders a divider between select option groups.
+// It keeps menu sections visually separated.
 function SelectSeparator({
   className,
   ...props
@@ -152,6 +166,8 @@ function SelectSeparator({
   );
 }
 
+// Renders the scroll-up affordance for long select menus.
+// It uses the shared chevron icon styling.
 function SelectScrollUpButton({
   className,
   ...props
@@ -170,6 +186,8 @@ function SelectScrollUpButton({
   );
 }
 
+// Renders the scroll-down affordance for long select menus.
+// It mirrors the scroll-up control at the bottom of the menu.
 function SelectScrollDownButton({
   className,
   ...props

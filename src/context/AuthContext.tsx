@@ -25,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({
   refreshUser: async () => {},
 });
 
+// Provides shared auth state to descendant components.
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(
     null,
@@ -32,6 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Loads the current Appwrite account and stores it in auth context.
+  // Missing sessions are treated as signed-out state instead of fatal errors.
   const fetchUser = async () => {
     try {
       const currentUser = await account.get();
@@ -47,6 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, []);
 
+  // Deletes the active Appwrite session, clears cached user state, and sends the user back to login.
+  // Failures are logged because logout is a navigation-side action.
   const logout = async () => {
     try {
       await account.deleteSession("current");
@@ -72,4 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Exposes authenticated user data and auth actions from AuthContext.
+// Components call it instead of importing Appwrite directly.
 export const useAuth = () => useContext(AuthContext);
