@@ -43,6 +43,7 @@ type DraftTask = {
 
 type DoneScope = "this-week" | "today";
 
+// Formats seconds into a clock-style duration label.
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -73,9 +74,11 @@ const formatEstimatedTime = (totalMinutes: number | null): string | null => {
   return `${hours}hr ${minutes}Mins`;
 };
 
+// Checks whether the provided value matches the within date range condition.
 const isWithinDateRange = (date: Date, start: Date, end: Date) =>
   date.getTime() >= start.getTime() && date.getTime() < end.getTime();
 
+// Defines the Task Column behavior used in this module.
 export function TaskColumn({
   title,
   status,
@@ -114,6 +117,7 @@ export function TaskColumn({
     stopTask,
   } = useTimer();
 
+  // Handles the toggle pause interaction.
   const handleTogglePause = () => {
     if (isTracking) {
       pauseActiveTask();
@@ -163,6 +167,7 @@ export function TaskColumn({
   const countDisplay = isDoneColumn ? visibleCount : tasks.length;
   const formattedVisibleCount = String(countDisplay).padStart(2, "0");
 
+  // Handles the add task interaction.
   const handleAddTask = () => {
     if (
       !draftTask.priority ||
@@ -350,6 +355,7 @@ export function TaskColumn({
             }
 
             if (task.status === "in_progress") {
+              // Handles the resume task interaction.
               const handleResumeTask = () => {
                 startTask(task.id);
               };

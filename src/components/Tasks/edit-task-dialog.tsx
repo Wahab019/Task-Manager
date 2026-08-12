@@ -38,6 +38,7 @@ type EditDraft = {
   deadline: string;
 };
 
+// Defines the Edit Task Dialog behavior used in this module.
 export function EditTaskDialog({
   task,
   open,
@@ -72,6 +73,7 @@ export function EditTaskDialog({
     setError(null);
   }, [open, task.id]);
 
+  // Handles the submit interaction.
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 

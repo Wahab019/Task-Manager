@@ -46,6 +46,7 @@ const buttonVariants = cva(
   },
 );
 
+// Defines the Button behavior used in this module.
 function Button({
   className,
   variant = "default",

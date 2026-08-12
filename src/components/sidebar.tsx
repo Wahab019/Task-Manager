@@ -21,6 +21,7 @@ const navigationItems = [
   { label: "Reports", icon: ChartNoAxesColumn, href: "/reports" },
 ];
 
+// Defines the Sidebar behavior used in this module.
 export function Sidebar() {
   const pathname = usePathname();
   const { logout, user } = useAuth();

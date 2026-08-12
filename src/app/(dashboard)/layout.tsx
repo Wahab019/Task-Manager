@@ -10,6 +10,7 @@ import { Header } from "@/components/Header";
 import { Loader2 } from "lucide-react";
 import { TimerProvider } from "@/context/TimerContext";
 
+// Defines the Dashboard Guard behavior used in this module.
 function DashboardGuard({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -52,6 +53,7 @@ function DashboardGuard({ children }: { children: ReactNode }) {
   );
 }
 
+// Defines the shared Next.js layout wrapper for this route segment.
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>

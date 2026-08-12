@@ -8,6 +8,7 @@ import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react";
 
 const Select = SelectPrimitive.Root;
 
+// Defines the Select Group behavior used in this module.
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
     <SelectPrimitive.Group
@@ -18,6 +19,7 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   );
 }
 
+// Defines the Select Value behavior used in this module.
 function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
   return (
     <SelectPrimitive.Value
@@ -28,6 +30,7 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
   );
 }
 
+// Defines the Select Trigger behavior used in this module.
 function SelectTrigger({
   className,
   size = "default",
@@ -56,6 +59,7 @@ function SelectTrigger({
   );
 }
 
+// Defines the Select Content behavior used in this module.
 function SelectContent({
   className,
   children,
@@ -98,6 +102,7 @@ function SelectContent({
   );
 }
 
+// Defines the Select Label behavior used in this module.
 function SelectLabel({
   className,
   ...props
@@ -111,6 +116,7 @@ function SelectLabel({
   );
 }
 
+// Defines the Select Item behavior used in this module.
 function SelectItem({
   className,
   children,
@@ -139,6 +145,7 @@ function SelectItem({
   );
 }
 
+// Defines the Select Separator behavior used in this module.
 function SelectSeparator({
   className,
   ...props
@@ -152,6 +159,7 @@ function SelectSeparator({
   );
 }
 
+// Defines the Select Scroll Up Button behavior used in this module.
 function SelectScrollUpButton({
   className,
   ...props
@@ -170,6 +178,7 @@ function SelectScrollUpButton({
   );
 }
 
+// Defines the Select Scroll Down Button behavior used in this module.
 function SelectScrollDownButton({
   className,
   ...props

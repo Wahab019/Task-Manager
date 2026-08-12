@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Pause, Play, Square } from "lucide-react";
 import { useTimer } from "@/context/TimerContext";
 
+// Defines the Avatar behavior used in this module.
 export function Avatar({ initials, tone }: { initials: string; tone: string }) {
   return (
     <span
@@ -15,6 +16,7 @@ export function Avatar({ initials, tone }: { initials: string; tone: string }) {
   );
 }
 
+// Formats seconds into a clock-style duration label.
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -26,6 +28,7 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
+// Defines the Dashboard Progress behavior used in this module.
 export const DashboardProgress = () => {
   const {
     tasks,
@@ -64,6 +67,7 @@ export const DashboardProgress = () => {
     }
   };
 
+  // Handles the stop interaction.
   const handleStop = () => {
     if (!displayedTask) return;
     if (isActive) {

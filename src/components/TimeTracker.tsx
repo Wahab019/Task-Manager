@@ -7,9 +7,11 @@ import { useTimer } from "@/context/TimerContext";
 const MIN_OFFSET = 24;
 const MAX_OFFSET = 300;
 
+// Defines the clamp Offset behavior used in this module.
 const clampOffset = (value: number) =>
   Math.min(Math.max(value, MIN_OFFSET), MAX_OFFSET);
 
+// Formats seconds into a clock-style duration label.
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -21,6 +23,7 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
+// Defines the Time Tracker behavior used in this module.
 export const TimeTracker = () => {
   const [position, setPosition] = useState({
     bottom: MIN_OFFSET,
@@ -45,6 +48,7 @@ export const TimeTracker = () => {
   } = useTimer();
 
   useEffect(() => {
+    // Handles the pointer move interaction.
     const handlePointerMove = (event: PointerEvent) => {
       if (dragState.current.pointerId === null) {
         return;
@@ -59,6 +63,7 @@ export const TimeTracker = () => {
       });
     };
 
+    // Handles the pointer up interaction.
     const handlePointerUp = (event: PointerEvent) => {
       if (dragState.current.pointerId === event.pointerId) {
         dragState.current.pointerId = null;
@@ -74,6 +79,7 @@ export const TimeTracker = () => {
     };
   }, []);
 
+  // Handles the pointer down interaction.
   const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
     if ((event.target as HTMLElement).closest("button")) {
       return;
@@ -90,6 +96,7 @@ export const TimeTracker = () => {
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
+  // Handles the pointer up interaction.
   const handlePointerUp = (event: React.PointerEvent<HTMLElement>) => {
     if (dragState.current.pointerId === event.pointerId) {
       dragState.current.pointerId = null;

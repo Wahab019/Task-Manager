@@ -44,6 +44,7 @@ type SidebarContextProps = {
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
+// Returns the sidebar hook value for consumers.
 function useSidebar() {
   const context = React.useContext(SidebarContext);
   if (!context) {
@@ -53,6 +54,7 @@ function useSidebar() {
   return context;
 }
 
+// Provides shared sidebar state to descendant components.
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
@@ -73,6 +75,7 @@ function SidebarProvider({
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen);
   const open = openProp ?? _open;
+  // Defines the set Open callback used in this module.
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value;
@@ -95,6 +98,7 @@ function SidebarProvider({
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
+    // Handles the key down interaction.
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
@@ -149,6 +153,7 @@ function SidebarProvider({
   );
 }
 
+// Defines the Sidebar behavior used in this module.
 function Sidebar({
   side = "left",
   variant = "sidebar",
@@ -251,6 +256,7 @@ function Sidebar({
   );
 }
 
+// Defines the Sidebar Trigger behavior used in this module.
 function SidebarTrigger({
   className,
   onClick,
@@ -277,6 +283,7 @@ function SidebarTrigger({
   );
 }
 
+// Defines the Sidebar Rail behavior used in this module.
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   const { toggleSidebar } = useSidebar();
 
@@ -302,6 +309,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   );
 }
 
+// Defines the Sidebar Inset behavior used in this module.
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   return (
     <main
@@ -315,6 +323,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   );
 }
 
+// Defines the Sidebar Input behavior used in this module.
 function SidebarInput({
   className,
   ...props
@@ -329,6 +338,7 @@ function SidebarInput({
   );
 }
 
+// Defines the Sidebar Header behavior used in this module.
 function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -340,6 +350,7 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Sidebar Footer behavior used in this module.
 function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -351,6 +362,7 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Sidebar Separator behavior used in this module.
 function SidebarSeparator({
   className,
   ...props
@@ -365,6 +377,7 @@ function SidebarSeparator({
   );
 }
 
+// Defines the Sidebar Content behavior used in this module.
 function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -379,6 +392,7 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Sidebar Group behavior used in this module.
 function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -390,6 +404,7 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Sidebar Group Label behavior used in this module.
 function SidebarGroupLabel({
   className,
   render,
@@ -414,6 +429,7 @@ function SidebarGroupLabel({
   });
 }
 
+// Defines the Sidebar Group Action behavior used in this module.
 function SidebarGroupAction({
   className,
   render,
@@ -438,6 +454,7 @@ function SidebarGroupAction({
   });
 }
 
+// Defines the Sidebar Group Content behavior used in this module.
 function SidebarGroupContent({
   className,
   ...props
@@ -452,6 +469,7 @@ function SidebarGroupContent({
   );
 }
 
+// Defines the Sidebar Menu behavior used in this module.
 function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
@@ -463,6 +481,7 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   );
 }
 
+// Defines the Sidebar Menu Item behavior used in this module.
 function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
@@ -496,6 +515,7 @@ const sidebarMenuButtonVariants = cva(
   },
 );
 
+// Defines the Sidebar Menu Button behavior used in this module.
 function SidebarMenuButton({
   render,
   isActive = false,
@@ -550,6 +570,7 @@ function SidebarMenuButton({
   );
 }
 
+// Defines the Sidebar Menu Action behavior used in this module.
 function SidebarMenuAction({
   className,
   render,
@@ -580,6 +601,7 @@ function SidebarMenuAction({
   });
 }
 
+// Defines the Sidebar Menu Badge behavior used in this module.
 function SidebarMenuBadge({
   className,
   ...props
@@ -597,6 +619,7 @@ function SidebarMenuBadge({
   );
 }
 
+// Defines the Sidebar Menu Skeleton behavior used in this module.
 function SidebarMenuSkeleton({
   className,
   showIcon = false,
@@ -635,6 +658,7 @@ function SidebarMenuSkeleton({
   );
 }
 
+// Defines the Sidebar Menu Sub behavior used in this module.
 function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
@@ -649,6 +673,7 @@ function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
   );
 }
 
+// Defines the Sidebar Menu Sub Item behavior used in this module.
 function SidebarMenuSubItem({
   className,
   ...props
@@ -663,6 +688,7 @@ function SidebarMenuSubItem({
   );
 }
 
+// Defines the Sidebar Menu Sub Button behavior used in this module.
 function SidebarMenuSubButton({
   render,
   size = "md",

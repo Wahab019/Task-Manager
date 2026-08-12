@@ -18,6 +18,7 @@ interface SidebarContextValue {
 
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
+// Provides shared sidebar state to descendant components.
 export function SidebarProvider({ children }: { children: ReactNode }) {
   // On desktop the sidebar starts expanded; state controls collapsed vs full.
   // On mobile the sidebar starts hidden; state controls hidden vs visible.
@@ -28,6 +29,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
       `(max-width: ${MOBILE_BREAKPOINT - 1}px)`,
     );
 
+    // Handles the mobile match interaction.
     const handleMobileMatch = (event: MediaQueryListEvent) => {
       if (event.matches) {
         setIsOpen(false);
@@ -42,7 +44,9 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     return () => mediaQuery.removeEventListener("change", handleMobileMatch);
   }, []);
 
+  // Defines the toggle behavior used in this module.
   const toggle = () => setIsOpen((prev) => !prev);
+  // Defines the close behavior used in this module.
   const close = () => setIsOpen(false);
 
   return (
@@ -52,6 +56,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Returns the sidebar hook value for consumers.
 export function useSidebar() {
   const ctx = useContext(SidebarContext);
   if (!ctx) throw new Error("useSidebar must be used within a SidebarProvider");

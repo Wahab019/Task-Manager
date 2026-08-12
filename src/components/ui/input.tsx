@@ -3,6 +3,7 @@ import { Input as InputPrimitive } from "@base-ui/react/input";
 
 import { cn } from "@/lib/utils";
 
+// Defines the Input behavior used in this module.
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <InputPrimitive

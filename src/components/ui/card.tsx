@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// Defines the Card behavior used in this module.
 function Card({
   className,
   size = "default",
@@ -20,6 +21,7 @@ function Card({
   );
 }
 
+// Defines the Card Header behavior used in this module.
 function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -33,6 +35,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Card Title behavior used in this module.
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -46,6 +49,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Card Description behavior used in this module.
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -56,6 +60,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Card Action behavior used in this module.
 function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -69,6 +74,7 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Card Content behavior used in this module.
 function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -79,6 +85,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Card Footer behavior used in this module.
 function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div

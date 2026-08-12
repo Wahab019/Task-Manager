@@ -3,6 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useTimer } from "@/context/TimerContext";
 
+// Defines the Todays Total behavior used in this module.
 export const TodaysTotal = () => {
   const { timeLogs } = useTimer();
   const mounted = typeof window !== "undefined";

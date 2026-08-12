@@ -5,6 +5,7 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { useTimer } from "@/context/TimerContext";
 
+// Computes the week bounds value used by the UI.
 function getWeekBounds(offsetWeeks = 0) {
   const now = new Date();
   const day = now.getDay(); // 0 = Sun
@@ -18,6 +19,7 @@ function getWeekBounds(offsetWeeks = 0) {
   return { monday, sunday };
 }
 
+// Defines the Total Hours behavior used in this module.
 export const TotalHours = () => {
   const { timelogs } = useTimer();
   const mounted = typeof window !== "undefined";

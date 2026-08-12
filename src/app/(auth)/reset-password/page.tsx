@@ -6,9 +6,11 @@ import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
+// Renders the Next.js page component for this route.
 export default function ResetPasswordPage() {
   const [submitted, setSubmitted] = useState(false);
 
+  // Handles the submit interaction.
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitted(true);

@@ -25,18 +25,22 @@ import {
   getTotalHoursInRange,
 } from "@/lib/utils";
 
+// Normalizes a date to the first day of its month.
 function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
+// Normalizes a date to the last day of its month.
 function endOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
+// Checks whether two dates fall within the same month and year.
 function isSameMonth(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
+// Formats month label for display in the UI.
 function formatMonthLabel(month: Date, currentYear: number) {
   const monthName = month.toLocaleDateString("en-US", { month: "long" });
   if (month.getFullYear() === currentYear) {
@@ -51,6 +55,7 @@ const metricDefs = [
   { icon: Clock3, label: "Avg Session Length" },
 ] as const;
 
+// Renders the Next.js page component for this route.
 export default function ReportsPage() {
   const today = new Date();
   const currentYear = today.getFullYear();

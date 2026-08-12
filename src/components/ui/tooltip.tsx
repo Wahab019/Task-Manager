@@ -4,6 +4,7 @@ import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
 
 import { cn } from "@/lib/utils";
 
+// Provides shared tooltip state to descendant components.
 function TooltipProvider({
   delay = 0,
   ...props
@@ -17,14 +18,17 @@ function TooltipProvider({
   );
 }
 
+// Defines the Tooltip behavior used in this module.
 function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />;
 }
 
+// Defines the Tooltip Trigger behavior used in this module.
 function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
 }
 
+// Defines the Tooltip Content behavior used in this module.
 function TooltipContent({
   className,
   side = "top",

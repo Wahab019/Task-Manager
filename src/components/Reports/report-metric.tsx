@@ -1,6 +1,7 @@
 import { Clock3 } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 
+// Defines the Report Metric behavior used in this module.
 export function ReportMetric({
   icon: Icon,
   label,

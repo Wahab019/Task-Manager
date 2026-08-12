@@ -2,6 +2,7 @@ import { CheckCircle2, Clock3 } from "lucide-react";
 import { Pill } from "./pill";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatRelativeTime } from "@/lib/utils";
+// Defines the Completed Task behavior used in this module.
 export function CompletedTask({
   title,
   description,

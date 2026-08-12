@@ -29,6 +29,7 @@ type ChartContextProps = {
 
 const ChartContext = React.createContext<ChartContextProps | null>(null);
 
+// Returns the chart hook value for consumers.
 function useChart() {
   const context = React.useContext(ChartContext);
 
@@ -39,6 +40,7 @@ function useChart() {
   return context;
 }
 
+// Defines the Chart Container behavior used in this module.
 function ChartContainer({
   id,
   className,
@@ -81,6 +83,7 @@ function ChartContainer({
   );
 }
 
+// Defines the Chart Style behavior used in this module.
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme ?? config.color,
@@ -116,6 +119,7 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
+// Defines the Chart Tooltip Content behavior used in this module.
 function ChartTooltipContent({
   active,
   payload,
@@ -272,6 +276,7 @@ function ChartTooltipContent({
 
 const ChartLegend = RechartsPrimitive.Legend;
 
+// Defines the Chart Legend Content behavior used in this module.
 function ChartLegendContent({
   className,
   hideIcon = false,
@@ -327,6 +332,7 @@ function ChartLegendContent({
   );
 }
 
+// Computes the payload config from payload value used by the UI.
 function getPayloadConfigFromPayload(
   config: ChartConfig,
   payload: unknown,

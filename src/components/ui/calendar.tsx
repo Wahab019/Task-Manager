@@ -16,6 +16,7 @@ import {
   ChevronDownIcon,
 } from "lucide-react";
 
+// Defines the Calendar behavior used in this module.
 function Calendar({
   className,
   classNames,
@@ -187,6 +188,7 @@ function Calendar({
   );
 }
 
+// Defines the Calendar Day Button behavior used in this module.
 function CalendarDayButton({
   className,
   day,

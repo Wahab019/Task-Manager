@@ -5,6 +5,7 @@ import { Check, Pencil, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTimer } from "@/context/TimerContext";
 
+// Computes the week bounds value used by the UI.
 function getWeekBounds() {
   const now = new Date();
   const day = now.getDay(); // 0 = Sun, 1 = Mon, …, 6 = Sat
@@ -18,6 +19,7 @@ function getWeekBounds() {
   return { monday, sunday };
 }
 
+// Formats hours minutes for display in the UI.
 function formatHoursMinutes(totalSeconds: number) {
   const h = Math.floor(totalSeconds / 3600)
     .toString()
@@ -28,6 +30,7 @@ function formatHoursMinutes(totalSeconds: number) {
   return `${h}:${m}`;
 }
 
+// Defines the Weekly Progress behavior used in this module.
 export const WeeklyProgress = () => {
   const { timelogs } = useTimer();
   // Weekly target in hours — null means "not set"
@@ -52,11 +55,13 @@ export const WeeklyProgress = () => {
     }
   }, [isEditing]);
 
+  // Handles the edit open interaction.
   const handleEditOpen = () => {
     setTempTarget(weeklyTarget !== null ? String(weeklyTarget) : "");
     setIsEditing(true);
   };
 
+  // Handles the save interaction.
   const handleSave = () => {
     const trimmed = tempTarget.trim();
     if (trimmed === "") {
@@ -73,10 +78,12 @@ export const WeeklyProgress = () => {
     setIsEditing(false);
   };
 
+  // Handles the cancel interaction.
   const handleCancel = () => {
     setIsEditing(false);
   };
 
+  // Handles the key down interaction.
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleSave();
     if (e.key === "Escape") handleCancel();

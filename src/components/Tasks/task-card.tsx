@@ -28,6 +28,7 @@ import { useTimer, type Priority, type Task } from "@/context/TimerContext";
 import { formatDueLabel } from "@/lib/utils";
 import { EditTaskDialog, type TaskEditUpdates } from "./edit-task-dialog";
 
+// Defines the Task Card behavior used in this module.
 export function TaskCard({
   id,
   priority,
@@ -66,6 +67,7 @@ export function TaskCard({
   const deadlineLabel = deadline ? formatDueLabel(deadline) : "";
   const isPending = id.startsWith("temp-");
 
+  // Handles the action interaction.
   const handleAction = (event: React.MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
@@ -84,10 +86,12 @@ export function TaskCard({
     elapsedSeconds: totalSeconds,
   };
 
+  // Handles the save interaction.
   const handleSave = async (updates: TaskEditUpdates) => {
     await updateTask(id, updates);
   };
 
+  // Handles the delete interaction.
   const handleDelete = async () => {
     setIsDeleting(true);
     setDeleteError(null);

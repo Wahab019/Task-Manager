@@ -5,6 +5,7 @@ import { useTimer } from "@/context/TimerContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+// Renders the Next.js page component for this route.
 export default function TimeLogsPage() {
   const { error, reloadData, isLoading } = useTimer();
   if (isLoading) {

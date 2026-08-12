@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 
+// Defines the Skeleton behavior used in this module.
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div

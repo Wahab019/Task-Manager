@@ -16,6 +16,7 @@ import { formatDueLabel } from "@/lib/utils";
 import { EditTaskDialog, type TaskEditUpdates } from "./edit-task-dialog";
 import { useTimer, type Priority, type Task } from "@/context/TimerContext";
 
+// Formats seconds into a clock-style duration label.
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -27,6 +28,7 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
+// Defines the Ongoing Task behavior used in this module.
 export function OngoingTask({
   id,
   priority = "normal",
@@ -69,6 +71,7 @@ export function OngoingTask({
     elapsedSeconds,
   };
 
+  // Handles the save interaction.
   const handleSave = async (updates: TaskEditUpdates) => {
     await updateTask(id, updates);
   };

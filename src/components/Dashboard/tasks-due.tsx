@@ -20,6 +20,7 @@ const colorClasses = {
   },
 } as const;
 
+// Defines the Tasks Due behavior used in this module.
 export const TasksDue = ({ tasks }: { tasks: Task[] }) => {
   const dueTasks = getTasksDueSoon(tasks).slice(0, 3);
 

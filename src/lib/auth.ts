@@ -1,6 +1,7 @@
 import { Client, Account } from "node-appwrite";
 import { headers } from "next/headers";
 
+// Returns the currently authenticated Appwrite user or null when no session exists.
 export async function getCurrentUser() {
   const headersList = await headers();
   const authHeader = headersList.get("authorization");

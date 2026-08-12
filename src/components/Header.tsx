@@ -4,6 +4,7 @@ import { PanelLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/context/SidebarContext";
 
+// Defines the Toolbar Button behavior used in this module.
 export function ToolbarButton({
   children,
   label,
@@ -29,12 +30,14 @@ export function ToolbarButton({
   );
 }
 
+// Defines the Header behavior used in this module.
 export const Header = () => {
   const { user } = useAuth();
   const { toggle } = useSidebar();
 
   const name = user?.name || user?.email?.split("@")[0] || "User";
 
+  // Computes the initials value used by the UI.
   const getInitials = (fullName: string) => {
     const parts = fullName.trim().split(" ");
     if (parts.length >= 2) {

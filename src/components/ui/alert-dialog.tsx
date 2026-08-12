@@ -10,6 +10,7 @@ const AlertDialog = AlertDialogPrimitive.Root;
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 const AlertDialogCancel = AlertDialogPrimitive.Close;
 
+// Defines the Alert Dialog Content behavior used in this module.
 function AlertDialogContent({
   className,
   children,
@@ -31,6 +32,7 @@ function AlertDialogContent({
   );
 }
 
+// Defines the Alert Dialog Header behavior used in this module.
 function AlertDialogHeader({
   className,
   ...props
@@ -43,6 +45,7 @@ function AlertDialogHeader({
   );
 }
 
+// Defines the Alert Dialog Footer behavior used in this module.
 function AlertDialogFooter({
   className,
   ...props
@@ -58,6 +61,7 @@ function AlertDialogFooter({
   );
 }
 
+// Defines the Alert Dialog Title behavior used in this module.
 function AlertDialogTitle({
   className,
   ...props
@@ -73,6 +77,7 @@ function AlertDialogTitle({
   );
 }
 
+// Defines the Alert Dialog Description behavior used in this module.
 function AlertDialogDescription({
   className,
   ...props
@@ -85,6 +90,7 @@ function AlertDialogDescription({
   );
 }
 
+// Defines the Alert Dialog Action behavior used in this module.
 function AlertDialogAction({
   className,
   ...props

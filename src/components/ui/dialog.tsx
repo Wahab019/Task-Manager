@@ -10,6 +10,7 @@ const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogClose = DialogPrimitive.Close;
 
+// Defines the Dialog Content behavior used in this module.
 function DialogContent({
   className,
   children,
@@ -37,6 +38,7 @@ function DialogContent({
   );
 }
 
+// Defines the Dialog Header behavior used in this module.
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -46,6 +48,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Dialog Footer behavior used in this module.
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -58,6 +61,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Dialog Title behavior used in this module.
 function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
@@ -70,6 +74,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   );
 }
 
+// Defines the Dialog Description behavior used in this module.
 function DialogDescription({
   className,
   ...props

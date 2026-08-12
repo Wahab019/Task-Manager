@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const DropdownMenu = MenuPrimitive.Root;
 const DropdownMenuTrigger = MenuPrimitive.Trigger;
 
+// Defines the Dropdown Menu Content behavior used in this module.
 function DropdownMenuContent({
   className,
   side = "bottom",
@@ -38,6 +39,7 @@ function DropdownMenuContent({
   );
 }
 
+// Defines the Dropdown Menu Item behavior used in this module.
 function DropdownMenuItem({ className, ...props }: MenuPrimitive.Item.Props) {
   return (
     <MenuPrimitive.Item

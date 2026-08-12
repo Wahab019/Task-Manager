@@ -5,14 +5,17 @@ import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 
 import { cn } from "@/lib/utils";
 
+// Defines the Popover behavior used in this module.
 function Popover({ ...props }: PopoverPrimitive.Root.Props) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 
+// Defines the Popover Trigger behavior used in this module.
 function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
+// Defines the Popover Content behavior used in this module.
 function PopoverContent({
   className,
   align = "center",
@@ -47,6 +50,7 @@ function PopoverContent({
   );
 }
 
+// Defines the Popover Header behavior used in this module.
 function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -57,6 +61,7 @@ function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Popover Title behavior used in this module.
 function PopoverTitle({ className, ...props }: PopoverPrimitive.Title.Props) {
   return (
     <PopoverPrimitive.Title
@@ -67,6 +72,7 @@ function PopoverTitle({ className, ...props }: PopoverPrimitive.Title.Props) {
   );
 }
 
+// Defines the Popover Description behavior used in this module.
 function PopoverDescription({
   className,
   ...props

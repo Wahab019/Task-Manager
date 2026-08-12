@@ -24,6 +24,7 @@ type FieldErrors = {
   password?: string;
 };
 
+// Renders the Next.js page component for this route.
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -34,6 +35,7 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
 
+  // Defines the create Session behavior used in this module.
   const createSession = async () => {
     if (typeof account.createEmailPasswordSession === "function") {
       await account.createEmailPasswordSession(email, password);
@@ -44,6 +46,7 @@ export default function LoginPage() {
     }
   };
 
+  // Handles the submit interaction.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});

@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Renders the Next.js page component for this route.
 export default function DashboardPage() {
   const { tasks, error, reloadData, isLoading } = useTimer();
 

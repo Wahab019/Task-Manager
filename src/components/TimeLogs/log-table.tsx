@@ -22,12 +22,14 @@ const timeFormatter = new Intl.DateTimeFormat("en-US", {
   minute: "2-digit",
 });
 
+// Normalizes a date to the first millisecond of its local day.
 function startOfDay(date: Date) {
   const nextDate = new Date(date);
   nextDate.setHours(0, 0, 0, 0);
   return nextDate;
 }
 
+// Defines the start Of Week behavior used in this module.
 function startOfWeek(date: Date) {
   const nextDate = startOfDay(date);
   const day = nextDate.getDay();
@@ -36,18 +38,21 @@ function startOfWeek(date: Date) {
   return nextDate;
 }
 
+// Defines the add Days behavior used in this module.
 function addDays(date: Date, days: number) {
   const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + days);
   return nextDate;
 }
 
+// Formats duration for display in the UI.
 function formatDuration(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
+// Formats week range for display in the UI.
 function formatWeekRange(monday: Date) {
   const sunday = addDays(monday, 6);
   const sameYear = monday.getFullYear() === sunday.getFullYear();
@@ -55,10 +60,12 @@ function formatWeekRange(monday: Date) {
   return `${weekFormatter.format(monday)} - ${weekFormatter.format(sunday)} ${yearLabel}`.trim();
 }
 
+// Computes the entry end time value used by the UI.
 function getEntryEndTime(entry: TimeLogEntry) {
   return entry.endTime ?? Date.now();
 }
 
+// Computes the week day keys value used by the UI.
 function getWeekDayKeys(weekStart: Date, today: Date) {
   return Array.from({ length: 7 }, (_, index) => {
     const date = addDays(weekStart, 6 - index);
@@ -69,6 +76,7 @@ function getWeekDayKeys(weekStart: Date, today: Date) {
   }).filter((key): key is string => key !== null);
 }
 
+// Defines the Date Row behavior used in this module.
 export function DateRow({
   label,
   total,
@@ -112,6 +120,7 @@ export function DateRow({
   );
 }
 
+// Defines the Log Table behavior used in this module.
 export const LogTable = () => {
   const { tasks, timelogs, isLoading, error, reloadData } = useTimer();
   const today = startOfDay(new Date());
@@ -197,12 +206,14 @@ export const LogTable = () => {
     }).filter((day): day is NonNullable<typeof day> => day !== null);
   }, [selectedMonday, tasks, timelogs, today]);
 
+  // Defines the navigate Week behavior used in this module.
   function navigateWeek(offset: number) {
     const nextMonday = addDays(selectedMonday, offset);
     setSelectedMonday(nextMonday);
     setCollapsedDays(new Set(getWeekDayKeys(nextMonday, today)));
   }
 
+  // Toggles the day state.
   function toggleDay(key: string) {
     setCollapsedDays((current) => {
       const next = new Set(current);
@@ -215,6 +226,7 @@ export const LogTable = () => {
     });
   }
 
+  // Toggles the group expanded state.
   function toggleGroupExpanded(groupKey: string) {
     setExpandedGroups((current) => ({
       ...current,

@@ -19,6 +19,7 @@ const STATUS_LABELS: Record<Task["status"], string> = {
   done: "Done",
 };
 
+// Defines the Task Board behavior used in this module.
 export function TaskBoard() {
   const { tasks, isLoading, error, addTask, updateTaskStatus } = useTimer();
 
@@ -46,6 +47,7 @@ export function TaskBoard() {
     });
   }
 
+  // Handles the drag end interaction.
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;

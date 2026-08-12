@@ -7,22 +7,27 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { XIcon } from "lucide-react";
 
+// Defines the Sheet behavior used in this module.
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }
 
+// Defines the Sheet Trigger behavior used in this module.
 function SheetTrigger({ ...props }: SheetPrimitive.Trigger.Props) {
   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
 }
 
+// Defines the Sheet Close behavior used in this module.
 function SheetClose({ ...props }: SheetPrimitive.Close.Props) {
   return <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
 }
 
+// Defines the Sheet Portal behavior used in this module.
 function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
 }
 
+// Defines the Sheet Overlay behavior used in this module.
 function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   return (
     <SheetPrimitive.Backdrop
@@ -36,6 +41,7 @@ function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   );
 }
 
+// Defines the Sheet Content behavior used in this module.
 function SheetContent({
   className,
   children,
@@ -79,6 +85,7 @@ function SheetContent({
   );
 }
 
+// Defines the Sheet Header behavior used in this module.
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -89,6 +96,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Sheet Footer behavior used in this module.
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -99,6 +107,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// Defines the Sheet Title behavior used in this module.
 function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
   return (
     <SheetPrimitive.Title
@@ -112,6 +121,7 @@ function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
   );
 }
 
+// Defines the Sheet Description behavior used in this module.
 function SheetDescription({
   className,
   ...props

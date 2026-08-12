@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   description: "A focused workspace for executive task management.",
 };
 
+// Defines the shared Next.js layout wrapper for this route segment.
 export default function RootLayout({
   children,
 }: Readonly<{

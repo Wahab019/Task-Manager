@@ -1,0 +1,77 @@
+Task Manager app dependency inventory
+
+Core app framework
+- next 16.2.10 — main app framework for routing, server rendering, API routes, and Next.js app structure.
+- react 19.2.4 — frontend UI library used across the app.
+- react-dom 19.2.4 — React DOM rendering for the browser.
+
+Backend and data layer
+- appwrite 26.2.0 — client-side Appwrite SDK used for auth and database interactions.
+- node-appwrite 27.1.0 — server-side Appwrite SDK used in API routes and server logic.
+- axios 1.18.1 — HTTP client used for timer and API requests.
+
+Authentication and validation
+- zod 4.4.3 — schema validation for forms such as login and password reset flows.
+
+Styling and UI utilities
+- tailwindcss 4 — utility-first CSS framework for the app styling.
+- @tailwindcss/postcss 4 — Tailwind/PostCSS integration.
+- clsx 2.1.1 — conditional className utility.
+- tailwind-merge 3.6.0 — merges Tailwind utility classes safely.
+- tw-animate-css 1.4.0 — animation utility for UI effects.
+- class-variance-authority 0.7.1 — component variant logic for UI building.
+- @base-ui/react 1.6.0 — headless UI primitives used by the app's component patterns.
+- lucide-react 1.24.0 — icon set for dashboard, auth screens, task actions, and shell UI.
+
+Task and dashboard functionality
+- @dnd-kit/core 6.3.1 — main drag-and-drop engine for task board interactions.
+- @dnd-kit/dom 0.5.0 — DOM integration for DnD behavior.
+- react-day-picker 10.0.1 — calendar/date selection UI.
+- recharts 3.8.0 — chart rendering for reports and dashboard analytics.
+
+Project scaffolding / tooling
+- typescript 5 — TypeScript language support.
+- eslint 9 — linting.
+- eslint-config-next 16.2.10 — Next.js lint rules.
+- prettier 3.9.5 — formatting.
+- husky 9.1.7 — git hooks automation.
+- lint-staged 17.0.8 — pre-commit formatting/linting support.
+
+Optional / generated utility package
+- shadcn 4.13.0 — used as part of the project’s component scaffolding workflow and shadcn-style UI setup.
+
+Most important app-working dependencies
+1. next
+2. react / react-dom
+3. appwrite / node-appwrite
+4. axios
+5. tailwindcss
+6. @dnd-kit/core
+7. recharts
+8. lucide-react
+9. zod
+
+This list reflects the packages actually imported by the codebase and the packages required for the app’s runtime and UI behavior.
+
+for date formatting and time logic, the app uses native javascript date handling plus browser formatting.
+
+
+Root file function inventory
+- .env - Stores local environment variables used by the app and Appwrite configuration.
+- .gitignore - Lists files and folders Git should ignore.
+- .prettierignore - Lists files and folders Prettier should skip.
+- .prettierrc - Configures Prettier formatting behavior.
+- AGENTS.md - Stores repository-specific instructions for coding agents.
+- CLAUDE.md - Contains a short project note for Claude-related tooling.
+- README.md - Provides the project overview and Next.js getting-started commands.
+- claude_client.py - Defines a small Python helper client for Claude-related tooling.
+- components.json - Configures shadcn-style component aliases and UI generation settings.
+- eslint.config.mjs - Configures ESLint with Next.js and TypeScript linting rules.
+- info.txt - Documents dependency notes and this root-file function inventory.
+- next-env.d.ts - Provides generated Next.js TypeScript ambient declarations.
+- next.config.ts - Exports the Next.js runtime configuration for the app.
+- package-lock.json - Locks exact installed npm dependency versions.
+- package.json - Defines app metadata, npm scripts, dependencies, and dev dependencies.
+- postcss.config.mjs - Configures PostCSS to run Tailwind CSS processing.
+- tsconfig.json - Configures TypeScript compiler options and path aliases.
+- tsconfig.tsbuildinfo - Stores TypeScript incremental build cache metadata.

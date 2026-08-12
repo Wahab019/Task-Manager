@@ -25,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({
   refreshUser: async () => {},
 });
 
+// Provides shared auth state to descendant components.
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(
     null,
@@ -32,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Defines the fetch User behavior used in this module.
   const fetchUser = async () => {
     try {
       const currentUser = await account.get();
@@ -47,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, []);
 
+  // Defines the logout behavior used in this module.
   const logout = async () => {
     try {
       await account.deleteSession("current");
@@ -72,4 +75,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Returns the auth hook value for consumers.
 export const useAuth = () => useContext(AuthContext);

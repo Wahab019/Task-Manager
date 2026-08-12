@@ -22,6 +22,7 @@ type AppwriteTaskDoc = {
   $updatedAt: string;
 };
 
+// Defines the to Task Response behavior used in this module.
 export function toTaskResponse(doc: AppwriteTaskDoc): TaskResponse {
   return {
     id: doc.$id,
