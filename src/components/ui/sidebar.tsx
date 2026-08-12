@@ -44,7 +44,8 @@ type SidebarContextProps = {
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
-// Returns the sidebar hook value for consumers.
+// Returns the sidebar context for components that need to read or change the shell sidebar state.
+// It throws when used outside the matching provider.
 function useSidebar() {
   const context = React.useContext(SidebarContext);
   if (!context) {
@@ -75,7 +76,8 @@ function SidebarProvider({
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen);
   const open = openProp ?? _open;
-  // Defines the set Open callback used in this module.
+  // Updates controlled or uncontrolled desktop sidebar state and persists it in a cookie.
+  // The cookie lets the sidebar remember its expanded/collapsed state across page loads.
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value;
@@ -98,7 +100,8 @@ function SidebarProvider({
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
-    // Handles the key down interaction.
+    // Toggles the sidebar when the user presses the configured keyboard shortcut.
+    // The handler listens globally so the shell shortcut works from anywhere in the app.
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
@@ -153,7 +156,8 @@ function SidebarProvider({
   );
 }
 
-// Defines the Sidebar behavior used in this module.
+// Renders the responsive sidebar container used by the app shell.
+// It switches between a sheet on mobile and a collapsible rail/sidebar on desktop.
 function Sidebar({
   side = "left",
   variant = "sidebar",
@@ -256,7 +260,8 @@ function Sidebar({
   );
 }
 
-// Defines the Sidebar Trigger behavior used in this module.
+// Renders the button that toggles the sidebar from headers or toolbars.
+// It calls any provided click handler before flipping the shared sidebar state.
 function SidebarTrigger({
   className,
   onClick,
@@ -283,7 +288,8 @@ function SidebarTrigger({
   );
 }
 
-// Defines the Sidebar Rail behavior used in this module.
+// Renders the thin desktop drag/click rail beside the sidebar.
+// Clicking it toggles the same expanded/collapsed state as the trigger button.
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   const { toggleSidebar } = useSidebar();
 
@@ -309,7 +315,8 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   );
 }
 
-// Defines the Sidebar Inset behavior used in this module.
+// Renders the main content wrapper that responds to inset sidebar variants.
+// It applies the margin, rounding, and shadow adjustments driven by sidebar state.
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   return (
     <main
@@ -323,7 +330,8 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   );
 }
 
-// Defines the Sidebar Input behavior used in this module.
+// Renders an input styled to fit inside sidebar panels.
+// It reuses the shared Input component while removing extra shadow treatment.
 function SidebarInput({
   className,
   ...props
@@ -338,7 +346,8 @@ function SidebarInput({
   );
 }
 
-// Defines the Sidebar Header behavior used in this module.
+// Renders the padded top region of a sidebar.
+// Branding, workspace switchers, or primary controls can be placed inside it.
 function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -350,7 +359,8 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Defines the Sidebar Footer behavior used in this module.
+// Renders the padded bottom region of a sidebar.
+// Account controls or secondary actions can be placed here consistently.
 function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -362,7 +372,8 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Defines the Sidebar Separator behavior used in this module.
+// Renders a sidebar-scoped divider with the correct inset and border color.
+// It wraps the shared Separator component for use inside sidebar groups.
 function SidebarSeparator({
   className,
   ...props
@@ -377,7 +388,8 @@ function SidebarSeparator({
   );
 }
 
-// Defines the Sidebar Content behavior used in this module.
+// Renders the scrollable middle region of the sidebar.
+// It hides overflow in icon-collapsed mode so menu labels do not leak out.
 function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -392,7 +404,8 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Defines the Sidebar Group behavior used in this module.
+// Renders a padded group container for related sidebar controls.
+// Labels, actions, and menu content are composed inside this wrapper.
 function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -404,7 +417,8 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Defines the Sidebar Group Label behavior used in this module.
+// Renders a sidebar group label and supports custom rendering through Base UI's render prop.
+// It fades out when the sidebar collapses to icon-only mode.
 function SidebarGroupLabel({
   className,
   render,
@@ -429,7 +443,8 @@ function SidebarGroupLabel({
   });
 }
 
-// Defines the Sidebar Group Action behavior used in this module.
+// Renders an optional action button aligned to a sidebar group header.
+// It is hidden in icon-collapsed mode where there is no room for group actions.
 function SidebarGroupAction({
   className,
   render,
@@ -454,7 +469,8 @@ function SidebarGroupAction({
   });
 }
 
-// Defines the Sidebar Group Content behavior used in this module.
+// Renders the content area inside a sidebar group.
+// Menus, nested lists, or custom controls sit inside this width-constrained wrapper.
 function SidebarGroupContent({
   className,
   ...props
@@ -469,7 +485,8 @@ function SidebarGroupContent({
   );
 }
 
-// Defines the Sidebar Menu behavior used in this module.
+// Renders the list container for sidebar menu items.
+// It provides the vertical spacing and minimum-width rules used by all menu rows.
 function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
@@ -481,7 +498,8 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   );
 }
 
-// Defines the Sidebar Menu Item behavior used in this module.
+// Renders one positioned list item within the sidebar menu.
+// Nested buttons, badges, and actions use its group state for hover styling.
 function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
@@ -515,7 +533,8 @@ const sidebarMenuButtonVariants = cva(
   },
 );
 
-// Defines the Sidebar Menu Button behavior used in this module.
+// Renders the primary clickable row inside a sidebar menu item.
+// It supports active styling, size variants, custom render targets, and collapsed-state tooltips.
 function SidebarMenuButton({
   render,
   isActive = false,
@@ -570,7 +589,8 @@ function SidebarMenuButton({
   );
 }
 
-// Defines the Sidebar Menu Action behavior used in this module.
+// Renders a compact action button attached to a sidebar menu row.
+// It can stay visible or appear only when the row is hovered or focused.
 function SidebarMenuAction({
   className,
   render,
@@ -601,7 +621,8 @@ function SidebarMenuAction({
   });
 }
 
-// Defines the Sidebar Menu Badge behavior used in this module.
+// Renders a non-interactive badge on the right side of a sidebar menu row.
+// It is hidden in icon-collapsed mode to keep the rail clean.
 function SidebarMenuBadge({
   className,
   ...props
@@ -619,7 +640,8 @@ function SidebarMenuBadge({
   );
 }
 
-// Defines the Sidebar Menu Skeleton behavior used in this module.
+// Renders a loading placeholder for a sidebar menu row.
+// It randomizes text width slightly so repeated skeleton rows feel less uniform.
 function SidebarMenuSkeleton({
   className,
   showIcon = false,
@@ -658,7 +680,8 @@ function SidebarMenuSkeleton({
   );
 }
 
-// Defines the Sidebar Menu Sub behavior used in this module.
+// Renders a nested sidebar submenu with an indented border.
+// It hides itself in icon-collapsed mode where nested labels cannot fit.
 function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
@@ -673,7 +696,8 @@ function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
   );
 }
 
-// Defines the Sidebar Menu Sub Item behavior used in this module.
+// Renders one list item inside a nested sidebar submenu.
+// It provides the positioning group used by submenu links and actions.
 function SidebarMenuSubItem({
   className,
   ...props
@@ -688,7 +712,8 @@ function SidebarMenuSubItem({
   );
 }
 
-// Defines the Sidebar Menu Sub Button behavior used in this module.
+// Renders a nested submenu link with active and size states.
+// It supports custom render targets while preserving sidebar data attributes.
 function SidebarMenuSubButton({
   render,
   size = "md",

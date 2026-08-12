@@ -5,17 +5,20 @@ import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 
 import { cn } from "@/lib/utils";
 
-// Defines the Popover behavior used in this module.
+// Provides the popover root state for trigger and content pairs.
+// It wraps Base UI popover behavior without adding styling itself.
 function Popover({ ...props }: PopoverPrimitive.Root.Props) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 
-// Defines the Popover Trigger behavior used in this module.
+// Marks the element that toggles a popover.
+// It forwards props directly to the Base UI trigger primitive.
 function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
-// Defines the Popover Content behavior used in this module.
+// Renders the positioned popover panel with app spacing, shadow, and animation classes.
+// It also includes the popover arrow.
 function PopoverContent({
   className,
   align = "center",
@@ -50,7 +53,8 @@ function PopoverContent({
   );
 }
 
-// Defines the Popover Header behavior used in this module.
+// Renders a standard header area inside popover content.
+// It gives popovers a consistent title/description layout.
 function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -61,7 +65,8 @@ function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Defines the Popover Title behavior used in this module.
+// Renders the accessible title for popover content.
+// It applies the shared compact heading style.
 function PopoverTitle({ className, ...props }: PopoverPrimitive.Title.Props) {
   return (
     <PopoverPrimitive.Title
@@ -72,7 +77,8 @@ function PopoverTitle({ className, ...props }: PopoverPrimitive.Title.Props) {
   );
 }
 
-// Defines the Popover Description behavior used in this module.
+// Renders secondary explanatory text inside a popover.
+// It applies muted text styling for supporting copy.
 function PopoverDescription({
   className,
   ...props

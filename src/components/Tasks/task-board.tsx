@@ -19,7 +19,8 @@ const STATUS_LABELS: Record<Task["status"], string> = {
   done: "Done",
 };
 
-// Defines the Task Board behavior used in this module.
+// Renders the full task board and coordinates drag-and-drop status changes.
+// It groups tasks into columns from TimerContext state.
 export function TaskBoard() {
   const { tasks, isLoading, error, addTask, updateTaskStatus } = useTimer();
 
@@ -47,7 +48,8 @@ export function TaskBoard() {
     });
   }
 
-  // Handles the drag end interaction.
+  // Handles dropping a task over a new column.
+  // It updates task status only when the drop target is a different valid status.
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;

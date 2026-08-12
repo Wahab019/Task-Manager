@@ -15,7 +15,8 @@ type TimeLogDocument = {
 
 const PAGE_SIZE = 100;
 
-// Defines the to Time Log Response behavior used in this module.
+// Converts an Appwrite timelog document into the API response shape.
+// It strips Appwrite metadata the frontend does not need.
 function toTimeLogResponse(doc: TimeLogDocument) {
   return {
     id: doc.$id,

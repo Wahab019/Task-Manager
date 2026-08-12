@@ -4,7 +4,8 @@ import { PanelLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/context/SidebarContext";
 
-// Defines the Toolbar Button behavior used in this module.
+// Renders a compact icon button used in the header toolbar.
+// It centralizes the hover, disabled, and label styling for header actions.
 export function ToolbarButton({
   children,
   label,
@@ -30,14 +31,16 @@ export function ToolbarButton({
   );
 }
 
-// Defines the Header behavior used in this module.
+// Renders the top application bar with navigation controls and the current user menu.
+// It also wires logout behavior to the account dropdown.
 export const Header = () => {
   const { user } = useAuth();
   const { toggle } = useSidebar();
 
   const name = user?.name || user?.email?.split("@")[0] || "User";
 
-  // Computes the initials value used by the UI.
+  // Derives a short initials label from the signed-in user name.
+  // The header uses it as the fallback avatar text.
   const getInitials = (fullName: string) => {
     const parts = fullName.trim().split(" ");
     if (parts.length >= 2) {

@@ -140,6 +140,8 @@ export function getDueDateColor(deadline: string): "red" | "yellow" | "green" {
   return "green";
 }
 
+// Returns unfinished tasks with valid deadlines, sorted from nearest to farthest.
+// Dashboard due-date widgets use this to show the most urgent work first.
 export function getTasksDueSoon<
   T extends { status: string; deadline: string | null },
 >(tasks: T[]): T[] {

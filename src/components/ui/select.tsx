@@ -8,7 +8,8 @@ import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react";
 
 const Select = SelectPrimitive.Root;
 
-// Defines the Select Group behavior used in this module.
+// Groups related select items inside the app select menu.
+// It passes styling through to the Base UI group primitive.
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
     <SelectPrimitive.Group
@@ -19,7 +20,8 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   );
 }
 
-// Defines the Select Value behavior used in this module.
+// Renders the selected value area for the app select trigger.
+// It inherits text styling from the shared select system.
 function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
   return (
     <SelectPrimitive.Value
@@ -30,7 +32,8 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
   );
 }
 
-// Defines the Select Trigger behavior used in this module.
+// Renders the clickable select control with chevron and focus styling.
+// It opens the menu and displays the current selected value.
 function SelectTrigger({
   className,
   size = "default",
@@ -59,7 +62,8 @@ function SelectTrigger({
   );
 }
 
-// Defines the Select Content behavior used in this module.
+// Renders the positioned select popup with viewport, scroll buttons, and animation classes.
+// It supports both popper and item-aligned positioning.
 function SelectContent({
   className,
   children,
@@ -102,7 +106,8 @@ function SelectContent({
   );
 }
 
-// Defines the Select Label behavior used in this module.
+// Renders non-interactive label text inside a select menu.
+// It gives grouped options a consistent heading style.
 function SelectLabel({
   className,
   ...props
@@ -116,7 +121,8 @@ function SelectLabel({
   );
 }
 
-// Defines the Select Item behavior used in this module.
+// Renders an individual selectable option with checkmark state.
+// It wires Base UI item behavior to the app option layout.
 function SelectItem({
   className,
   children,
@@ -145,7 +151,8 @@ function SelectItem({
   );
 }
 
-// Defines the Select Separator behavior used in this module.
+// Renders a divider between select option groups.
+// It keeps menu sections visually separated.
 function SelectSeparator({
   className,
   ...props
@@ -159,7 +166,8 @@ function SelectSeparator({
   );
 }
 
-// Defines the Select Scroll Up Button behavior used in this module.
+// Renders the scroll-up affordance for long select menus.
+// It uses the shared chevron icon styling.
 function SelectScrollUpButton({
   className,
   ...props
@@ -178,7 +186,8 @@ function SelectScrollUpButton({
   );
 }
 
-// Defines the Select Scroll Down Button behavior used in this module.
+// Renders the scroll-down affordance for long select menus.
+// It mirrors the scroll-up control at the bottom of the menu.
 function SelectScrollDownButton({
   className,
   ...props

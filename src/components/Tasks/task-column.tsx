@@ -78,7 +78,8 @@ const formatEstimatedTime = (totalMinutes: number | null): string | null => {
 const isWithinDateRange = (date: Date, start: Date, end: Date) =>
   date.getTime() >= start.getTime() && date.getTime() < end.getTime();
 
-// Defines the Task Column behavior used in this module.
+// Renders one kanban status column with filtering, task creation, and task controls.
+// It adapts done-task visibility by selected date scope.
 export function TaskColumn({
   title,
   status,
@@ -117,7 +118,8 @@ export function TaskColumn({
     stopTask,
   } = useTimer();
 
-  // Handles the toggle pause interaction.
+  // Switches the active task between paused and running states.
+  // It delegates the actual timer transition to TimerContext.
   const handleTogglePause = () => {
     if (isTracking) {
       pauseActiveTask();
@@ -167,7 +169,8 @@ export function TaskColumn({
   const countDisplay = isDoneColumn ? visibleCount : tasks.length;
   const formattedVisibleCount = String(countDisplay).padStart(2, "0");
 
-  // Handles the add task interaction.
+  // Submits the add-task form for this column and resets the local draft.
+  // The new task starts with the column status context.
   const handleAddTask = () => {
     if (
       !draftTask.priority ||
@@ -355,7 +358,8 @@ export function TaskColumn({
             }
 
             if (task.status === "in_progress") {
-              // Handles the resume task interaction.
+              // Resumes a task from the column list, using its title to restart the timer display.
+              // It stops event bubbling so drag/card actions do not also fire.
               const handleResumeTask = () => {
                 startTask(task.id);
               };

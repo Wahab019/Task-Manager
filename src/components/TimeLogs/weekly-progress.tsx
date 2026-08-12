@@ -5,7 +5,8 @@ import { Check, Pencil, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTimer } from "@/context/TimerContext";
 
-// Computes the week bounds value used by the UI.
+// Builds the start and end timestamps for the current or offset week.
+// Dashboard and progress summaries use this range for filtering timelogs.
 function getWeekBounds() {
   const now = new Date();
   const day = now.getDay(); // 0 = Sun, 1 = Mon, …, 6 = Sat
@@ -19,7 +20,8 @@ function getWeekBounds() {
   return { monday, sunday };
 }
 
-// Formats hours minutes for display in the UI.
+// Formats seconds into the hours-and-minutes label used by the weekly target card.
+// Whole-hour values stay compact while partial hours include their remaining minutes.
 function formatHoursMinutes(totalSeconds: number) {
   const h = Math.floor(totalSeconds / 3600)
     .toString()
@@ -30,7 +32,8 @@ function formatHoursMinutes(totalSeconds: number) {
   return `${h}:${m}`;
 }
 
-// Defines the Weekly Progress behavior used in this module.
+// Displays progress toward a weekly target and lets the user edit that target locally.
+// It stores the target in localStorage.
 export const WeeklyProgress = () => {
   const { timelogs } = useTimer();
   // Weekly target in hours — null means "not set"
@@ -55,13 +58,15 @@ export const WeeklyProgress = () => {
     }
   }, [isEditing]);
 
-  // Handles the edit open interaction.
+  // Opens weekly-target editing and seeds the draft with the current target.
+  // This keeps cancel/save behavior predictable.
   const handleEditOpen = () => {
     setTempTarget(weeklyTarget !== null ? String(weeklyTarget) : "");
     setIsEditing(true);
   };
 
-  // Handles the save interaction.
+  // Persists edited form or task values through the owner-provided save callback.
+  // Local saving state prevents duplicate submissions.
   const handleSave = () => {
     const trimmed = tempTarget.trim();
     if (trimmed === "") {
@@ -78,12 +83,14 @@ export const WeeklyProgress = () => {
     setIsEditing(false);
   };
 
-  // Handles the cancel interaction.
+  // Cancels weekly-target editing and restores the draft value.
+  // It leaves the saved target unchanged.
   const handleCancel = () => {
     setIsEditing(false);
   };
 
-  // Handles the key down interaction.
+  // Handles keyboard shortcuts for editable controls.
+  // Enter saves the draft and Escape cancels editing when supported.
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleSave();
     if (e.key === "Escape") handleCancel();

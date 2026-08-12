@@ -28,7 +28,8 @@ import { useTimer, type Priority, type Task } from "@/context/TimerContext";
 import { formatDueLabel } from "@/lib/utils";
 import { EditTaskDialog, type TaskEditUpdates } from "./edit-task-dialog";
 
-// Defines the Task Card behavior used in this module.
+// Renders a draggable task card with metadata and contextual actions.
+// It opens edit/delete flows while keeping drag interactions isolated.
 export function TaskCard({
   id,
   priority,
@@ -67,7 +68,8 @@ export function TaskCard({
   const deadlineLabel = deadline ? formatDueLabel(deadline) : "";
   const isPending = id.startsWith("temp-");
 
-  // Handles the action interaction.
+  // Stops card action clicks from starting a drag or selecting the card.
+  // It lets nested buttons behave independently.
   const handleAction = (event: React.MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
@@ -86,12 +88,14 @@ export function TaskCard({
     elapsedSeconds: totalSeconds,
   };
 
-  // Handles the save interaction.
+  // Persists edited form or task values through the owner-provided save callback.
+  // Local saving state prevents duplicate submissions.
   const handleSave = async (updates: TaskEditUpdates) => {
     await updateTask(id, updates);
   };
 
-  // Handles the delete interaction.
+  // Deletes the current task through TimerContext after confirmation.
+  // Errors stay surfaced through the shared task state.
   const handleDelete = async () => {
     setIsDeleting(true);
     setDeleteError(null);

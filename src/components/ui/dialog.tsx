@@ -10,7 +10,8 @@ const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogClose = DialogPrimitive.Close;
 
-// Defines the Dialog Content behavior used in this module.
+// Renders the modal dialog panel and backdrop with app animation styles.
+// It wraps Base UI dialog popup behavior.
 function DialogContent({
   className,
   children,
@@ -38,7 +39,8 @@ function DialogContent({
   );
 }
 
-// Defines the Dialog Header behavior used in this module.
+// Renders the top text area for a dialog.
+// It standardizes title and description spacing.
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -48,7 +50,8 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Defines the Dialog Footer behavior used in this module.
+// Renders the bottom action area for a dialog.
+// It handles mobile stacking and desktop right alignment.
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -61,7 +64,8 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Defines the Dialog Title behavior used in this module.
+// Renders the accessible dialog title with shared heading typography.
+// Screen readers use it to label the modal.
 function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
@@ -74,7 +78,8 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   );
 }
 
-// Defines the Dialog Description behavior used in this module.
+// Renders supporting dialog copy with muted body styling.
+// It provides context below the dialog title.
 function DialogDescription({
   className,
   ...props

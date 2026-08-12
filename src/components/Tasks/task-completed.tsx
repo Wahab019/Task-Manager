@@ -2,7 +2,8 @@ import { CheckCircle2, Clock3 } from "lucide-react";
 import { Pill } from "./pill";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatRelativeTime } from "@/lib/utils";
-// Defines the Completed Task behavior used in this module.
+// Renders a compact completed task summary.
+// It shows title, description, and priority in the done column.
 export function CompletedTask({
   title,
   description,

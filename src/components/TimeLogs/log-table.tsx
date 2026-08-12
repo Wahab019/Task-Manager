@@ -29,7 +29,8 @@ function startOfDay(date: Date) {
   return nextDate;
 }
 
-// Defines the start Of Week behavior used in this module.
+// Normalizes a date to Monday at the start of the local week.
+// Weekly log views use it as their anchor date.
 function startOfWeek(date: Date) {
   const nextDate = startOfDay(date);
   const day = nextDate.getDay();
@@ -38,21 +39,24 @@ function startOfWeek(date: Date) {
   return nextDate;
 }
 
-// Defines the add Days behavior used in this module.
+// Returns a new date shifted by the requested day count.
+// Date navigation helpers use it without mutating the original date.
 function addDays(date: Date, days: number) {
   const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + days);
   return nextDate;
 }
 
-// Formats duration for display in the UI.
+// Formats elapsed seconds into a compact duration string for timeline and log displays.
+// It avoids exposing raw second counts in the UI.
 function formatDuration(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
-// Formats week range for display in the UI.
+// Formats the current log-table week range for the header.
+// It shows both endpoints in a compact month/day style.
 function formatWeekRange(monday: Date) {
   const sunday = addDays(monday, 6);
   const sameYear = monday.getFullYear() === sunday.getFullYear();
@@ -60,12 +64,14 @@ function formatWeekRange(monday: Date) {
   return `${weekFormatter.format(monday)} - ${weekFormatter.format(sunday)} ${yearLabel}`.trim();
 }
 
-// Computes the entry end time value used by the UI.
+// Returns the effective end time for a timelog.
+// Open entries use the current time so running segments can be displayed.
 function getEntryEndTime(entry: TimeLogEntry) {
   return entry.endTime ?? Date.now();
 }
 
-// Computes the week day keys value used by the UI.
+// Builds date keys from the selected week up to today.
+// Future days are excluded from the current weekly log view.
 function getWeekDayKeys(weekStart: Date, today: Date) {
   return Array.from({ length: 7 }, (_, index) => {
     const date = addDays(weekStart, 6 - index);
@@ -76,7 +82,8 @@ function getWeekDayKeys(weekStart: Date, today: Date) {
   }).filter((key): key is string => key !== null);
 }
 
-// Defines the Date Row behavior used in this module.
+// Renders a collapsible day row for the weekly log table.
+// It shows the date, total duration, and expand/collapse affordance.
 export function DateRow({
   label,
   total,
@@ -120,7 +127,8 @@ export function DateRow({
   );
 }
 
-// Defines the Log Table behavior used in this module.
+// Renders the weekly time-log table grouped by day and task.
+// It manages week navigation, collapsed days, and expanded task sessions.
 export const LogTable = () => {
   const { tasks, timelogs, isLoading, error, reloadData } = useTimer();
   const today = startOfDay(new Date());
@@ -206,7 +214,8 @@ export const LogTable = () => {
     }).filter((day): day is NonNullable<typeof day> => day !== null);
   }, [selectedMonday, tasks, timelogs, today]);
 
-  // Defines the navigate Week behavior used in this module.
+  // Moves the log table to the previous or next week.
+  // It also resets collapsed day state for the newly selected week.
   function navigateWeek(offset: number) {
     const nextMonday = addDays(selectedMonday, offset);
     setSelectedMonday(nextMonday);

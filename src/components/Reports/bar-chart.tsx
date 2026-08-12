@@ -40,7 +40,8 @@ function isSameMonth(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
-// Defines the Report Bar Chart behavior used in this module.
+// Renders the selected report week as a day-by-day bar chart.
+// It keeps the chosen week valid when the selected month changes.
 export function ReportBarChart({ selectedMonth }: { selectedMonth: Date }) {
   const { timelogs } = useTimer();
   const weeks = useMemo(() => getWeeksInMonth(selectedMonth), [selectedMonth]);

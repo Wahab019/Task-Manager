@@ -4,7 +4,8 @@ import { Separator as SeparatorPrimitive } from "@base-ui/react/separator";
 
 import { cn } from "@/lib/utils";
 
-// Defines the Separator behavior used in this module.
+// Renders a horizontal or vertical divider using the app styling.
+// It wraps the Base UI separator primitive.
 function Separator({
   className,
   orientation = "horizontal",

@@ -374,7 +374,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   // duration instead of relying on the last timer-tick value, which can be
   // up to 1 second behind the actual close time.
   useEffect(() => {
-    // Handles the page hide interaction.
+    // Refreshes the persisted timestamp right before the browser hides the page.
+    // That gives the next hydration pass an exact stop point for the running segment.
     const handlePageHide = () => {
       const saved = localStorage.getItem(TIMING_STORAGE_KEY);
       if (!saved) return;
@@ -487,7 +488,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval> | null = null;
     if (isTracking && currentEntryStartTime && activeTaskId) {
-      // Defines the update Clock behavior used in this module.
+      // Recomputes the live timer display from closed logs plus the open segment.
+      // It also mirrors the same value onto the active task so every UI surface stays aligned.
       const updateClock = () => {
         const closedSeconds = getTotalDurationForTask(activeTaskId);
         const segmentSeconds = Math.floor(
@@ -654,7 +656,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   }, [error]);
 
   useEffect(() => {
-    // Handles the visibility interaction.
+    // Revalidates tasks when the tab becomes visible again.
+    // This picks up changes made elsewhere without interrupting the current local timer.
     const handleVisibility = async () => {
       if (document.visibilityState !== "visible") return;
       try {
@@ -671,6 +674,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
 
+  // Creates a task optimistically so the board updates immediately, then swaps in the server copy.
+  // If the API request fails, the temporary task is removed and the provider exposes an error message.
   const addTask = async (draft: {
     priority: Priority;
     title: string;
@@ -954,6 +959,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const resumeActiveTask = resumeTimer;
   const stopActiveTask = stopTimer;
 
+  // Applies guarded task status transitions and persists valid changes to the server.
+  // Timer-driven transitions are routed through pause/stop so elapsed time is closed correctly.
   const updateTaskStatus = async (
     taskId: string,
     newStatus: Task["status"],
@@ -1006,6 +1013,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Updates task details with an optimistic local change while preserving timer-derived fields.
+  // If persistence fails, the previous task snapshot is restored before the error is rethrown.
   const updateTask = async (
     taskId: string,
     updates: {

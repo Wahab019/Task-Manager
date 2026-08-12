@@ -22,7 +22,8 @@ type AppwriteTaskDoc = {
   $updatedAt: string;
 };
 
-// Defines the to Task Response behavior used in this module.
+// Converts an Appwrite task document into the frontend task response shape.
+// It normalizes optional fields and metadata names.
 export function toTaskResponse(doc: AppwriteTaskDoc): TaskResponse {
   return {
     id: doc.$id,

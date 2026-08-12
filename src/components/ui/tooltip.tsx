@@ -18,17 +18,20 @@ function TooltipProvider({
   );
 }
 
-// Defines the Tooltip behavior used in this module.
+// Provides the Base UI tooltip root for hover/focus help.
+// It keeps tooltip behavior consistent for trigger/content pairs.
 function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />;
 }
 
-// Defines the Tooltip Trigger behavior used in this module.
+// Marks the element that opens a tooltip.
+// It delegates trigger behavior to the Base UI primitive.
 function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
 }
 
-// Defines the Tooltip Content behavior used in this module.
+// Renders the tooltip bubble with app colors, animation, and arrow.
+// It keeps helper text presentation consistent.
 function TooltipContent({
   className,
   side = "top",

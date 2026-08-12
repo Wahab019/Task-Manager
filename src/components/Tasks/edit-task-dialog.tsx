@@ -38,7 +38,8 @@ type EditDraft = {
   deadline: string;
 };
 
-// Defines the Edit Task Dialog behavior used in this module.
+// Renders the task-editing modal and owns its draft form state.
+// It normalizes submitted values before handing updates back to TimerContext.
 export function EditTaskDialog({
   task,
   open,
@@ -73,7 +74,8 @@ export function EditTaskDialog({
     setError(null);
   }, [open, task.id]);
 
-  // Handles the submit interaction.
+  // Validates and submits the current form state.
+  // The exact side effect depends on the page or dialog that owns the handler.
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 

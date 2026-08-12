@@ -5,7 +5,8 @@ import { useMemo } from "react";
 import { useTimer } from "@/context/TimerContext";
 import { getRecentCompletedTasksInMonth } from "@/lib/utils";
 
-// Defines the Report Table behavior used in this module.
+// Renders recent completed task rows for the chosen report month.
+// It uses report utilities to prepare display-ready entries.
 export const ReportTable = ({ selectedMonth }: { selectedMonth: Date }) => {
   const { tasks } = useTimer();
 

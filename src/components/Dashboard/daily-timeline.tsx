@@ -24,21 +24,24 @@ function startOfDay(date: Date) {
   return nextDate;
 }
 
-// Defines the add Days behavior used in this module.
+// Returns a new date shifted by the requested day count.
+// Date navigation helpers use it without mutating the original date.
 function addDays(date: Date, days: number) {
   const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + days);
   return nextDate;
 }
 
-// Formats duration for display in the UI.
+// Formats elapsed seconds into a compact duration string for timeline and log displays.
+// It avoids exposing raw second counts in the UI.
 function formatDuration(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
-// Formats time range for display in the UI.
+// Formats a timelog start and end timestamp into a readable range.
+// Running entries fall back to an in-progress label.
 function formatTimeRange(startTime: number, endTime: number | null) {
   if (endTime === null) {
     return `${timeFormatter.format(new Date(startTime))} - NOW`;
@@ -47,7 +50,8 @@ function formatTimeRange(startTime: number, endTime: number | null) {
   return `${timeFormatter.format(new Date(startTime))} - ${timeFormatter.format(new Date(endTime))}`;
 }
 
-// Defines the Daily Timeline behavior used in this module.
+// Renders the selected day timeline from completed timelogs.
+// It groups task names, durations, and time ranges into dashboard activity rows.
 export const DailyTimeline = () => {
   const { tasks, timelogs } = useTimer();
   const [selectedDate, setSelectedDate] = useState(() =>

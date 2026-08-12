@@ -2,7 +2,8 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-// Defines the Card behavior used in this module.
+// Renders the shared card wrapper with border, background, and shadow styling.
+// Specialized card sections compose inside it.
 function Card({
   className,
   size = "default",
@@ -21,7 +22,8 @@ function Card({
   );
 }
 
-// Defines the Card Header behavior used in this module.
+// Renders the top section of a card with grid spacing for titles and actions.
+// It keeps card headers visually consistent.
 function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -35,7 +37,8 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Defines the Card Title behavior used in this module.
+// Renders the primary card heading with shared typography.
+// Consumers can pass any heading-like content through it.
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -49,7 +52,8 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Defines the Card Description behavior used in this module.
+// Renders secondary explanatory text inside a card.
+// It applies the muted text treatment used by the design system.
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -60,7 +64,8 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Defines the Card Action behavior used in this module.
+// Positions optional card actions beside header content.
+// It lets buttons or menus align predictably in card headers.
 function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -74,7 +79,8 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Defines the Card Content behavior used in this module.
+// Renders the main body area of a card.
+// It applies the horizontal padding expected by the card layout.
 function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -85,7 +91,8 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Defines the Card Footer behavior used in this module.
+// Renders the bottom action or summary area of a card.
+// It keeps footer spacing aligned with the rest of the card.
 function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div

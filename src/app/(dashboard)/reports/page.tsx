@@ -40,7 +40,8 @@ function isSameMonth(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
-// Formats month label for display in the UI.
+// Formats a month option label for the reports month picker.
+// It omits the year for months in the current year.
 function formatMonthLabel(month: Date, currentYear: number) {
   const monthName = month.toLocaleDateString("en-US", { month: "long" });
   if (month.getFullYear() === currentYear) {

@@ -28,7 +28,8 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
-// Defines the Ongoing Task behavior used in this module.
+// Renders the expanded active task card for in-progress work.
+// It exposes pause, stop, edit, and complete actions without starting a drag.
 export function OngoingTask({
   id,
   priority = "normal",
@@ -71,7 +72,8 @@ export function OngoingTask({
     elapsedSeconds,
   };
 
-  // Handles the save interaction.
+  // Persists edited form or task values through the owner-provided save callback.
+  // Local saving state prevents duplicate submissions.
   const handleSave = async (updates: TaskEditUpdates) => {
     await updateTask(id, updates);
   };

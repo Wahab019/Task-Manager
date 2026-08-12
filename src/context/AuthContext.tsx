@@ -33,7 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Defines the fetch User behavior used in this module.
+  // Loads the current Appwrite account and stores it in auth context.
+  // Missing sessions are treated as signed-out state instead of fatal errors.
   const fetchUser = async () => {
     try {
       const currentUser = await account.get();
@@ -49,7 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, []);
 
-  // Defines the logout behavior used in this module.
+  // Deletes the active Appwrite session, clears cached user state, and sends the user back to login.
+  // Failures are logged because logout is a navigation-side action.
   const logout = async () => {
     try {
       await account.deleteSession("current");
@@ -75,5 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Returns the auth hook value for consumers.
+// Exposes authenticated user data and auth actions from AuthContext.
+// Components call it instead of importing Appwrite directly.
 export const useAuth = () => useContext(AuthContext);

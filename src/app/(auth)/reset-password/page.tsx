@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 export default function ResetPasswordPage() {
   const [submitted, setSubmitted] = useState(false);
 
-  // Handles the submit interaction.
+  // Validates and submits the current form state.
+  // The exact side effect depends on the page or dialog that owns the handler.
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitted(true);

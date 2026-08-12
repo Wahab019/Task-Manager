@@ -3,7 +3,8 @@ import { Input as InputPrimitive } from "@base-ui/react/input";
 
 import { cn } from "@/lib/utils";
 
-// Defines the Input behavior used in this module.
+// Renders the shared input with consistent sizing, focus rings, and validation styling.
+// Forms use it for text, dates, and numeric values.
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <InputPrimitive

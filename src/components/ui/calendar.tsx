@@ -16,7 +16,8 @@ import {
   ChevronDownIcon,
 } from "lucide-react";
 
-// Defines the Calendar behavior used in this module.
+// Renders the shared date picker with app-specific button styles and custom DayPicker components.
+// It keeps date selection UI consistent wherever used.
 function Calendar({
   className,
   classNames,
@@ -188,7 +189,8 @@ function Calendar({
   );
 }
 
-// Defines the Calendar Day Button behavior used in this module.
+// Renders an individual calendar day button and focuses selected days.
+// It bridges DayPicker state with the app button styling.
 function CalendarDayButton({
   className,
   day,
