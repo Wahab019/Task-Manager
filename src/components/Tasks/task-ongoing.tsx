@@ -84,7 +84,7 @@ export function OngoingTask({
         ref={setNodeRef}
         {...listeners}
         {...attributes}
-        className={`relative overflow-hidden touch-none rounded-lg border border-[#9f7a2c] bg-white p-5 shadow-[0_8px_18px_rgba(11,59,46,0.09)] transition-opacity ${
+        className={`max-w-100 relative overflow-hidden touch-none rounded-lg border border-[#9f7a2c] bg-white p-5 shadow-[0_8px_18px_rgba(11,59,46,0.09)] transition-opacity ${
           isDragging ? "cursor-grabbing opacity-50" : "cursor-grab"
         }`}
         style={{
