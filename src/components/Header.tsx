@@ -1,6 +1,6 @@
 "use client";
 
-import { PanelLeft, Search } from "lucide-react";
+import { PanelLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/context/SidebarContext";
 

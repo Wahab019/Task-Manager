@@ -26,16 +26,6 @@ export function TaskBoard() {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
-  async function handleAddTask(draft: {
-    priority: Priority;
-    title: string;
-    description: string;
-    time: string;
-    deadline: string | null;
-  }) {
-    await addTask(draft);
-  }
-
   // Adapter to satisfy TaskColumn's onAddTask signature
   function handleAddTaskForColumn(task: {
     priority: Priority;

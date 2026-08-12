@@ -223,15 +223,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     isTracking,
   ]);
 
-  const persistTimelogs = useCallback(() => {
-    if (hasHydratedLogs) {
-      localStorage.setItem(
-        TIMELOGS_STORAGE_KEY,
-        JSON.stringify(timelogsRef.current),
-      );
-    }
-  }, [hasHydratedLogs]);
-
   const readCachedLogs = useCallback(() => {
     const saved = localStorage.getItem(TIMELOGS_STORAGE_KEY);
     if (!saved) return [];
@@ -352,68 +343,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     },
     [activeTaskId, currentEntryId, currentEntryStartTime, syncEntryToServer],
   );
-
-  const persistPausedTimerSnapshot = useCallback(() => {
-    if (!activeTaskId || !activeTaskTitle) {
-      localStorage.removeItem(TIMING_STORAGE_KEY);
-      return;
-    }
-
-    const closedEntry = closeCurrentEntry();
-    if (!closedEntry) {
-      return;
-    }
-
-    const taskId = activeTaskId;
-    const totalSeconds = Math.round(
-      syncTaskElapsedSeconds(taskId, closedEntry.duration),
-    );
-
-    setCurrentSeconds(totalSeconds);
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              status: "in_progress",
-              elapsedSeconds: totalSeconds,
-            }
-          : task,
-      ),
-    );
-
-    const savedLogs = localStorage.getItem(TIMELOGS_STORAGE_KEY);
-    if (savedLogs) {
-      try {
-        const logs = JSON.parse(savedLogs) as TimeLogEntry[];
-        const filtered = logs.filter((log) => log.id !== closedEntry.id);
-        localStorage.setItem(
-          TIMELOGS_STORAGE_KEY,
-          JSON.stringify([...filtered, closedEntry]),
-        );
-      } catch {
-        // ignore parse errors
-      }
-    }
-
-    const payload: PersistedTimerState = {
-      version: TIMER_STATE_VERSION,
-      activeTaskId: taskId,
-      activeTaskTitle,
-      currentEntryStartTime: null,
-      currentEntryId: null,
-      isTracking: false,
-      currentSeconds: totalSeconds,
-      persistedAt: Date.now(),
-    };
-
-    localStorage.setItem(TIMING_STORAGE_KEY, JSON.stringify(payload));
-  }, [
-    activeTaskId,
-    activeTaskTitle,
-    closeCurrentEntry,
-    syncTaskElapsedSeconds,
-  ]);
 
   const clearActiveTimer = useCallback(() => {
     setActiveTaskId(null);

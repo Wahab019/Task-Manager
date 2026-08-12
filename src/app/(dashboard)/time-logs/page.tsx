@@ -4,7 +4,6 @@ import { TodaysTotal, WeeklyProgress, LogTable } from "@/components/TimeLogs";
 import { useTimer } from "@/context/TimerContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TimeLogsPage() {
   const { error, reloadData, isLoading } = useTimer();

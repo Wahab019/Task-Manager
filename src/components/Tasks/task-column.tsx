@@ -111,7 +111,6 @@ export function TaskColumn({
     startTask,
     pauseActiveTask,
     resumeActiveTask,
-    stopActiveTask,
     stopTask,
   } = useTimer();
 
