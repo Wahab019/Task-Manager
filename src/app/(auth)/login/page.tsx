@@ -154,12 +154,12 @@ export default function LoginPage() {
             >
               Password
             </label>
-            <Link
+            {/* <Link
               href="/reset-password"
               className="text-[10px] font-bold text-primary underline underline-offset-2"
             >
               Forgot Password?
-            </Link>
+            </Link> */}
           </div>
           <div className="relative">
             <input
@@ -201,7 +201,7 @@ export default function LoginPage() {
           )}
         </div>
 
-        <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[#69716d]">
+        {/* <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[#69716d]">
           <input
             type="checkbox"
             checked={remember}
@@ -210,7 +210,7 @@ export default function LoginPage() {
             className="size-3.5 rounded-xs border-[#dce0dd] accent-primary"
           />
           Remember this workstation
-        </label>
+        </label> */}
 
         <button
           type="submit"
