@@ -3,8 +3,15 @@ import { COLLECTIONS, DATABASE_ID } from "@/lib/appwrite-config";
 import { getCurrentUser } from "@/lib/auth";
 import { toTaskResponse } from "../response";
 
+/**
+ * Type definitions for task properties.
+ */
 type Status = "todo" | "in_progress" | "done";
 type Priority = "low" | "normal" | "high";
+
+/**
+ * Represents the structure of a Task document as stored in the Appwrite database.
+ */
 type TaskDocument = {
   $id: string;
   $updatedAt: string;
@@ -18,17 +25,39 @@ type TaskDocument = {
   deadline: string | null;
 };
 
-// Checks whether the provided value matches the status condition.
+/**
+ * Type guard to check whether the provided value is a valid Status.
+ *
+ * @param value - The value to check
+ * @returns True if the value is a valid Status
+ */
 function isStatus(value: unknown): value is Status {
   return value === "todo" || value === "in_progress" || value === "done";
 }
 
-// Checks whether the provided value matches the priority condition.
+/**
+ * Type guard to check whether the provided value is a valid Priority.
+ *
+ * @param value - The value to check
+ * @returns True if the value is a valid Priority
+ */
 function isPriority(value: unknown): value is Priority {
   return value === "low" || value === "normal" || value === "high";
 }
 
-// Handles PATCH requests for this route and applies partial updates.
+/**
+ * Handles PATCH requests to update a specific task by ID.
+ *
+ * Flow:
+ * 1. Authenticates the user.
+ * 2. Validates the request body and applies partial updates.
+ * 3. Verifies that the task exists and belongs to the authenticated user.
+ * 4. Updates the task document in the Appwrite database.
+ * 5. Returns the updated task response.
+ *
+ * @param request - The incoming HTTP request containing partial task updates
+ * @param params - The route parameters containing the task ID
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -200,7 +229,19 @@ export async function PATCH(
   return Response.json(toTaskResponse(updatedTask as unknown as TaskDocument));
 }
 
-// Handles DELETE requests for this route and removes the requested resource.
+/**
+ * Handles DELETE requests to remove a specific task by ID.
+ *
+ * Flow:
+ * 1. Authenticates the user.
+ * 2. Fetches the task to ensure it exists and belongs to the user.
+ * 3. Enforces business logic: only tasks that are "todo" (not started) can be deleted.
+ * 4. Deletes the task document from the Appwrite database.
+ * 5. Returns a success confirmation.
+ *
+ * @param _request - The incoming HTTP request
+ * @param params - The route parameters containing the task ID
+ */
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },

@@ -1,3 +1,7 @@
+/**
+ * Defines the public shape of a Task object returned by the API.
+ * This is the interface that the frontend application consumes.
+ */
 export type TaskResponse = {
   id: string;
   title: string;
@@ -10,6 +14,10 @@ export type TaskResponse = {
   $updatedAt: string;
 };
 
+/**
+ * Represents the raw Task document structure as it comes from the Appwrite database.
+ * Includes Appwrite-specific metadata fields like `$id` and `$updatedAt`.
+ */
 type AppwriteTaskDoc = {
   $id: string;
   title: string;
@@ -22,8 +30,15 @@ type AppwriteTaskDoc = {
   $updatedAt: string;
 };
 
-// Converts an Appwrite task document into the frontend task response shape.
-// It normalizes optional fields and metadata names.
+/**
+ * Converts a raw Appwrite task document into the standardized frontend TaskResponse shape.
+ *
+ * - Maps Appwrite's internal `$id` to a clean `id` property.
+ * - Passes through all other relevant data fields.
+ *
+ * @param doc - The raw task document from Appwrite
+ * @returns The formatted task response object
+ */
 export function toTaskResponse(doc: AppwriteTaskDoc): TaskResponse {
   return {
     id: doc.$id,

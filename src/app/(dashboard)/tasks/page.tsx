@@ -1,6 +1,5 @@
 import { TaskBoard } from "@/components/Tasks/task-board";
 
-// Renders the Next.js page component for this route.
 export default function TasksPage() {
   return (
     <div className="relative mx-auto min-h-[calc(100vh-4rem)] max-w-7xl p-1">
