@@ -75,3 +75,18 @@ Root file function inventory
 - postcss.config.mjs - Configures PostCSS to run Tailwind CSS processing.
 - tsconfig.json - Configures TypeScript compiler options and path aliases.
 - tsconfig.tsbuildinfo - Stores TypeScript incremental build cache metadata.
+
+
+Viewed response.ts:1-40
+
+The `tasks/response.ts` file acts as a **Data Mapper** (or Data Transfer Object mapper) between your backend database and your frontend application. 
+
+Here's exactly what it does:
+
+1. **Defines the API Shape (`TaskResponse`)**: It explicitly defines the format of the data that your API will send back to the frontend. This gives you strong typing on the frontend so you know exactly what fields a Task will have.
+2. **Sanitizes/Transforms Database Data (`toTaskResponse`)**: When you fetch a task from the Appwrite database, it comes back with Appwrite-specific system fields (like `$id`, `$permissions`, `$collectionId`, etc.). The `toTaskResponse` function takes that raw database document and strips out anything the frontend doesn't need, while renaming fields to be more standard (like mapping Appwrite's `$id` to a normal `id` property).
+
+**Why is this useful?**
+If you ever change your database provider (e.g., from Appwrite to Supabase or MongoDB), your frontend code won't break. You would only have to update this one `toTaskResponse` function to map the new database's format to your existing frontend `TaskResponse` shape.
+
+Would you like me to add JSDoc comments to this file as well?

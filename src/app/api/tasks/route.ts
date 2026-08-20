@@ -5,8 +5,15 @@ import { COLLECTIONS, DATABASE_ID } from "@/lib/appwrite-config";
 import { getCurrentUser } from "@/lib/auth";
 import { toTaskResponse } from "./response";
 
+/**
+ * Type definitions for task properties.
+ */
 type Priority = "low" | "normal" | "high";
 type Status = "todo" | "in_progress" | "done";
+
+/**
+ * Represents the structure of a Task document as stored in the Appwrite database.
+ */
 type TaskDocument = {
   $id: string;
   $updatedAt: string;
@@ -20,17 +27,35 @@ type TaskDocument = {
   assigned_to: string;
 };
 
-// Checks whether the provided value matches the priority condition.
+/**
+ * Type guard to check whether the provided value is a valid Priority.
+ *
+ * @param value - The value to check
+ * @returns True if the value is a valid Priority
+ */
 function isPriority(value: unknown): value is Priority {
   return value === "low" || value === "normal" || value === "high";
 }
 
-// Checks whether the provided value matches the status condition.
+/**
+ * Type guard to check whether the provided value is a valid Status.
+ *
+ * @param value - The value to check
+ * @returns True if the value is a valid Status
+ */
 function isStatus(value: unknown): value is Status {
   return value === "todo" || value === "in_progress" || value === "done";
 }
 
-// Handles GET requests for this route and returns the requested JSON response.
+/**
+ * Handles GET requests to retrieve all tasks for the authenticated user.
+ *
+ * Flow:
+ * 1. Authenticates the user.
+ * 2. Queries the Appwrite database for tasks assigned to the user's ID.
+ * 3. Maps the raw database documents to the public `Task` response format.
+ * 4. Returns the JSON list of tasks.
+ */
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) {
@@ -57,7 +82,18 @@ export async function GET() {
   );
 }
 
-// Handles POST requests for this route and creates the requested resource.
+/**
+ * Handles POST requests to create a new task.
+ *
+ * Flow:
+ * 1. Authenticates the user.
+ * 2. Validates the request body for required fields (title, description, priority, status).
+ * 3. Formats optional fields (estimatedMinutes, deadline).
+ * 4. Creates a new task document in the Appwrite database assigned to the user.
+ * 5. Returns the newly created task.
+ *
+ * @param request - The incoming HTTP request containing the new task data
+ */
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) {
