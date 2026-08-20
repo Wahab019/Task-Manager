@@ -25,23 +25,48 @@ import {
   getTotalHoursInRange,
 } from "@/lib/utils";
 
-// Normalizes a date to the first day of its month.
+/**
+ * Normalizes a given date to the first day of its month.
+ * Useful for establishing the start of a reporting period.
+ *
+ * @param date - The date to normalize
+ * @returns A new Date object set to midnight on the first day of the month
+ */
 function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
-// Normalizes a date to the last day of its month.
+/**
+ * Normalizes a given date to the last day of its month.
+ * Useful for establishing the end of a reporting period.
+ *
+ * @param date - The date to normalize
+ * @returns A new Date object set to midnight on the last day of the month
+ */
 function endOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
-// Checks whether two dates fall within the same month and year.
+/**
+ * Checks whether two dates fall within the exact same month and year.
+ *
+ * @param a - First date to compare
+ * @param b - Second date to compare
+ * @returns True if both dates share the same month and year
+ */
 function isSameMonth(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
-// Formats a month option label for the reports month picker.
-// It omits the year for months in the current year.
+/**
+ * Formats a month option label for the reports month picker.
+ * It omits the year for months in the current year to keep the UI clean,
+ * but includes the year for past years.
+ *
+ * @param month - The month to format
+ * @param currentYear - The current year for comparison
+ * @returns A formatted string label (e.g., "January" or "December 2023")
+ */
 function formatMonthLabel(month: Date, currentYear: number) {
   const monthName = month.toLocaleDateString("en-US", { month: "long" });
   if (month.getFullYear() === currentYear) {
@@ -50,17 +75,33 @@ function formatMonthLabel(month: Date, currentYear: number) {
   return `${monthName} ${month.getFullYear()}`;
 }
 
+/**
+ * Configuration for the summary metric cards displayed at the top of the report.
+ * Maps each metric to its corresponding Lucide icon and display label.
+ */
 const metricDefs = [
   { icon: Clock3, label: "Total Hours" },
   { icon: CheckCircle2, label: "Tasks Completed" },
   { icon: Clock3, label: "Avg Session Length" },
 ] as const;
 
-// Renders the Next.js page component for this route.
+/**
+ * ReportsPage Component
+ *
+ * Renders the dashboard reports page.
+ * Allows users to select a month to view their productivity metrics.
+ * Fetches time logs and tasks via `useTimer`, calculates aggregated metrics
+ * (total hours, tasks completed, average session length), and displays them
+ * alongside charts and tabular data.
+ */
 export default function ReportsPage() {
   const today = new Date();
-  const currentYear = today.getFullYear();
+  const currentYear = today.getFullYear(); // Used to conditionally format month labels
+
+  // Access global timer context state
   const { tasks, timelogs, isLoading, error, reloadData } = useTimer();
+
+  // Local state for the currently selected reporting month
   const [selectedMonth, setSelectedMonth] = useState<Date>(startOfMonth(today));
 
   const monthOptions = Array.from({ length: 25 }, (_, index) => {
