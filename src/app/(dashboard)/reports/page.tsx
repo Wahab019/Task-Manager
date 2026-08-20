@@ -88,7 +88,6 @@ const metricDefs = [
 /**
  * ReportsPage Component
  *
- * Renders the dashboard reports page.
  * Allows users to select a month to view their productivity metrics.
  * Fetches time logs and tasks via `useTimer`, calculates aggregated metrics
  * (total hours, tasks completed, average session length), and displays them
