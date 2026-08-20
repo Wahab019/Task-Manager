@@ -4,6 +4,10 @@ import { databases } from "@/lib/appwrite-server";
 import { COLLECTIONS, DATABASE_ID } from "@/lib/appwrite-config";
 import { getCurrentUser } from "@/lib/auth";
 
+/**
+ * Represents the structure of a TimeLog document as stored in the Appwrite database.
+ * Tracks individual sessions of time spent on a specific task.
+ */
 type TimeLogDocument = {
   $id: string;
   taskId: string;
@@ -13,10 +17,18 @@ type TimeLogDocument = {
   duration: number;
 };
 
+/**
+ * The number of timelogs to fetch per database query (pagination size).
+ */
 const PAGE_SIZE = 100;
 
-// Converts an Appwrite timelog document into the API response shape.
-// It strips Appwrite metadata the frontend does not need.
+/**
+ * Converts a raw Appwrite timelog document into the standardized frontend response shape.
+ * Strips Appwrite metadata the frontend does not need (like renaming `$id` to `id`).
+ *
+ * @param doc - The raw timelog document from Appwrite
+ * @returns The formatted timelog response object
+ */
 function toTimeLogResponse(doc: TimeLogDocument) {
   return {
     id: doc.$id,
@@ -28,7 +40,15 @@ function toTimeLogResponse(doc: TimeLogDocument) {
   };
 }
 
-// Handles GET requests for this route and returns the requested JSON response.
+/**
+ * Handles GET requests to retrieve all timelogs for the authenticated user.
+ *
+ * Flow:
+ * 1. Authenticates the user.
+ * 2. Fetches timelogs in pages (using cursor-based pagination) to bypass Appwrite limit.
+ * 3. Maps all fetched documents to the public response format.
+ * 4. Returns the JSON list of timelogs, ordered newest first.
+ */
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) {
@@ -73,7 +93,19 @@ export async function GET() {
   return Response.json(documents.map((doc) => toTimeLogResponse(doc)));
 }
 
-// Handles POST requests for this route and creates the requested resource.
+/**
+ * Handles POST requests to create a new timelog entry.
+ *
+ * Flow:
+ * 1. Authenticates the user.
+ * 2. Validates request payload (taskId, startTime, endTime, duration).
+ * 3. Uses a client-provided `clientId` as the document ID if provided,
+ *    preventing duplicate entries from network retries.
+ * 4. Creates the timelog in the Appwrite database.
+ * 5. Returns the created timelog (or the existing one if a duplicate was detected).
+ *
+ * @param request - The incoming HTTP request containing timelog data
+ */
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) {

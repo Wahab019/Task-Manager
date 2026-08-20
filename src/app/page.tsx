@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { account } from "@/lib/appwrite";
 
-// Renders the Next.js page component for this route.
 export default function RootPage() {
   const router = useRouter();
 
