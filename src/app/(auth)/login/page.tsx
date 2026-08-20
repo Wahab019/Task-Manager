@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { ArrowRight, Eye, EyeOff, Landmark, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { account } from "@/lib/appwrite";
 
+/**
+ * Zod schema for validating login form inputs.
+ * Ensures that the email is valid and the password meets the minimum length requirement.
+ */
 const loginSchema = z.object({
   email: z
     .string()
@@ -19,24 +22,43 @@ const loginSchema = z.object({
     .min(6, "Password must be at least 6 characters"),
 });
 
+/**
+ * Type definition for tracking form validation errors.
+ * Stores error messages mapped to specific form fields.
+ */
 type FieldErrors = {
   email?: string;
   password?: string;
 };
 
-// Renders the Next.js page component for this route.
+/**
+ * LoginPage Component
+ *
+ * Renders the Next.js page for user authentication.
+ * Manages form state, handles input validation via Zod, and authenticates
+ * users through the Appwrite service. On successful login, users are
+ * redirected to the dashboard.
+ */
 export default function LoginPage() {
-  const router = useRouter();
+  const router = useRouter(); // Next.js router for navigation
+
+  // Local state for form inputs and UI behavior
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [generalError, setGeneralError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false); // Toggles password visibility
+  const [loading, setLoading] = useState(false); // Tracks submission state to disable inputs
 
-  // Creates an Appwrite email/password session from the login form.
-  // It clears stale sessions first so repeated logins do not collide.
+  // State for error handling
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({}); // Validation errors per field
+  const [generalError, setGeneralError] = useState<string | null>(null); // Global errors (e.g., wrong credentials)
+
+  /**
+   * Helper function to establish a session with Appwrite.
+   *
+   * It attempts to call the appropriate Appwrite authentication method.
+   * If a session is successfully created, the user is authenticated.
+   * Throws an error if the underlying Appwrite SDK method is missing.
+   */
   const createSession = async () => {
     if (typeof account.createEmailPasswordSession === "function") {
       await account.createEmailPasswordSession(email, password);
@@ -47,8 +69,18 @@ export default function LoginPage() {
     }
   };
 
-  // Validates and submits the current form state.
-  // The exact side effect depends on the page or dialog that owns the handler.
+  /**
+   * Handles the form submission event.
+   *
+   * 1. Prevents default browser form submission.
+   * 2. Clears previous errors.
+   * 3. Validates inputs using the Zod schema.
+   * 4. Attempts to create an Appwrite session.
+   * 5. If a session conflict occurs (user already logged in), it clears the old session and retries.
+   * 6. Redirects to the dashboard on success, or sets an error message on failure.
+   *
+   * @param e - The form submission event
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});
