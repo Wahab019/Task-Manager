@@ -6,8 +6,14 @@ import { UserRoundCheck } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { useTimer } from "@/context/TimerContext";
 
-// Formats logged seconds into a compact minutes or hours label.
-// Recent activity uses it to keep each row readable.
+/**
+ * Formats a raw number of seconds into a compact string representing hours and/or minutes.
+ * Examples: "1h 30m", "2h", "45m".
+ * Used in the recent activity list to keep rows readable and concise.
+ *
+ * @param totalSeconds - The duration to format
+ * @returns A formatted duration string
+ */
 function formatLogDuration(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -23,7 +29,13 @@ function formatLogDuration(totalSeconds: number) {
   return `${minutes}m`;
 }
 
-// Formats a timestamp as a short human-readable relative time string.
+/**
+ * Formats a unix timestamp into a relative human-readable time string.
+ * Examples: "just now", "5 minutes ago", "2 hours ago", "3 days ago".
+ *
+ * @param endTime - Unix timestamp in milliseconds
+ * @returns A relative time string
+ */
 function formatRelativeTime(endTime: number) {
   const now = Date.now();
   const diffSeconds = Math.max(0, Math.round((now - endTime) / 1000));
@@ -44,8 +56,13 @@ function formatRelativeTime(endTime: number) {
   return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
-// Lists the latest completed timer sessions with task names and relative completion times.
-// It joins timelogs against tasks for user-friendly labels.
+/**
+ * RecentActivity Component
+ *
+ * Renders a widget displaying the user's 3 most recently completed timer sessions.
+ * Joins timelog data with the task list to display user-friendly task names.
+ * Includes formatted relative times and duration labels.
+ */
 export const RecentActivity = () => {
   const { tasks, timelogs } = useTimer();
 
