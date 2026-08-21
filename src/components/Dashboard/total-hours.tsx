@@ -5,8 +5,12 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { useTimer } from "@/context/TimerContext";
 
-// Builds the start and end timestamps for the current or offset week.
-// Dashboard and progress summaries use this range for filtering timelogs.
+/**
+ * Calculates the start and end dates (Monday to Sunday) for a specific week.
+ *
+ * @param offsetWeeks - The number of weeks to shift from the current week (e.g., -1 for last week)
+ * @returns An object containing the exact `monday` and `sunday` Date objects for that week.
+ */
 function getWeekBounds(offsetWeeks = 0) {
   const now = new Date();
   const day = now.getDay(); // 0 = Sun
@@ -20,8 +24,13 @@ function getWeekBounds(offsetWeeks = 0) {
   return { monday, sunday };
 }
 
-// Summarizes logged time for this week and compares it with last week.
-// It converts raw timelog seconds into the dashboard hours metric.
+/**
+ * TotalHours Component
+ *
+ * A dashboard widget that summarizes the total logged time for the current week.
+ * It compares the current week's total against the previous week and displays
+ * a trend indicator (up/down) with the delta in hours.
+ */
 export const TotalHours = () => {
   const { timelogs } = useTimer();
   const mounted = typeof window !== "undefined";

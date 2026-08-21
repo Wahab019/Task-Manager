@@ -5,8 +5,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Pause, Play, Square } from "lucide-react";
 import { useTimer } from "@/context/TimerContext";
 
-// Renders a small initials avatar with the requested visual tone.
-// Dashboard progress uses it beside active task metadata.
+/** =========================================================
+ * Avatar Component -- i'm not making use of this now
+ * 
+ * Renders a small circular badge displaying user initials.
+ * Used in the dashboard to show who is currently working on an active task.
+ * 
+ * @param initials - The user's initials (e.g., "JD")
+ * @param tone - Tailwind background color class for styling
+ 
 export function Avatar({ initials, tone }: { initials: string; tone: string }) {
   return (
     <span
@@ -16,8 +23,15 @@ export function Avatar({ initials, tone }: { initials: string; tone: string }) {
     </span>
   );
 }
+=====================================================================*/
 
-// Formats seconds into a clock-style duration label.
+/**
+ * Formats a raw number of seconds into a standard HH:MM:SS clock string.
+ * Ensures that single-digit minutes or seconds are zero-padded (e.g. 01:05:09).
+ *
+ * @param seconds - Total number of seconds
+ * @returns A formatted string like "01:05:09"
+ */
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -29,8 +43,13 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
-// Displays the active or in-progress task and exposes pause, resume, and stop controls.
-// It keeps the dashboard connected to TimerContext state.
+/**
+ * DashboardProgress Component
+ *
+ * The main active task banner displayed on the dashboard.
+ * It connects to the global TimerContext to display the currently running (or paused)
+ * task, rendering a live duration counter and controls to start, pause, resume, or stop tracking.
+ */
 export const DashboardProgress = () => {
   const {
     tasks,
@@ -55,7 +74,12 @@ export const DashboardProgress = () => {
   const displayedTask = activeTask ?? fallbackTask;
   const isActive = !!activeTask;
 
-  // Handle resume/start from the dashboard
+  /**
+   * Toggles the timer state for the currently displayed task.
+   * If the task is active and running, it pauses.
+   * If the task is active and paused, it resumes.
+   * If the task is not active, it starts it.
+   */
   const handleToggle = () => {
     if (!displayedTask) return;
     if (isActive) {
@@ -69,8 +93,11 @@ export const DashboardProgress = () => {
     }
   };
 
-  // Stops the active dashboard task through TimerContext.
-  // The guard keeps the control inert when there is no task to stop.
+  /**
+   * Stops the active dashboard task timer through TimerContext.
+   * If the task was just paused (not the actively tracking one), it manually marks it as "done".
+   * Safely ignores clicks if there is no task displayed.
+   */
   const handleStop = () => {
     if (!displayedTask) return;
     if (isActive) {

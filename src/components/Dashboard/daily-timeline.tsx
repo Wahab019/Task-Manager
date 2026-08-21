@@ -17,31 +17,55 @@ const timeFormatter = new Intl.DateTimeFormat("en-US", {
   minute: "2-digit",
 });
 
-// Normalizes a date to the first millisecond of its local day.
+/**
+ * Normalizes a date object to the very first millisecond of its local day.
+ * Useful for day-level comparisons regardless of the exact time.
+ *
+ * @param date - The date to normalize
+ * @returns A new Date object set to 00:00:00 on the same day
+ */
 function startOfDay(date: Date) {
   const nextDate = new Date(date);
   nextDate.setHours(0, 0, 0, 0);
   return nextDate;
 }
 
-// Returns a new date shifted by the requested day count.
-// Date navigation helpers use it without mutating the original date.
+/**
+ * Returns a new date shifted by a specified number of days.
+ * Used by the date navigation helpers to safely calculate adjacent days
+ * without mutating the original date object.
+ *
+ * @param date - The starting date
+ * @param days - The number of days to shift (positive or negative)
+ * @returns A new Date object offset by the requested days
+ */
 function addDays(date: Date, days: number) {
   const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + days);
   return nextDate;
 }
 
-// Formats elapsed seconds into a compact duration string for timeline and log displays.
-// It avoids exposing raw second counts in the UI.
+/**
+ * Formats a raw number of elapsed seconds into a compact HH:MM duration string.
+ * This provides a cleaner UI presentation for time logs.
+ *
+ * @param totalSeconds - Total elapsed time in seconds
+ * @returns A formatted string like "02:15"
+ */
 function formatDuration(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
-// Formats a timelog start and end timestamp into a readable range.
-// Running entries fall back to an in-progress label.
+/**
+ * Formats a timelog's start and end timestamps into a readable time range.
+ * If the log is currently active (no endTime), it returns a string indicating it's still running.
+ *
+ * @param startTime - Unix timestamp when the log started
+ * @param endTime - Unix timestamp when the log ended (or null if active)
+ * @returns A formatted string like "9:00 AM - 10:30 AM" or "9:00 AM - NOW"
+ */
 function formatTimeRange(startTime: number, endTime: number | null) {
   if (endTime === null) {
     return `${timeFormatter.format(new Date(startTime))} - NOW`;
@@ -50,8 +74,13 @@ function formatTimeRange(startTime: number, endTime: number | null) {
   return `${timeFormatter.format(new Date(startTime))} - ${timeFormatter.format(new Date(endTime))}`;
 }
 
-// Renders the selected day timeline from completed timelogs.
-// It groups task names, durations, and time ranges into dashboard activity rows.
+/**
+ * DailyTimeline Component
+ *
+ * Renders a vertical timeline of all completed and active timelogs for a selected day.
+ * It groups task names, formatted durations, and time ranges into an interactive dashboard widget.
+ * Users can navigate between days to see past activity.
+ */
 export const DailyTimeline = () => {
   const { tasks, timelogs } = useTimer();
   const [selectedDate, setSelectedDate] = useState(() =>
@@ -98,12 +127,17 @@ export const DailyTimeline = () => {
     ? `Today, ${dayFormatter.format(selectedDate)}`
     : dayFormatter.format(selectedDate);
 
-  // Moves the current view to the previous day.
+  /**
+   * Moves the timeline view to the previous day.
+   */
   function goToPreviousDay() {
     setSelectedDate((current) => startOfDay(addDays(current, -1)));
   }
 
-  // Moves the current view to the next day.
+  /**
+   * Moves the timeline view to the next day.
+   * Disabled if the currently selected day is today (cannot view future logs).
+   */
   function goToNextDay() {
     if (isToday) return;
     setSelectedDate((current) => startOfDay(addDays(current, 1)));
