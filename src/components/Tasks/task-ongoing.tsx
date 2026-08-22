@@ -16,7 +16,7 @@ import { formatDueLabel } from "@/lib/utils";
 import { EditTaskDialog, type TaskEditUpdates } from "./edit-task-dialog";
 import { useTimer, type Priority, type Task } from "@/context/TimerContext";
 
-// Formats seconds into a clock-style duration label.
+/** Formats a number of seconds as an `HH:MM:SS` clock-style label. */
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -28,8 +28,27 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
-// Renders the expanded active task card for in-progress work.
-// It exposes pause, stop, edit, and complete actions without starting a drag.
+/** Properties required to render an in-progress task and its timer controls. */
+type OngoingTaskProps = {
+  id: string;
+  priority?: Priority;
+  title: string;
+  description: string;
+  estimatedMinutes?: number | null;
+  time: string | null;
+  deadline: string | null;
+  elapsedSeconds: number;
+  isTracking: boolean;
+  onPause: () => void;
+  onStop: () => void;
+};
+
+/**
+ * Renders the expanded task card for in-progress work.
+ *
+ * It combines the live timer state with draggable behavior and exposes pause,
+ * stop, and edit actions without allowing nested controls to start a drag.
+ */
 export function OngoingTask({
   id,
   priority = "normal",
@@ -42,25 +61,15 @@ export function OngoingTask({
   isTracking,
   onPause,
   onStop,
-}: {
-  id: string;
-  priority?: Priority;
-  title: string;
-  description: string;
-  estimatedMinutes?: number | null;
-  time: string | null;
-  deadline: string | null;
-  elapsedSeconds: number;
-  isTracking: boolean;
-  onPause: () => void;
-  onStop: () => void;
-}) {
+}: OngoingTaskProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id });
   const { updateTask } = useTimer();
   const [isEditOpen, setIsEditOpen] = useState(false);
+  /** Temporary tasks remain disabled until persistence assigns an ID. */
   const isPending = id.startsWith("temp-");
 
+  /** Task snapshot supplied to the shared edit dialog. */
   const task: Task = {
     id,
     priority,
@@ -72,8 +81,7 @@ export function OngoingTask({
     elapsedSeconds,
   };
 
-  // Persists edited form or task values through the owner-provided save callback.
-  // Local saving state prevents duplicate submissions.
+  /** Persists normalized edit values for this task through TimerContext. */
   const handleSave = async (updates: TaskEditUpdates) => {
     await updateTask(id, updates);
   };
