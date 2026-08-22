@@ -22,6 +22,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import type { Priority, Task } from "@/context/TimerContext";
 
+/**
+ * The normalized values emitted when a user saves edits to a task.
+ *
+ * Text fields are trimmed before they are returned, while optional numeric
+ * and date fields use `null` when the user leaves them empty or invalid.
+ */
 export type TaskEditUpdates = {
   title: string;
   description: string;
@@ -30,6 +36,12 @@ export type TaskEditUpdates = {
   deadline: string | null;
 };
 
+/**
+ * String-based form state used while a task is being edited.
+ *
+ * The duration and deadline remain strings so the form can represent empty
+ * inputs; they are normalized into {@link TaskEditUpdates} on submission.
+ */
 type EditDraft = {
   priority: Priority;
   title: string;
@@ -38,19 +50,27 @@ type EditDraft = {
   deadline: string;
 };
 
-// Renders the task-editing modal and owns its draft form state.
-// It normalizes submitted values before handing updates back to TimerContext.
+/** Properties accepted by {@link EditTaskDialog}. */
+type EditTaskDialogProps = {
+  task: Task;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (updates: TaskEditUpdates) => Promise<void>;
+};
+
+/**
+ * Renders the task-editing modal and owns its draft form state.
+ *
+ * When the dialog opens, the draft is refreshed from the supplied task. On
+ * submission, required text is validated and optional values are normalized
+ * before the parent persistence callback is invoked.
+ */
 export function EditTaskDialog({
   task,
   open,
   onOpenChange,
   onSave,
-}: {
-  task: Task;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (updates: TaskEditUpdates) => Promise<void>;
-}) {
+}: EditTaskDialogProps) {
   const [draft, setDraft] = useState<EditDraft>({
     priority: task.priority,
     title: task.title,
@@ -74,8 +94,12 @@ export function EditTaskDialog({
     setError(null);
   }, [open, task.id]);
 
-  // Validates and submits the current form state.
-  // The exact side effect depends on the page or dialog that owns the handler.
+  /**
+   * Validates, normalizes, and submits the current form state.
+   *
+   * The callback owns persistence, while this handler manages validation,
+   * saving feedback, error presentation, and closing the dialog after success.
+   */
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 

@@ -2,19 +2,27 @@ import { CheckCircle2, Clock3 } from "lucide-react";
 import { Pill } from "./pill";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatRelativeTime } from "@/lib/utils";
-// Renders a compact completed task summary.
-// It shows title, description, and priority in the done column.
+
+/** Properties displayed in a completed task summary card. */
+type CompletedTaskProps = {
+  title: string;
+  description: string;
+  time: string;
+  completedAt: string;
+};
+
+/**
+ * Renders a compact completed-task summary for the Done column.
+ *
+ * The completion timestamp is converted to a relative label for display while
+ * the supplied duration is rendered as-is.
+ */
 export function CompletedTask({
   title,
   description,
   time,
   completedAt,
-}: {
-  title: string;
-  description: string;
-  time: string;
-  completedAt: string;
-}) {
+}: CompletedTaskProps) {
   const completedLabel = formatRelativeTime(completedAt);
 
   return (

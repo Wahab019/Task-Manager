@@ -28,6 +28,10 @@ import {
 import { useTimer } from "@/context/TimerContext";
 import { getHoursByDayInRange, getWeeksInMonth } from "@/lib/utils";
 
+/**
+ * Chart configuration used by the Recharts components.
+ * Currently defines a single dataset `hours` with a label and color.
+ */
 const chartConfig = {
   hours: {
     label: "Hours",
@@ -36,12 +40,26 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 // Checks whether two dates fall within the same month and year.
+/**
+ * Determines whether two Date objects fall within the same month and year.
+ *
+ * @param a - First date to compare
+ * @param b - Second date to compare
+ * @returns `true` if both dates share the same month and year, otherwise `false`
+ */
 function isSameMonth(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
-// Renders the selected report week as a day-by-day bar chart.
-// It keeps the chosen week valid when the selected month changes.
+/**
+ * ReportBarChart Component
+ *
+ * Renders a bar chart showing the total hours logged for each day of the selected week.
+ * The component updates the displayed week when the selected month changes, ensuring the
+ * chosen week always falls within the current month.
+ *
+ * @param selectedMonth - The month currently selected by the user (Date object)
+ */
 export function ReportBarChart({ selectedMonth }: { selectedMonth: Date }) {
   const { timelogs } = useTimer();
   const weeks = useMemo(() => getWeeksInMonth(selectedMonth), [selectedMonth]);
@@ -100,7 +118,7 @@ export function ReportBarChart({ selectedMonth }: { selectedMonth: Date }) {
       <CardContent className="pt-6">
         <ChartContainer
           config={chartConfig}
-          className="h-65 w-full print:h-auto print:min-h-[24rem]"
+          className="h-65 w-full print:h-auto print:min-h-96"
         >
           <BarChart
             data={hoursData}

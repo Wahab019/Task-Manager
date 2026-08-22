@@ -19,8 +19,10 @@ import { CompletedTask } from "./task-completed";
 import { OngoingTask } from "./task-ongoing";
 import { useTimer } from "@/context/TimerContext";
 
+/** Priority levels available when creating or displaying a task. */
 export type Priority = "low" | "normal" | "high";
 
+/** Task data required by the board's status columns and task cards. */
 export type Task = {
   id: string;
   title: string;
@@ -33,17 +35,19 @@ export type Task = {
   $updatedAt?: string;
 };
 
+/** Raw values maintained by the new-task form before submission. */
 type DraftTask = {
   priority: Priority | "";
   title: string;
   description: string;
-  time: string; // raw form input, string on purpose — converted to a number only at submission
+  time: string;
   deadline: string;
 };
 
+/** Date scopes supported by the completed-task filter. */
 type DoneScope = "this-week" | "today";
 
-// Formats seconds into a clock-style duration label.
+/** Formats a number of seconds as an `HH:MM:SS` clock-style label. */
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -55,6 +59,10 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
+/**
+ * Formats an optional minute estimate for display on an in-progress task.
+ * Returns `null` when the estimate is missing or not positive.
+ */
 const formatEstimatedTime = (totalMinutes: number | null): string | null => {
   if (!totalMinutes || totalMinutes <= 0) {
     return null;
@@ -74,29 +82,37 @@ const formatEstimatedTime = (totalMinutes: number | null): string | null => {
   return `${hours}hr ${minutes}Mins`;
 };
 
-// Checks whether the provided value matches the within date range condition.
+/** Returns whether a date falls within the half-open `[start, end)` range. */
 const isWithinDateRange = (date: Date, start: Date, end: Date) =>
   date.getTime() >= start.getTime() && date.getTime() < end.getTime();
 
-// Renders one kanban status column with filtering, task creation, and task controls.
-// It adapts done-task visibility by selected date scope.
+/** Values emitted by the task creation form to its parent board. */
+type NewTaskInput = {
+  priority: Priority;
+  title: string;
+  description: string;
+  estimatedMinutes: number | null;
+  deadline: string | null;
+};
+
+/** Properties accepted by {@link TaskColumn}. */
+type TaskColumnProps = {
+  title: string;
+  status: Task["status"];
+  tasks: Task[];
+  onAddTask?: (task: NewTaskInput) => void;
+};
+
+/**
+ * Renders one kanban status column with filtering, task creation, and task
+ * controls. Completed tasks can be narrowed to today or the current week.
+ */
 export function TaskColumn({
   title,
   status,
   tasks,
   onAddTask,
-}: {
-  title: string;
-  status: Task["status"];
-  tasks: Task[];
-  onAddTask?: (task: {
-    priority: Priority;
-    title: string;
-    description: string;
-    estimatedMinutes: number | null;
-    deadline: string | null;
-  }) => void;
-}) {
+}: TaskColumnProps) {
   const { isOver, setNodeRef } = useDroppable({ id: status });
   const [showForm, setShowForm] = useState(false);
   const [doneScope, setDoneScope] = useState<DoneScope>("today");
@@ -118,8 +134,7 @@ export function TaskColumn({
     stopTask,
   } = useTimer();
 
-  // Switches the active task between paused and running states.
-  // It delegates the actual timer transition to TimerContext.
+  /** Switches the active task between paused and running states. */
   const handleTogglePause = () => {
     if (isTracking) {
       pauseActiveTask();
@@ -131,6 +146,7 @@ export function TaskColumn({
   const isToDoColumn = title === "To Do";
   const isDoneColumn = title === "Done";
 
+  /** Applies the selected calendar scope when this is the Done column. */
   const filteredDoneTasks = isDoneColumn
     ? tasks.filter((task) => {
         if (!task.$updatedAt) {
@@ -169,8 +185,12 @@ export function TaskColumn({
   const countDisplay = isDoneColumn ? visibleCount : tasks.length;
   const formattedVisibleCount = String(countDisplay).padStart(2, "0");
 
-  // Submits the add-task form for this column and resets the local draft.
-  // The new task starts with the column status context.
+  /**
+   * Validates and submits the new-task form, then resets its local draft.
+   *
+   * Empty required fields abort submission. The duration is converted from
+   * its raw string representation only when it is a finite positive number.
+   */
   const handleAddTask = () => {
     if (
       !draftTask.priority ||
@@ -358,8 +378,7 @@ export function TaskColumn({
             }
 
             if (task.status === "in_progress") {
-              // Resumes a task from the column list, using its title to restart the timer display.
-              // It stops event bubbling so drag/card actions do not also fire.
+              /** Resumes this task through TimerContext from the column list. */
               const handleResumeTask = () => {
                 startTask(task.id);
               };
