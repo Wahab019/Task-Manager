@@ -118,7 +118,7 @@ export function ReportBarChart({ selectedMonth }: { selectedMonth: Date }) {
       <CardContent className="pt-6">
         <ChartContainer
           config={chartConfig}
-          className="h-65 w-full print:h-auto print:min-h-[24rem]"
+          className="h-65 w-full print:h-auto print:min-h-96"
         >
           <BarChart
             data={hoursData}
