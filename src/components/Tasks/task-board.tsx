@@ -13,14 +13,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TaskColumn, type Task, type Priority } from "./task-column";
 import { useTimer, type Task as TimerTask } from "@/context/TimerContext";
 
+/** Labels displayed above each task status column. */
 const STATUS_LABELS: Record<Task["status"], string> = {
   todo: "To Do",
   in_progress: "In Progress",
   done: "Done",
 };
 
-// Renders the full task board and coordinates drag-and-drop status changes.
-// It groups tasks into columns from TimerContext state.
+/**
+ * Renders the full task board and coordinates drag-and-drop status changes.
+ *
+ * Tasks are read from TimerContext, grouped by status, and passed to the
+ * corresponding columns. Only the To Do column receives the task-creation
+ * adapter because new tasks enter the board in that status.
+ */
 export function TaskBoard() {
   const { tasks, isLoading, error, addTask, updateTaskStatus } = useTimer();
 
@@ -28,7 +34,14 @@ export function TaskBoard() {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
-  // Adapter to satisfy TaskColumn's onAddTask signature
+  /**
+   * Adapts the column form's task shape to TimerContext's add-task contract.
+   *
+   * The column keeps estimated minutes nullable for form semantics, while the
+   * context API receives the value as the string expected by its persistence
+   * layer. Creation is intentionally fire-and-forget because the column's
+   * callback accepts a synchronous return type.
+   */
   function handleAddTaskForColumn(task: {
     priority: Priority;
     title: string;
@@ -38,7 +51,6 @@ export function TaskBoard() {
   }) {
     const time =
       task.estimatedMinutes != null ? String(task.estimatedMinutes) : "0";
-    // fire-and-forget to match expected void return
     void addTask({
       priority: task.priority,
       title: task.title,
@@ -48,8 +60,12 @@ export function TaskBoard() {
     });
   }
 
-  // Handles dropping a task over a new column.
-  // It updates task status only when the drop target is a different valid status.
+  /**
+   * Persists the status represented by the drop target after a drag ends.
+   *
+   * Drops outside a registered column are ignored. The context owns the
+   * actual status update and any resulting persistence or error handling.
+   */
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;
@@ -60,6 +76,7 @@ export function TaskBoard() {
     await updateTaskStatus(taskId, newStatus);
   }
 
+  /** Groups the context tasks into the three board columns by status. */
   const tasksByStatus = useMemo(() => {
     const grouped: Record<Task["status"], Task[]> = {
       todo: [],
