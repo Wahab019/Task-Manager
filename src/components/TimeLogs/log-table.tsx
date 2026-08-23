@@ -144,11 +144,22 @@ export const LogTable = () => {
     {},
   );
 
+  /**
+   * Builds the rendered week model from raw tasks and time logs.
+   *
+   * The projection keeps date filtering and aggregation out of the JSX: logs
+   * are first limited to the selected week, grouped by local day, then grouped
+   * by task so each task can expose a total and its individual sessions.
+   */
   const days = useMemo(() => {
+    // Use a half-open week range so midnight on the following Monday is excluded.
     const weekStart = startOfDay(selectedMonday);
     const weekEnd = addDays(weekStart, 7);
+
+    // Resolve task metadata once while building the grouped log view.
     const tasksById = new Map(tasks.map((task) => [task.id, task]));
 
+    // Keep only logs from the selected week, keyed by their local calendar day.
     const logsByDay = timelogs
       .filter((log) => {
         const start = new Date(log.startTime);
@@ -162,6 +173,7 @@ export const LogTable = () => {
         return groups;
       }, new Map());
 
+    // Build newest-first day entries and omit dates that have not occurred yet.
     return Array.from({ length: 7 }, (_, index) => {
       const date = addDays(weekStart, 6 - index);
       if (date > today) {
@@ -172,6 +184,7 @@ export const LogTable = () => {
         .slice()
         .sort((a, b) => a.startTime - b.startTime);
 
+      // Combine multiple sessions for the same task while preserving each segment.
       const groupedByTask = logs.reduce<
         Map<string, { taskId: string; logs: TimeLogEntry[] }>
       >((groups, log) => {
@@ -184,6 +197,7 @@ export const LogTable = () => {
         return groups;
       }, new Map());
 
+      // Attach task metadata and calculate both task totals and segment labels.
       const taskGroups = Array.from(groupedByTask.values()).map((group) => {
         const task = tasksById.get(group.taskId);
         const total = group.logs.reduce((sum, log) => sum + log.duration, 0);
@@ -203,6 +217,7 @@ export const LogTable = () => {
         };
       });
 
+      // The day total is derived from task totals so every displayed duration agrees.
       return {
         date,
         key,
