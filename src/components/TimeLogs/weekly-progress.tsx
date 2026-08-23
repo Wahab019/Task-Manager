@@ -5,8 +5,10 @@ import { Check, Pencil, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTimer } from "@/context/TimerContext";
 
-// Builds the start and end timestamps for the current or offset week.
-// Dashboard and progress summaries use this range for filtering timelogs.
+/**
+ * Builds the local calendar bounds for the current Monday-to-Sunday week.
+ * The returned timestamps are used to filter time logs for weekly progress.
+ */
 function getWeekBounds() {
   const now = new Date();
   const day = now.getDay(); // 0 = Sun, 1 = Mon, …, 6 = Sat
@@ -20,8 +22,7 @@ function getWeekBounds() {
   return { monday, sunday };
 }
 
-// Formats seconds into the hours-and-minutes label used by the weekly target card.
-// Whole-hour values stay compact while partial hours include their remaining minutes.
+/** Formats elapsed seconds as the `HH:MM` label used by the progress card. */
 function formatHoursMinutes(totalSeconds: number) {
   const h = Math.floor(totalSeconds / 3600)
     .toString()
@@ -32,11 +33,18 @@ function formatHoursMinutes(totalSeconds: number) {
   return `${h}:${m}`;
 }
 
-// Displays progress toward a weekly target and lets the user edit that target locally.
-// It stores the target in localStorage.
+/**
+ * Displays progress toward a weekly target and lets the user edit that target.
+ *
+ * Time-log totals come from TimerContext, while the target is persisted in
+ * localStorage so it remains available across browser sessions.
+ */
 export const WeeklyProgress = () => {
   const { timelogs } = useTimer();
-  // Weekly target in hours — null means "not set"
+  /**
+   * Weekly target in hours; `null` means no target has been configured.
+   * The initializer reads only in the browser to avoid server-side storage access.
+   */
   const [weeklyTarget, setWeeklyTarget] = useState<number | null>(() => {
     if (typeof window === "undefined") return null;
     const saved = localStorage.getItem("timer_weeklyTarget");
@@ -50,7 +58,7 @@ export const WeeklyProgress = () => {
   const [tempTarget, setTempTarget] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus input when entering edit mode
+  /** Focuses and selects the target input whenever edit mode opens. */
   useEffect(() => {
     if (isEditing) {
       inputRef.current?.focus();
@@ -58,19 +66,19 @@ export const WeeklyProgress = () => {
     }
   }, [isEditing]);
 
-  // Opens weekly-target editing and seeds the draft with the current target.
-  // This keeps cancel/save behavior predictable.
+  /** Opens target editing and seeds the draft from the saved target. */
   const handleEditOpen = () => {
     setTempTarget(weeklyTarget !== null ? String(weeklyTarget) : "");
     setIsEditing(true);
   };
 
-  // Persists edited form or task values through the owner-provided save callback.
-  // Local saving state prevents duplicate submissions.
+  /**
+   * Validates and persists the target draft, or clears it when left empty.
+   * Invalid non-positive values leave the existing target unchanged.
+   */
   const handleSave = () => {
     const trimmed = tempTarget.trim();
     if (trimmed === "") {
-      // Clear the target
       setWeeklyTarget(null);
       localStorage.removeItem("timer_weeklyTarget");
     } else {
@@ -83,22 +91,21 @@ export const WeeklyProgress = () => {
     setIsEditing(false);
   };
 
-  // Cancels weekly-target editing and restores the draft value.
-  // It leaves the saved target unchanged.
+  /** Cancels target editing without changing the persisted target. */
   const handleCancel = () => {
     setIsEditing(false);
   };
 
-  // Handles keyboard shortcuts for editable controls.
-  // Enter saves the draft and Escape cancels editing when supported.
+  /** Saves on Enter and cancels on Escape while editing the target. */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleSave();
     if (e.key === "Escape") handleCancel();
   };
 
-  // Calculate weekly and today totals
+  /** Accumulated seconds for the selected weekly range and current day. */
   let weeklySeconds = 0;
   let todaySeconds = 0;
+  /** Percentage of the configured weekly target, capped at 100%. */
   let progressPercent = 0;
 
   if (typeof window !== "undefined") {
