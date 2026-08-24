@@ -4,21 +4,28 @@ import { PanelLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/context/SidebarContext";
 
-// Renders a compact icon button used in the header toolbar.
-// It centralizes the hover, disabled, and label styling for header actions.
+/** Props accepted by the reusable header toolbar button. */
+type ToolbarButtonProps = {
+  children: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  className?: string;
+};
+
+/**
+ * Renders a compact icon button for the header toolbar.
+ *
+ * It centralizes accessible labeling and the shared hover, disabled, and size
+ * styling used by header actions.
+ */
 export function ToolbarButton({
   children,
   label,
   onClick,
   disabled,
   className = "",
-}: {
-  children: React.ReactNode;
-  label: string;
-  onClick?: () => void;
-  disabled?: boolean;
-  className?: string;
-}) {
+}: ToolbarButtonProps) {
   return (
     <button
       aria-label={label}
@@ -31,16 +38,25 @@ export function ToolbarButton({
   );
 }
 
-// Renders the top application bar with navigation controls and the current user menu.
-// It also wires logout behavior to the account dropdown.
+/**
+ * Renders the top application bar for the authenticated dashboard.
+ *
+ * The header provides the sidebar toggle and displays the current user's
+ * initials, name, and email from AuthContext.
+ */
 export const Header = () => {
   const { user } = useAuth();
   const { toggle } = useSidebar();
 
+  /** Uses the user's name first, then the email prefix, as the display label. */
   const name = user?.name || user?.email?.split("@")[0] || "User";
 
-  // Derives a short initials label from the signed-in user name.
-  // The header uses it as the fallback avatar text.
+  /**
+   * Derives a short avatar label from a user's display name.
+   *
+   * Multi-word names use the first and last initials; single-word names use
+   * their first two characters.
+   */
   const getInitials = (fullName: string) => {
     const parts = fullName.trim().split(" ");
     if (parts.length >= 2) {
@@ -49,6 +65,7 @@ export const Header = () => {
     return fullName.substring(0, 2).toUpperCase();
   };
 
+  /** Initials rendered in the user's avatar circle. */
   const initials = getInitials(name);
 
   return (
