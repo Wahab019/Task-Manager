@@ -7,12 +7,11 @@ import { useTimer } from "@/context/TimerContext";
 const MIN_OFFSET = 24;
 const MAX_OFFSET = 300;
 
-// Constrains the floating timer offset so it stays within the viewport.
-// Dragging uses it to avoid losing the control off-screen.
+/** Restricts a floating timer offset to the configured viewport bounds. */
 const clampOffset = (value: number) =>
   Math.min(Math.max(value, MIN_OFFSET), MAX_OFFSET);
 
-// Formats seconds into a clock-style duration label.
+/** Formats elapsed seconds as an `HH:MM:SS` clock-style label. */
 const formatSeconds = (seconds: number) => {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -24,13 +23,20 @@ const formatSeconds = (seconds: number) => {
   return `${h}:${m}:${s}`;
 };
 
-// Renders the draggable floating timer control for the active task.
-// It switches between pause and resume actions based on tracking state.
+/**
+ * Renders the draggable floating timer control for the active task.
+ *
+ * The control follows the active timer state, supports bounded pointer
+ * dragging, and delegates pause, resume, and stop operations to TimerContext.
+ */
 export const TimeTracker = () => {
+  /** Current distance of the floating control from the viewport edges. */
   const [position, setPosition] = useState({
     bottom: MIN_OFFSET,
     right: MIN_OFFSET,
   });
+
+  /** Pointer and offset values captured at the beginning of a drag gesture. */
   const dragState = useRef({
     pointerId: null as number | null,
     startX: 0,
@@ -49,9 +55,13 @@ export const TimeTracker = () => {
     stopActiveTask,
   } = useTimer();
 
+  /**
+   * Tracks pointer movement and releases the active drag state on pointer-up.
+   * Global listeners keep dragging responsive when the pointer leaves the
+   * timer element; cleanup prevents listeners from surviving unmounting.
+   */
   useEffect(() => {
-    // Updates the floating timer position during a drag gesture.
-    // It uses the saved drag origin to calculate a bounded offset.
+    /** Updates the floating timer position from the saved drag origin. */
     const handlePointerMove = (event: PointerEvent) => {
       if (dragState.current.pointerId === null) {
         return;
@@ -66,8 +76,7 @@ export const TimeTracker = () => {
       });
     };
 
-    // Ends pointer capture and finalizes click-versus-drag state.
-    // This keeps dragging the floating timer from accidentally triggering controls.
+    /** Ends the active drag gesture when the captured pointer is released. */
     const handlePointerUp = (event: PointerEvent) => {
       if (dragState.current.pointerId === event.pointerId) {
         dragState.current.pointerId = null;
@@ -83,8 +92,10 @@ export const TimeTracker = () => {
     };
   }, []);
 
-  // Starts pointer capture for dragging the floating timer.
-  // It records the initial pointer and panel offset before movement begins.
+  /**
+   * Starts a drag gesture unless the pointer began on a timer control button.
+   * The initial pointer and panel offsets become the movement calculation origin.
+   */
   const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
     if ((event.target as HTMLElement).closest("button")) {
       return;
@@ -101,8 +112,7 @@ export const TimeTracker = () => {
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  // Ends pointer capture and finalizes click-versus-drag state.
-  // This keeps dragging the floating timer from accidentally triggering controls.
+  /** Releases pointer capture and clears the active drag gesture. */
   const handlePointerUp = (event: React.PointerEvent<HTMLElement>) => {
     if (dragState.current.pointerId === event.pointerId) {
       dragState.current.pointerId = null;
@@ -114,6 +124,7 @@ export const TimeTracker = () => {
     return null;
   }
 
+  /** Task metadata used to label the currently tracked timer. */
   const activeTask = tasks.find((t) => t.id === activeTaskId);
   if (!activeTask) {
     return null;
