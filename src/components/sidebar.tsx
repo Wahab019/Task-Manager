@@ -14,6 +14,7 @@ import {
   TimerReset,
 } from "lucide-react";
 
+/** Navigation destinations rendered in the application sidebar. */
 const navigationItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { label: "Tasks", icon: TimerReset, href: "/tasks" },
@@ -21,16 +22,28 @@ const navigationItems = [
   { label: "Reports", icon: ChartNoAxesColumn, href: "/reports" },
 ];
 
-// Renders the main navigation sidebar and greeting.
-// It highlights the active route and closes itself after mobile navigation.
+/**
+ * Renders the main application navigation sidebar.
+ *
+ * It highlights the active route, adapts its expanded state through
+ * SidebarContext, displays an authenticated user's greeting, and closes after
+ * navigation on mobile-sized viewports.
+ */
 export function Sidebar() {
   const pathname = usePathname();
   const { logout, user } = useAuth();
   const { isOpen, close } = useSidebar();
+  /** Uses the user's name, then their email prefix, for personalized labels. */
   const name = user?.name || user?.email?.split("@")[0] || "User";
+  /** Current time-based greeting displayed above the logout action. */
   const [greeting, setGreeting] = useState("Good morning");
+  /** First name shown in the expanded sidebar greeting. */
   const firstName = name.split(" ")[0];
 
+  /**
+   * Keeps the greeting aligned with the current time of day.
+   * The interval is cleared when the sidebar unmounts.
+   */
   useEffect(() => {
     setGreeting(getTimeBasedGreeting());
     const interval = setInterval(
@@ -73,6 +86,7 @@ export function Sidebar() {
           aria-label="Main navigation"
         >
           {navigationItems.map(({ label, icon: Icon, href }) => {
+            /** Treats nested routes as active for their parent destination. */
             const active = pathname === href || pathname.startsWith(`${href}/`);
 
             return (
@@ -80,7 +94,7 @@ export function Sidebar() {
                 key={label}
                 href={href}
                 onClick={() => {
-                  // On mobile, close sidebar after navigation
+                  // Keep the desktop sidebar state unchanged after navigation.
                   if (window.innerWidth < 1024) close();
                 }}
                 title={!isOpen ? label : undefined}
