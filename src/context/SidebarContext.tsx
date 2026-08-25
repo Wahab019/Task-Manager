@@ -8,29 +8,44 @@ import {
   type ReactNode,
 } from "react";
 
+/** Viewport width below which the sidebar uses its mobile behavior. */
 const MOBILE_BREAKPOINT = 1024;
 
+/** Shared sidebar visibility state and actions for the application shell. */
 interface SidebarContextValue {
   isOpen: boolean;
   toggle: () => void;
   close: () => void;
 }
 
+/** Context value supplied to sidebar-aware descendants. */
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
-// Provides shared sidebar state to descendant components.
-export function SidebarProvider({ children }: { children: ReactNode }) {
-  // On desktop the sidebar starts expanded; state controls collapsed vs full.
-  // On mobile the sidebar starts hidden; state controls hidden vs visible.
+/** Props accepted by {@link SidebarProvider}. */
+type SidebarProviderProps = {
+  children: ReactNode;
+};
+
+/**
+ * Provides shared responsive sidebar state to descendant components.
+ *
+ * The sidebar starts expanded and switches to closed when the viewport enters
+ * the mobile range, preventing desktop layout state from leaking into mobile.
+ */
+export function SidebarProvider({ children }: SidebarProviderProps) {
+  /** Sidebar visibility state shared by the header and navigation components. */
   const [isOpen, setIsOpen] = useState(true);
 
+  /**
+   * Synchronizes sidebar visibility with the mobile media-query state.
+   * The listener is removed when the provider unmounts.
+   */
   useEffect(() => {
     const mediaQuery = window.matchMedia(
       `(max-width: ${MOBILE_BREAKPOINT - 1}px)`,
     );
 
-    // Closes the app sidebar when the viewport enters the mobile range.
-    // That prevents the desktop sidebar state from leaking into the mobile layout.
+    /** Closes the sidebar when the viewport enters the mobile range. */
     const handleMobileMatch = (event: MediaQueryListEvent) => {
       if (event.matches) {
         setIsOpen(false);
@@ -45,11 +60,9 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     return () => mediaQuery.removeEventListener("change", handleMobileMatch);
   }, []);
 
-  // Flips the lightweight app sidebar between open and closed states.
-  // Header and navigation controls call this shared action.
+  /** Flips the sidebar between open and closed states. */
   const toggle = () => setIsOpen((prev) => !prev);
-  // Closes the lightweight app sidebar from places like navigation links.
-  // It gives mobile interactions a single way to dismiss the menu.
+  /** Closes the sidebar for actions such as mobile navigation. */
   const close = () => setIsOpen(false);
 
   return (
@@ -59,8 +72,10 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Returns the sidebar context for components that need to read or change the shell sidebar state.
-// It throws when used outside the matching provider.
+/**
+ * Returns shared sidebar state and actions from the nearest provider.
+ * Throws when called outside a {@link SidebarProvider}.
+ */
 export function useSidebar() {
   const ctx = useContext(SidebarContext);
   if (!ctx) throw new Error("useSidebar must be used within a SidebarProvider");
