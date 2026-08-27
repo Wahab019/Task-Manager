@@ -2,12 +2,15 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { Task, TimeLogEntry } from "@/context/TimerContext";
 
-// Combines conditional class names and resolves Tailwind class conflicts.
+/** Combines conditional class names and resolves conflicting Tailwind utilities. */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// src/lib/utils.ts (add this alongside your existing helpers)
+/**
+ * Returns a greeting based on the current local hour.
+ * Night covers hours before 05:00 and from 21:00 onward.
+ */
 export function getTimeBasedGreeting(): string {
   const hour = new Date().getHours();
 
@@ -18,7 +21,11 @@ export function getTimeBasedGreeting(): string {
   return "Good night";
 }
 
-// Converts an ISO deadline into a compact relative due-date label.
+/**
+ * Converts a calendar deadline into a compact relative due-date label.
+ * Invalid dates return an empty string; dates beyond the next seven days use
+ * a short month/day label instead of a weekday.
+ */
 export function formatDueLabel(deadline: string): string {
   const now = new Date();
   const dueDate = new Date(`${deadline}T00:00:00`);
@@ -62,7 +69,11 @@ export function formatDueLabel(deadline: string): string {
   return `Due ${monthDayFormatter.format(dueDate)}`;
 }
 
-// Formats a timestamp as a short human-readable relative time string.
+/**
+ * Formats a timestamp as a short relative time string.
+ * Future timestamps are treated as occurring now, so the result never says
+ * that an event happened in the future.
+ */
 export function formatRelativeTime(timestamp: string | number | Date): string {
   const time =
     typeof timestamp === "number"
@@ -100,7 +111,7 @@ export function formatRelativeTime(timestamp: string | number | Date): string {
   return `${days} days ago`;
 }
 
-// Formats seconds into a clock-style duration label.
+/** Formats elapsed seconds as an `HH:MM:SS` clock-style duration label. */
 export function formatSeconds(seconds: number): string {
   const h = Math.floor(seconds / 3600)
     .toString()
@@ -112,7 +123,7 @@ export function formatSeconds(seconds: number): string {
   return `${h}:${m}:${s}`;
 }
 
-// Maps a task deadline to the UI urgency color used by due-date pills.
+/** Maps a deadline to the due-date urgency color used by the UI. */
 export function getDueDateColor(deadline: string): "red" | "yellow" | "green" {
   const now = new Date();
   const dueDate = new Date(`${deadline}T00:00:00`);
@@ -140,8 +151,10 @@ export function getDueDateColor(deadline: string): "red" | "yellow" | "green" {
   return "green";
 }
 
-// Returns unfinished tasks with valid deadlines, sorted from nearest to farthest.
-// Dashboard due-date widgets use this to show the most urgent work first.
+/**
+ * Returns unfinished tasks with non-empty deadlines sorted nearest first.
+ * The input array is copied before sorting, so callers' task order is preserved.
+ */
 export function getTasksDueSoon<
   T extends { status: string; deadline: string | null },
 >(tasks: T[]): T[] {
@@ -155,21 +168,21 @@ export function getTasksDueSoon<
     });
 }
 
-// Normalizes a date to the first millisecond of its local day.
+/** Returns a copy of a date normalized to the first millisecond of its day. */
 function startOfDay(date: Date): Date {
   const normalized = new Date(date);
   normalized.setHours(0, 0, 0, 0);
   return normalized;
 }
 
-// Normalizes a date to the final millisecond of its local day.
+/** Returns a copy of a date normalized to the final millisecond of its day. */
 function endOfDay(date: Date): Date {
   const normalized = new Date(date);
   normalized.setHours(23, 59, 59, 999);
   return normalized;
 }
 
-// Builds week ranges that cover the selected month for reports.
+/** Builds four fixed seven-day report ranges covering a selected month. */
 export function getWeeksInMonth(
   month: Date,
 ): { label: string; from: Date; to: Date }[] {
@@ -201,7 +214,11 @@ export function getWeeksInMonth(
   ];
 }
 
-// Aggregates timelog durations into daily hour totals for a date range.
+/**
+ * Aggregates time-log durations into rounded hour totals for Monday-Sunday.
+ * Logs are included when their start timestamp falls within the inclusive
+ * local-day range from `from` through `to`.
+ */
 export function getHoursByDayInRange(
   timelogs: TimeLogEntry[],
   from: Date,
@@ -225,22 +242,22 @@ export function getHoursByDayInRange(
   }));
 }
 
-// Normalizes a date to the first day of its month.
+/** Returns the first local calendar day of the supplied month. */
 function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
-// Normalizes a date to the last day of its month.
+/** Returns the last local calendar day of the supplied month. */
 function endOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
-// Checks whether two dates fall within the same month and year.
+/** Returns whether two dates share the same local month and year. */
 function isSameMonth(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
-// Formats report dates in the short month/day style used by tables.
+/** Formats a report date as a localized short month/day/year label. */
 function formatReportDate(date: Date) {
   return date.toLocaleDateString("en-US", {
     month: "short",
@@ -249,9 +266,7 @@ function formatReportDate(date: Date) {
   });
 }
 
-// â”€â”€ Report aggregation helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-/** Format a total-seconds count as "Xh Ym" (e.g. "38h 15m" or "0m"). */
+/** Formats total seconds as `Xh Ym`, omitting hours when they are zero. */
 function formatReportDuration(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -259,7 +274,7 @@ function formatReportDuration(totalSeconds: number): string {
   return `${hours}h ${minutes}m`;
 }
 
-/** Timelogs whose startTime (ms epoch) falls within [from, to] (day-inclusive). */
+/** Returns time logs whose start timestamps fall within the inclusive date range. */
 function filterTimelogsInRange(
   timelogs: TimeLogEntry[],
   from: Date,
@@ -274,10 +289,7 @@ function filterTimelogsInRange(
   );
 }
 
-/**
- * Sum durations of all timelogs whose startTime falls within [from, to]
- * and return the result formatted as "Xh Ym".
- */
+/** Sums matching time-log durations and formats the result as `Xh Ym`. */
 export function getTotalHoursInRange(
   timelogs: TimeLogEntry[],
   from: Date,
@@ -288,9 +300,7 @@ export function getTotalHoursInRange(
   return formatReportDuration(totalSeconds);
 }
 
-/**
- * Count tasks with status "done" whose completion timestamp falls within [from, to].
- */
+/** Counts completed tasks whose valid update timestamp falls in the date range. */
 export function getTasksCompletedInRange(
   tasks: Task[],
   from: Date,
@@ -314,8 +324,8 @@ export function getTasksCompletedInRange(
 }
 
 /**
- * Average duration of timelogs whose startTime falls within [from, to],
- * formatted as "Xh Ym". Returns "0m" when there are no matching entries.
+ * Averages matching time-log durations and formats the result as `Xh Ym`.
+ * Returns `0m` when the date range contains no entries.
  */
 export function getAverageSessionLength(
   timelogs: TimeLogEntry[],
@@ -328,7 +338,10 @@ export function getAverageSessionLength(
   return formatReportDuration(Math.round(totalSeconds / filtered.length));
 }
 
-// Builds recent report rows by joining monthly timelogs to their tasks.
+/**
+ * Builds recent report rows by joining monthly time logs to task metadata.
+ * Results are newest first and limited to the requested number of entries.
+ */
 export function getRecentEntriesInMonth(
   timelogs: TimeLogEntry[],
   tasks: Task[],
@@ -362,7 +375,10 @@ export function getRecentEntriesInMonth(
     });
 }
 
-// Returns recently completed tasks for the selected report month.
+/**
+ * Returns recently completed tasks for the selected report month.
+ * Results are newest first and limited to the requested number of tasks.
+ */
 export function getRecentCompletedTasksInMonth(
   tasks: Task[],
   month: Date,
