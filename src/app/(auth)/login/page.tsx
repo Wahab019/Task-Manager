@@ -233,17 +233,6 @@ export default function LoginPage() {
           )}
         </div>
 
-        {/* <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[#69716d]">
-          <input
-            type="checkbox"
-            checked={remember}
-            onChange={(e) => setRemember(e.target.checked)}
-            disabled={loading}
-            className="size-3.5 rounded-xs border-[#dce0dd] accent-primary"
-          />
-          Remember this workstation
-        </label> */}
-
         <button
           type="submit"
           disabled={loading}
