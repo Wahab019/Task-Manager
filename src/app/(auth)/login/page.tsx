@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, Landmark, Loader2 } from "lucide-react";
 import { z } from "zod";
@@ -186,12 +187,12 @@ export default function LoginPage() {
             >
               Password
             </label>
-            {/* <Link
+            <Link
               href="/reset-password"
-              className="text-[10px] font-bold text-primary underline underline-offset-2"
+              className="text-[10px] font-bold text-primary underline underline-offset-2 hover:text-[#0a3026] transition-colors"
             >
               Forgot Password?
-            </Link> */}
+            </Link>
           </div>
           <div className="relative">
             <input
@@ -248,6 +249,18 @@ export default function LoginPage() {
             </>
           )}
         </button>
+
+        <div className="pt-2 text-center">
+          <p className="text-xs text-[#737b76]">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/sign-up"
+              className="font-bold text-primary underline underline-offset-2 hover:text-[#0a3026] transition-colors"
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
       </form>
     </div>
   );

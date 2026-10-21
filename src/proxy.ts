@@ -10,7 +10,7 @@ import type { NextRequest } from "next/server";
 const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ?? "";
 const SESSION_COOKIE = `a_session_${PROJECT_ID}`;
 
-const PUBLIC_PATHS = ["/login", "/reset-password"];
+const PUBLIC_PATHS = ["/login", "/sign-up", "/reset-password"];
 
 // Redirects users based on authentication state before protected or public pages render.
 export function proxy(request: NextRequest) {
