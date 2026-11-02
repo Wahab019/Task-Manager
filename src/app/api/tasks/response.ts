@@ -14,12 +14,9 @@ export type TaskResponse = {
   $updatedAt: string;
 };
 
-/**
- * Represents the raw Task document structure as it comes from the Appwrite database.
- * Includes Appwrite-specific metadata fields like `$id` and `$updatedAt`.
- */
-type AppwriteTaskDoc = {
-  $id: string;
+export type TaskRecord = {
+  id?: string;
+  $id?: string;
   title: string;
   description: string;
   priority: TaskResponse["priority"];
@@ -27,21 +24,19 @@ type AppwriteTaskDoc = {
   estimatedMinutes: number | null;
   deadline: string | null;
   elapsedSeconds: number;
-  $updatedAt: string;
+  updatedAt?: string;
+  $updatedAt?: string;
 };
 
 /**
- * Converts a raw Appwrite task document into the standardized frontend TaskResponse shape.
+ * Converts a database task row/document into the standardized frontend TaskResponse shape.
  *
- * - Maps Appwrite's internal `$id` to a clean `id` property.
- * - Passes through all other relevant data fields.
- *
- * @param doc - The raw task document from Appwrite
+ * @param doc - The task record from SQLite or Appwrite
  * @returns The formatted task response object
  */
-export function toTaskResponse(doc: AppwriteTaskDoc): TaskResponse {
+export function toTaskResponse(doc: TaskRecord): TaskResponse {
   return {
-    id: doc.$id,
+    id: doc.id || doc.$id || "",
     title: doc.title,
     description: doc.description,
     priority: doc.priority,
@@ -49,6 +44,6 @@ export function toTaskResponse(doc: AppwriteTaskDoc): TaskResponse {
     estimatedMinutes: doc.estimatedMinutes,
     deadline: doc.deadline,
     elapsedSeconds: doc.elapsedSeconds,
-    $updatedAt: doc.$updatedAt,
+    $updatedAt: doc.updatedAt || doc.$updatedAt || new Date().toISOString(),
   };
 }
