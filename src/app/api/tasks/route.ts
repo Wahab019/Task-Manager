@@ -1,31 +1,13 @@
-import { ID, Query } from "node-appwrite";
-
-import { databases } from "@/lib/appwrite-server";
-import { COLLECTIONS, DATABASE_ID } from "@/lib/appwrite-config";
+import crypto from "node:crypto";
+import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { toTaskResponse } from "./response";
+import { toTaskResponse, TaskRecord } from "./response";
 
 /**
  * Type definitions for task properties.
  */
 type Priority = "low" | "normal" | "high";
 type Status = "todo" | "in_progress" | "done";
-
-/**
- * Represents the structure of a Task document as stored in the Appwrite database.
- */
-type TaskDocument = {
-  $id: string;
-  $updatedAt: string;
-  title: string;
-  description: string;
-  priority: Priority;
-  status: Status;
-  estimatedMinutes: number | null;
-  deadline: string | null;
-  elapsedSeconds: number;
-  assigned_to: string;
-};
 
 /**
  * Type guard to check whether the provided value is a valid Priority.
@@ -48,12 +30,12 @@ function isStatus(value: unknown): value is Status {
 }
 
 /**
- * Handles GET requests to retrieve all tasks for the authenticated user.
+ * Handles GET requests to retrieve all tasks for the authenticated user via SQL.
  *
  * Flow:
- * 1. Authenticates the user.
- * 2. Queries the Appwrite database for tasks assigned to the user's ID.
- * 3. Maps the raw database documents to the public `Task` response format.
+ * 1. Authenticates the user with Appwrite session JWT.
+ * 2. Executes a parameterized SQL query on SQLite database.
+ * 3. Maps the SQL rows to the standardized `TaskResponse` shape.
  * 4. Returns the JSON list of tasks.
  */
 export async function GET() {
@@ -62,34 +44,44 @@ export async function GET() {
     return Response.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  let result;
   try {
-    result = await databases.listDocuments(DATABASE_ID, COLLECTIONS.TASKS, [
-      Query.equal("assigned_to", user.authUserId),
-    ]);
+    const statement = db.prepare<[string], TaskRecord>(`
+      SELECT 
+        id, 
+        title, 
+        description, 
+        priority, 
+        status, 
+        estimatedMinutes, 
+        deadline, 
+        elapsedSeconds, 
+        assigned_to, 
+        updatedAt, 
+        createdAt
+      FROM tasks
+      WHERE assigned_to = ?
+      ORDER BY updatedAt DESC
+    `);
+
+    const rows = statement.all(user.authUserId);
+    return Response.json(rows.map(toTaskResponse));
   } catch (error) {
-    console.error("Failed to list tasks:", error);
+    console.error("Failed to list tasks from SQLite:", error);
     return Response.json(
       { error: "Something went wrong. Please try again." },
       { status: 500 },
     );
   }
-
-  return Response.json(
-    result.documents.map((doc) =>
-      toTaskResponse(doc as unknown as TaskDocument),
-    ),
-  );
 }
 
 /**
- * Handles POST requests to create a new task.
+ * Handles POST requests to create a new task using SQL INSERT.
  *
  * Flow:
- * 1. Authenticates the user.
+ * 1. Authenticates the user with Appwrite session JWT.
  * 2. Validates the request body for required fields (title, description, priority, status).
  * 3. Formats optional fields (estimatedMinutes, deadline).
- * 4. Creates a new task document in the Appwrite database assigned to the user.
+ * 4. Inserts a new task row into SQLite using parameterized SQL.
  * 5. Returns the newly created task.
  *
  * @param request - The incoming HTTP request containing the new task data
@@ -143,27 +135,58 @@ export async function POST(request: Request) {
         : null,
   };
 
-  let createdTask;
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+
   try {
-    createdTask = await databases.createDocument(
-      DATABASE_ID,
-      COLLECTIONS.TASKS,
-      ID.unique(),
-      {
-        ...validatedFields,
-        assigned_to: user.authUserId,
-        elapsedSeconds: 0,
-      },
+    const insertStatement = db.prepare(`
+      INSERT INTO tasks (
+        id,
+        title,
+        description,
+        priority,
+        status,
+        estimatedMinutes,
+        deadline,
+        elapsedSeconds,
+        assigned_to,
+        updatedAt,
+        createdAt
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      )
+    `);
+
+    insertStatement.run(
+      id,
+      validatedFields.title,
+      validatedFields.description,
+      validatedFields.priority,
+      validatedFields.status,
+      validatedFields.estimatedMinutes,
+      validatedFields.deadline,
+      0,
+      user.authUserId,
+      now,
+      now,
     );
+
+    const createdTask = db
+      .prepare<[string], TaskRecord>("SELECT * FROM tasks WHERE id = ?")
+      .get(id);
+
+    if (!createdTask) {
+      throw new Error("Created task could not be retrieved");
+    }
+
+    return Response.json(toTaskResponse(createdTask), {
+      status: 201,
+    });
   } catch (error) {
-    console.error("Failed to create task:", error);
+    console.error("Failed to create task with SQLite:", error);
     return Response.json(
       { error: "Something went wrong. Please try again." },
       { status: 500 },
     );
   }
-
-  return Response.json(toTaskResponse(createdTask as unknown as TaskDocument), {
-    status: 201,
-  });
 }
