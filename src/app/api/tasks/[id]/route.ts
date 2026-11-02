@@ -1,29 +1,12 @@
-import { databases } from "@/lib/appwrite-server";
-import { COLLECTIONS, DATABASE_ID } from "@/lib/appwrite-config";
+import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { toTaskResponse } from "../response";
+import { toTaskResponse, TaskRecord } from "../response";
 
 /**
  * Type definitions for task properties.
  */
 type Status = "todo" | "in_progress" | "done";
 type Priority = "low" | "normal" | "high";
-
-/**
- * Represents the structure of a Task document as stored in the Appwrite database.
- */
-type TaskDocument = {
-  $id: string;
-  $updatedAt: string;
-  status: Status;
-  elapsedSeconds: number;
-  assigned_to: string;
-  title: string;
-  description: string;
-  priority: Priority;
-  estimatedMinutes: number | null;
-  deadline: string | null;
-};
 
 /**
  * Type guard to check whether the provided value is a valid Status.
@@ -46,13 +29,13 @@ function isPriority(value: unknown): value is Priority {
 }
 
 /**
- * Handles PATCH requests to update a specific task by ID.
+ * Handles PATCH requests to update a specific task by ID using SQL.
  *
  * Flow:
- * 1. Authenticates the user.
+ * 1. Authenticates the user with Appwrite session JWT.
  * 2. Validates the request body and applies partial updates.
- * 3. Verifies that the task exists and belongs to the authenticated user.
- * 4. Updates the task document in the Appwrite database.
+ * 3. Verifies that the task exists and belongs to the authenticated user via SQL SELECT.
+ * 4. Updates the task in SQLite using parameterized SQL UPDATE.
  * 5. Returns the updated task response.
  *
  * @param request - The incoming HTTP request containing partial task updates
@@ -142,57 +125,45 @@ export async function PATCH(
     );
   }
 
-  let existingTask;
-  try {
-    existingTask = await databases.getDocument(
-      DATABASE_ID,
-      COLLECTIONS.TASKS,
-      id,
-    );
-  } catch {
+  // Fetch the existing task using SQL
+  const existingTask = db
+    .prepare<[string], TaskRecord & { assigned_to: string }>(
+      "SELECT * FROM tasks WHERE id = ?",
+    )
+    .get(id);
+
+  if (!existingTask) {
     return Response.json({ error: "Task not found." }, { status: 404 });
   }
 
-  const taskDocument = existingTask as unknown as TaskDocument;
-
-  if (taskDocument.assigned_to !== user.authUserId) {
+  if (existingTask.assigned_to !== user.authUserId) {
     return Response.json({ error: "Forbidden." }, { status: 403 });
   }
 
-  const validatedUpdates: {
-    status?: "todo" | "in_progress" | "done";
-    elapsedSeconds?: number;
-    title?: string;
-    description?: string;
-    priority?: Priority;
-    estimatedMinutes?: number | null;
-    deadline?: string | null;
-  } = {};
+  const updates: Record<string, unknown> = {};
 
   if (taskData.status !== undefined) {
-    validatedUpdates.status = taskData.status;
+    updates.status = taskData.status;
   }
 
   if (taskData.elapsedSeconds !== undefined) {
-    validatedUpdates.elapsedSeconds = Math.round(
-      Number(taskData.elapsedSeconds),
-    );
+    updates.elapsedSeconds = Math.round(Number(taskData.elapsedSeconds));
   }
 
   if (taskData.title !== undefined) {
-    validatedUpdates.title = taskData.title.trim();
+    updates.title = taskData.title.trim();
   }
 
   if (taskData.description !== undefined) {
-    validatedUpdates.description = taskData.description.trim();
+    updates.description = taskData.description.trim();
   }
 
   if (taskData.priority !== undefined) {
-    validatedUpdates.priority = taskData.priority;
+    updates.priority = taskData.priority;
   }
 
   if (taskData.estimatedMinutes !== undefined) {
-    validatedUpdates.estimatedMinutes =
+    updates.estimatedMinutes =
       typeof taskData.estimatedMinutes === "number" &&
       Number.isFinite(taskData.estimatedMinutes) &&
       taskData.estimatedMinutes > 0
@@ -201,42 +172,62 @@ export async function PATCH(
   }
 
   if (taskData.deadline !== undefined) {
-    validatedUpdates.deadline =
+    updates.deadline =
       typeof taskData.deadline === "string" && taskData.deadline.trim()
         ? taskData.deadline.trim()
         : null;
   }
 
-  let updatedTask;
+  updates.updatedAt = new Date().toISOString();
+
+  const setClauses: string[] = [];
+  const values: unknown[] = [];
+
+  for (const [key, value] of Object.entries(updates)) {
+    setClauses.push(`${key} = ?`);
+    values.push(value);
+  }
+
+  values.push(id);
+  values.push(user.authUserId);
+
   try {
-    updatedTask = await databases.updateDocument(
-      DATABASE_ID,
-      COLLECTIONS.TASKS,
-      id,
-      validatedUpdates,
-    );
+    const updateSql = `
+      UPDATE tasks 
+      SET ${setClauses.join(", ")}
+      WHERE id = ? AND assigned_to = ?
+    `;
+
+    db.prepare(updateSql).run(...values);
+
+    const updatedTask = db
+      .prepare<[string], TaskRecord>("SELECT * FROM tasks WHERE id = ?")
+      .get(id);
+
+    if (!updatedTask) {
+      throw new Error("Updated task could not be retrieved");
+    }
+
+    return Response.json(toTaskResponse(updatedTask));
   } catch (error) {
-    console.error("Failed to update task document:", error);
+    console.error("Failed to update task with SQL:", error);
     return Response.json(
       {
-        error:
-          "Failed to update task. Database connection timed out or failed.",
+        error: "Failed to update task.",
       },
       { status: 500 },
     );
   }
-
-  return Response.json(toTaskResponse(updatedTask as unknown as TaskDocument));
 }
 
 /**
- * Handles DELETE requests to remove a specific task by ID.
+ * Handles DELETE requests to remove a specific task by ID using SQL.
  *
  * Flow:
- * 1. Authenticates the user.
- * 2. Fetches the task to ensure it exists and belongs to the user.
+ * 1. Authenticates the user with Appwrite session JWT.
+ * 2. Fetches the task via SQL SELECT to ensure it exists and belongs to the user.
  * 3. Enforces business logic: only tasks that are "todo" (not started) can be deleted.
- * 4. Deletes the task document from the Appwrite database.
+ * 4. Deletes the task row from SQLite using SQL DELETE.
  * 5. Returns a success confirmation.
  *
  * @param _request - The incoming HTTP request
@@ -253,24 +244,22 @@ export async function DELETE(
 
   const { id } = await params;
 
-  let existingTask;
-  try {
-    existingTask = await databases.getDocument(
-      DATABASE_ID,
-      COLLECTIONS.TASKS,
-      id,
-    );
-  } catch {
+  // Retrieve existing task using SQL
+  const existingTask = db
+    .prepare<[string], TaskRecord & { assigned_to: string }>(
+      "SELECT * FROM tasks WHERE id = ?",
+    )
+    .get(id);
+
+  if (!existingTask) {
     return Response.json({ error: "Task not found." }, { status: 404 });
   }
 
-  const taskDocument = existingTask as unknown as TaskDocument;
-
-  if (taskDocument.assigned_to !== user.authUserId) {
+  if (existingTask.assigned_to !== user.authUserId) {
     return Response.json({ error: "Forbidden." }, { status: 403 });
   }
 
-  if (taskDocument.status !== "todo") {
+  if (existingTask.status !== "todo") {
     return Response.json(
       { error: "Only tasks that haven't been started can be deleted." },
       { status: 400 },
@@ -278,9 +267,12 @@ export async function DELETE(
   }
 
   try {
-    await databases.deleteDocument(DATABASE_ID, COLLECTIONS.TASKS, id);
+    db.prepare("DELETE FROM tasks WHERE id = ? AND assigned_to = ?").run(
+      id,
+      user.authUserId,
+    );
   } catch (error) {
-    console.error("Failed to delete task document:", error);
+    console.error("Failed to delete task via SQL:", error);
     return Response.json(
       { error: "Something went wrong. Please try again." },
       { status: 500 },
