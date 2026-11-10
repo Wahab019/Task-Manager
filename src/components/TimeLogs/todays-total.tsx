@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { useTimer } from "@/context/TimerContext";
+import { formatHoursMinutes } from "@/lib/utils";
 
 /**
  * Displays the total duration of time logs that started today.
@@ -11,7 +12,7 @@ import { useTimer } from "@/context/TimerContext";
  * fallback before local date calculations are performed.
  */
 export const TodaysTotal = () => {
-  const { timeLogs } = useTimer();
+  const { timelogs } = useTimer();
   /** Prevents local date calculations from changing the server-rendered HTML. */
   const mounted = typeof window !== "undefined";
 
@@ -22,22 +23,13 @@ export const TodaysTotal = () => {
     /** Local calendar date used to identify today's time-log entries. */
     const todayStr = new Date().toDateString();
     /** Logs whose start timestamp falls on the current local calendar date. */
-    const todaysLogs = timeLogs.filter((log) => {
+    const todaysLogs = timelogs.filter((log) => {
       const logDate = new Date(log.startTime);
       return logDate.toDateString() === todayStr;
     });
     /** Total tracked seconds from today's log entries. */
     const totalSeconds = todaysLogs.reduce((acc, log) => acc + log.duration, 0);
-    /** Whole hours extracted from the day's total for the card label. */
-    const hours = Math.floor(totalSeconds / 3600)
-      .toString()
-      .padStart(2, "0");
-    /** Remaining whole minutes after removing complete hours. */
-    const minutes = Math.floor((totalSeconds % 3600) / 60)
-      .toString()
-      .padStart(2, "0");
-    /** Compact hours-and-minutes value displayed to the user. */
-    formattedTime = `${hours}:${minutes}`;
+    formattedTime = formatHoursMinutes(totalSeconds);
   }
 
   return (
