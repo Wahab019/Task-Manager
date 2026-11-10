@@ -12,21 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDraggable } from "@dnd-kit/core";
-import { formatDueLabel } from "@/lib/utils";
+import { formatDueLabel, formatSeconds } from "@/lib/utils";
 import { EditTaskDialog, type TaskEditUpdates } from "./edit-task-dialog";
 import { useTimer, type Priority, type Task } from "@/context/TimerContext";
-
-/** Formats a number of seconds as an `HH:MM:SS` clock-style label. */
-const formatSeconds = (seconds: number) => {
-  const h = Math.floor(seconds / 3600)
-    .toString()
-    .padStart(2, "0");
-  const m = Math.floor((seconds % 3600) / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = (seconds % 60).toString().padStart(2, "0");
-  return `${h}:${m}:${s}`;
-};
 
 /** Properties required to render an in-progress task and its timer controls. */
 type OngoingTaskProps = {
