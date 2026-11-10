@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, Landmark, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { ID } from "appwrite";
-import { account } from "@/lib/appwrite";
+import { account, loginWithEmail } from "@/lib/appwrite";
 
 /**
  * Zod schema for validating sign-up form inputs.
@@ -72,19 +72,6 @@ export default function SignUpPage() {
   const [generalError, setGeneralError] = useState<string | null>(null);
 
   /**
-   * Helper function to establish a session with Appwrite.
-   */
-  const createSession = async () => {
-    if (typeof account.createEmailPasswordSession === "function") {
-      await account.createEmailPasswordSession(email, password);
-    } else if (typeof (account as any).createEmailSession === "function") {
-      await (account as any).createEmailSession(email, password);
-    } else {
-      throw new Error("Appwrite authentication method not available.");
-    }
-  };
-
-  /**
    * Handles user registration submission.
    */
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,30 +105,14 @@ export default function SignUpPage() {
       await account.create(ID.unique(), email, password, name);
 
       // 2. Establish active session, clearing any dangling session if needed
-      try {
-        await createSession();
-      } catch (err: any) {
-        if (
-          err?.message?.includes("session is active") ||
-          err?.code === 409 ||
-          err?.type === "user_session_already_exists"
-        ) {
-          try {
-            await account.deleteSession("current");
-          } catch (_) {
-            // Ignore error if session wasn't active
-          }
-          await createSession();
-        } else {
-          throw err;
-        }
-      }
+      await loginWithEmail(email, password);
 
       // 3. Redirect to the dashboard
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { message?: string };
       setGeneralError(
-        err?.message || "Failed to create account. Please try again.",
+        error?.message || "Failed to create account. Please try again.",
       );
     } finally {
       setLoading(false);
