@@ -4,25 +4,7 @@ import { useMemo } from "react";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { useTimer } from "@/context/TimerContext";
-
-/**
- * Calculates the start and end dates (Monday to Sunday) for a specific week.
- *
- * @param offsetWeeks - The number of weeks to shift from the current week (e.g., -1 for last week)
- * @returns An object containing the exact `monday` and `sunday` Date objects for that week.
- */
-function getWeekBounds(offsetWeeks = 0) {
-  const now = new Date();
-  const day = now.getDay(); // 0 = Sun
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + diffToMonday + offsetWeeks * 7);
-  monday.setHours(0, 0, 0, 0);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
-  return { monday, sunday };
-}
+import { getWeekBounds } from "@/lib/utils";
 
 /**
  * TotalHours Component
