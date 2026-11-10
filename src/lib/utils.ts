@@ -168,8 +168,34 @@ export function getTasksDueSoon<
     });
 }
 
+/** Formats elapsed seconds as a compact `HH:MM` duration label. */
+export function formatHoursMinutes(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+/**
+ * Calculates the start and end dates (Monday to Sunday) for a specific week.
+ *
+ * @param offsetWeeks - The number of weeks to shift from the current week (e.g., -1 for last week)
+ * @returns An object containing the exact `monday` and `sunday` Date objects for that week.
+ */
+export function getWeekBounds(offsetWeeks = 0) {
+  const now = new Date();
+  const day = now.getDay(); // 0 = Sun
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday + offsetWeeks * 7);
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return { monday, sunday };
+}
+
 /** Returns a copy of a date normalized to the first millisecond of its day. */
-function startOfDay(date: Date): Date {
+export function startOfDay(date: Date): Date {
   const normalized = new Date(date);
   normalized.setHours(0, 0, 0, 0);
   return normalized;
@@ -336,43 +362,6 @@ export function getAverageSessionLength(
   if (filtered.length === 0) return "0m";
   const totalSeconds = filtered.reduce((sum, log) => sum + log.duration, 0);
   return formatReportDuration(Math.round(totalSeconds / filtered.length));
-}
-
-/**
- * Builds recent report rows by joining monthly time logs to task metadata.
- * Results are newest first and limited to the requested number of entries.
- */
-export function getRecentEntriesInMonth(
-  timelogs: TimeLogEntry[],
-  tasks: Task[],
-  month: Date,
-  limit: number = 5,
-): { id: string; taskName: string; date: string; duration: string }[] {
-  const today = new Date();
-  const monthStart = startOfMonth(month);
-  const monthEnd = isSameMonth(month, today)
-    ? new Date(Math.min(endOfMonth(month).getTime(), today.getTime()))
-    : endOfMonth(month);
-  const tasksById = new Map(tasks.map((task) => [task.id, task]));
-
-  return timelogs
-    .filter(
-      (log) =>
-        log.startTime >= monthStart.getTime() &&
-        log.startTime <= monthEnd.getTime(),
-    )
-    .slice()
-    .sort((a, b) => b.startTime - a.startTime)
-    .slice(0, limit)
-    .map((log) => {
-      const task = tasksById.get(log.taskId);
-      return {
-        id: log.id,
-        taskName: task?.title ?? "Deleted task",
-        date: formatReportDate(new Date(log.startTime)),
-        duration: formatReportDuration(log.duration),
-      };
-    });
 }
 
 /**
