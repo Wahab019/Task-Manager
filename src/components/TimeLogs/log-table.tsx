@@ -5,6 +5,7 @@ import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { TimeLogEntry, useTimer } from "@/context/TimerContext";
+import { formatHoursMinutes, startOfDay } from "@/lib/utils";
 
 const dayFormatter = new Intl.DateTimeFormat("en-US", {
   weekday: "long",
@@ -22,13 +23,6 @@ const timeFormatter = new Intl.DateTimeFormat("en-US", {
   minute: "2-digit",
 });
 
-/** Returns a copy of a date normalized to the start of its local day. */
-function startOfDay(date: Date) {
-  const nextDate = new Date(date);
-  nextDate.setHours(0, 0, 0, 0);
-  return nextDate;
-}
-
 /** Returns a copy of a date normalized to Monday at the start of its week. */
 function startOfWeek(date: Date) {
   const nextDate = startOfDay(date);
@@ -45,12 +39,7 @@ function addDays(date: Date, days: number) {
   return nextDate;
 }
 
-/** Formats elapsed seconds as a compact `HH:MM` duration label. */
-function formatDuration(totalSeconds: number) {
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-}
+const formatDuration = formatHoursMinutes;
 
 /** Formats a Monday date and its following Sunday as the table week range. */
 function formatWeekRange(monday: Date) {
