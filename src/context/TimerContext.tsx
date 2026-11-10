@@ -64,7 +64,6 @@ interface TimerContextType {
   isTracking: boolean;
   currentSeconds: number;
   timelogs: TimeLogEntry[];
-  timeLogs: TimeLogEntry[];
   addTask: (draft: {
     priority: Priority;
     title: string;
@@ -172,7 +171,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [currentSeconds, setCurrentSeconds] = useState(0);
   /** Time logs plus hydration flags used to coordinate startup persistence. */
   const [timelogs, setTimelogs] = useState<TimeLogEntry[]>([]);
-  const [hasHydratedLogs, setHasHydratedLogs] = useState(false);
   const [hasHydratedTimer, setHasHydratedTimer] = useState(false);
 
   const currentSecondsRef = React.useRef(0);
@@ -285,8 +283,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       console.error("Failed to load timelogs:", error);
       setTimelogs(readCachedLogs());
       setError("Couldn't load time logs. Try again.");
-    } finally {
-      setHasHydratedLogs(true);
     }
   }, [readCachedLogs]);
 
@@ -1118,7 +1114,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         isTracking,
         currentSeconds,
         timelogs,
-        timeLogs: timelogs,
         addTask,
         startTimer,
         pauseTimer,
