@@ -1,3 +1,14 @@
+export type Priority = "low" | "normal" | "high";
+export type Status = "todo" | "in_progress" | "done";
+
+export function isPriority(value: unknown): value is Priority {
+  return value === "low" || value === "normal" || value === "high";
+}
+
+export function isStatus(value: unknown): value is Status {
+  return value === "todo" || value === "in_progress" || value === "done";
+}
+
 /**
  * Defines the public shape of a Task object returned by the API.
  * This is the interface that the frontend application consumes.
@@ -6,8 +17,8 @@ export type TaskResponse = {
   id: string;
   title: string;
   description: string;
-  priority: "low" | "normal" | "high";
-  status: "todo" | "in_progress" | "done";
+  priority: Priority;
+  status: Status;
   estimatedMinutes: number | null;
   deadline: string | null;
   elapsedSeconds: number;
@@ -19,8 +30,8 @@ export type TaskRecord = {
   $id?: string;
   title: string;
   description: string;
-  priority: TaskResponse["priority"];
-  status: TaskResponse["status"];
+  priority: Priority;
+  status: Status;
   estimatedMinutes: number | null;
   deadline: string | null;
   elapsedSeconds: number;
