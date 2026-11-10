@@ -44,8 +44,6 @@ next-env.d.ts
 
 /venv/
 
-claude_client.py
-
 # sqlite database
 /data/
 *.sqlite

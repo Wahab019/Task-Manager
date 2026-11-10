@@ -3,6 +3,7 @@
 import { Pause, Play, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTimer } from "@/context/TimerContext";
+import { formatSeconds } from "@/lib/utils";
 
 const MIN_OFFSET = 24;
 const MAX_OFFSET = 300;
@@ -10,18 +11,6 @@ const MAX_OFFSET = 300;
 /** Restricts a floating timer offset to the configured viewport bounds. */
 const clampOffset = (value: number) =>
   Math.min(Math.max(value, MIN_OFFSET), MAX_OFFSET);
-
-/** Formats elapsed seconds as an `HH:MM:SS` clock-style label. */
-const formatSeconds = (seconds: number) => {
-  const h = Math.floor(seconds / 3600)
-    .toString()
-    .padStart(2, "0");
-  const m = Math.floor((seconds % 3600) / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = (seconds % 60).toString().padStart(2, "0");
-  return `${h}:${m}:${s}`;
-};
 
 /**
  * Renders the draggable floating timer control for the active task.

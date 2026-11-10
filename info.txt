@@ -1,92 +1,112 @@
-Task Manager app dependency inventory
+Task Manager App Architecture & Dependency Inventory
 
-Core app framework
-- next 16.2.10 — main app framework for routing, server rendering, API routes, and Next.js app structure.
-- react 19.2.4 — frontend UI library used across the app.
-- react-dom 19.2.4 — React DOM rendering for the browser.
+1. Core App Framework
+- next 16.2.10 — Main full-stack framework providing App Router, server actions, API routes, and request proxying.
+- react 19.2.4 — Component and state management library.
+- react-dom 19.2.4 — React DOM rendering for web browsers.
 
-Backend and data layer
-- appwrite 26.2.0 — client-side Appwrite SDK used for auth and database interactions.
-- node-appwrite 27.1.0 — server-side Appwrite SDK used in API routes and server logic.
-- axios 1.18.1 — HTTP client used for timer and API requests.
+2. Backend, Data Layer & Authentication
+- better-sqlite3 13.0.3 — Local SQLite database engine stored at `data/taskmanager.sqlite`. Uses Write-Ahead Logging (WAL) and enforced foreign keys for fast, concurrent task and time-log persistence.
+- appwrite 26.2.0 — Client-side Appwrite SDK used for user registration, login, and session token generation.
+- node-appwrite 27.1.0 — Server-side Appwrite SDK used in `src/lib/auth.ts` to verify session JWT tokens in incoming API requests.
+- axios 1.18.1 — Client-side HTTP client used by TimerContext to synchronize tasks and time logs with Next.js API routes.
 
-Authentication and validation
-- zod 4.4.3 — schema validation for forms such as login and password reset flows.
+3. Authentication & Validation
+- zod 4.4.3 — Schema validation for authentication forms (sign-up, login, password reset).
 
-Styling and UI utilities
-- tailwindcss 4 — utility-first CSS framework for the app styling.
-- @tailwindcss/postcss 4 — Tailwind/PostCSS integration.
-- clsx 2.1.1 — conditional className utility.
-- tailwind-merge 3.6.0 — merges Tailwind utility classes safely.
-- tw-animate-css 1.4.0 — animation utility for UI effects.
-- class-variance-authority 0.7.1 — component variant logic for UI building.
-- @base-ui/react 1.6.0 — headless UI primitives used by the app's component patterns.
-- lucide-react 1.24.0 — icon set for dashboard, auth screens, task actions, and shell UI.
+4. Styling & UI Primitives
+- tailwindcss 4 — Utility-first CSS framework for layout and visual styling.
+- @tailwindcss/postcss 4 — PostCSS integration for Tailwind CSS 4.
+- clsx 2.1.1 & tailwind-merge 3.6.0 — Utility functions composed in `cn()` to merge conditional Tailwind classes safely.
+- tw-animate-css 1.4.0 — Animation classes for transitions and modals.
+- class-variance-authority 0.7.1 — Component variant definitions for reusable UI elements.
+- @base-ui/react 1.6.0 — Headless accessible primitives powering dialogs, dropdowns, and selects.
+- lucide-react 1.24.0 — Icon library used across navigation, dashboard widgets, and task cards.
 
-Task and dashboard functionality
-- @dnd-kit/core 6.3.1 — main drag-and-drop engine for task board interactions.
-- @dnd-kit/dom 0.5.0 — DOM integration for DnD behavior.
-- react-day-picker 10.0.1 — calendar/date selection UI.
-- recharts 3.8.0 — chart rendering for reports and dashboard analytics.
+5. Tasks & Analytics
+- @dnd-kit/core 6.3.1 — Drag-and-drop core engine powering the Kanban task board status columns.
+- recharts 3.8.0 — Data visualization library for monthly and weekly reporting charts.
 
-Project scaffolding / tooling
-- typescript 5 — TypeScript language support.
-- eslint 9 — linting.
-- eslint-config-next 16.2.10 — Next.js lint rules.
-- prettier 3.9.5 — formatting.
-- husky 9.1.7 — git hooks automation.
-- lint-staged 17.0.8 — pre-commit formatting/linting support.
+6. Development Tooling & Scaffolding
+- typescript 5 — Static type checker.
+- eslint 9 & eslint-config-next 16.2.10 — Next.js and React linting rules.
+- prettier 3.9.5 — Code formatter.
+- husky 9.1.7 & lint-staged 17.0.8 — Pre-commit formatting and linting hooks.
+- shadcn 4.13.0 — Component scaffolding CLI (in devDependencies).
 
-Optional / generated utility package
-- shadcn 4.13.0 — used as part of the project’s component scaffolding workflow and shadcn-style UI setup.
+---
 
-Most important app-working dependencies
-1. next
-2. react / react-dom
-3. appwrite / node-appwrite
-4. axios
-5. tailwindcss
-6. @dnd-kit/core
-7. recharts
-8. lucide-react
-9. zod
+Architecture Overview
 
-This list reflects the packages actually imported by the codebase and the packages required for the app’s runtime and UI behavior.
+1. Data Persistence (SQLite)
+All tasks and timelogs are persisted locally in SQLite (`data/taskmanager.sqlite`) managed by `src/lib/db.ts`. Prepared statements handle all CRUD operations with transactions and WAL concurrency.
 
-for date formatting and time logic, the app uses native javascript date handling plus browser formatting.
+2. User Authentication (Appwrite Auth)
+User identity and authentication are managed through Appwrite Cloud. The frontend (`src/lib/appwrite.ts`) creates sessions and issues JWTs. API routes (`/api/tasks`, `/api/timelogs`) authenticate requests via `src/lib/auth.ts`, extracting the Bearer token and verifying the user identity with Appwrite's Account API before querying SQLite scoped to `user.authUserId`.
 
+3. Next.js 16 Request Proxy
+Next.js 16 proxy convention (`src/proxy.ts`, formerly `middleware.ts`) intercepts requests to redirect authenticated users to `/dashboard` and unauthenticated users to `/login`.
 
-Root file function inventory
-- .env - Stores local environment variables used by the app and Appwrite configuration.
-- .gitignore - Lists files and folders Git should ignore.
-- .prettierignore - Lists files and folders Prettier should skip.
-- .prettierrc - Configures Prettier formatting behavior.
-- AGENTS.md - Stores repository-specific instructions for coding agents.
-- CLAUDE.md - Contains a short project note for Claude-related tooling.
-- README.md - Provides the project overview and Next.js getting-started commands.
-- claude_client.py - Defines a small Python helper client for Claude-related tooling.
-- components.json - Configures shadcn-style component aliases and UI generation settings.
-- eslint.config.mjs - Configures ESLint with Next.js and TypeScript linting rules.
-- info.txt - Documents dependency notes and this root-file function inventory.
-- next-env.d.ts - Provides generated Next.js TypeScript ambient declarations.
-- next.config.ts - Exports the Next.js runtime configuration for the app.
-- package-lock.json - Locks exact installed npm dependency versions.
-- package.json - Defines app metadata, npm scripts, dependencies, and dev dependencies.
-- postcss.config.mjs - Configures PostCSS to run Tailwind CSS processing.
-- tsconfig.json - Configures TypeScript compiler options and path aliases.
-- tsconfig.tsbuildinfo - Stores TypeScript incremental build cache metadata.
+4. State Management (React Context)
+- `AuthContext` (`src/context/AuthContext.tsx`): Tracks logged-in user profile, loading state, and logout actions.
+- `SidebarContext` (`src/context/SidebarContext.tsx`): Coordinates navigation sidebar toggle and mobile responsiveness.
+- `TimerContext` (`src/context/TimerContext.tsx`): Central state store for live task tracking, running timer intervals, active task selection, optimistic task creation/updating, and server synchronization.
 
+5. Data Transfer Layer
+`src/app/api/tasks/response.ts` defines the `TaskResponse` DTO and maps database records (`TaskRecord`) to the standardized frontend contract, decoupling SQLite schema from frontend views.
 
-Viewed response.ts:1-40
+---
 
-The `tasks/response.ts` file acts as a **Data Mapper** (or Data Transfer Object mapper) between your backend database and your frontend application. 
+Repository File Inventory
 
-Here's exactly what it does:
+Root Configuration:
+- `.env` — Environment configuration (`NEXT_PUBLIC_APPWRITE_PROJECT_ID`, `NEXT_PUBLIC_APPWRITE_ENDPOINT`, `APPWRITE_API_KEY`).
+- `.gitignore` — Ignores build artifacts, SQLite database files, dependencies, and environment files.
+- `.prettierignore` / `.prettierrc` — Prettier formatting rules.
+- `AGENTS.md` — Agent instructions and Next.js 16 conventions.
+- `components.json` — shadcn UI configuration.
+- `eslint.config.mjs` — ESLint flat config with Next.js rules.
+- `info.txt` — This architecture overview and inventory.
+- `next.config.ts` — Next.js runtime configuration.
+- `package.json` / `package-lock.json` — Dependencies and npm scripts.
+- `postcss.config.mjs` — PostCSS configuration for Tailwind.
+- `tsconfig.json` — TypeScript compiler configuration and path aliases.
 
-1. **Defines the API Shape (`TaskResponse`)**: It explicitly defines the format of the data that your API will send back to the frontend. This gives you strong typing on the frontend so you know exactly what fields a Task will have.
-2. **Sanitizes/Transforms Database Data (`toTaskResponse`)**: When you fetch a task from the Appwrite database, it comes back with Appwrite-specific system fields (like `$id`, `$permissions`, `$collectionId`, etc.). The `toTaskResponse` function takes that raw database document and strips out anything the frontend doesn't need, while renaming fields to be more standard (like mapping Appwrite's `$id` to a normal `id` property).
-
-**Why is this useful?**
-If you ever change your database provider (e.g., from Appwrite to Supabase or MongoDB), your frontend code won't break. You would only have to update this one `toTaskResponse` function to map the new database's format to your existing frontend `TaskResponse` shape.
-
-Would you like me to add JSDoc comments to this file as well?
+Application Source (`src/`):
+- `src/proxy.ts` — Next.js 16 request proxy for authentication route protection.
+- `src/app/globals.css` — Global design tokens, theme variables, and Tailwind imports.
+- `src/app/layout.tsx` — Root HTML layout and font loading.
+- `src/app/page.tsx` — Root landing page that redirects based on authentication state.
+- `src/app/(auth)/` — Public authentication routes:
+  - `login/page.tsx` — Email & password login.
+  - `sign-up/page.tsx` — Account registration.
+  - `reset-password/page.tsx` — Password recovery flow.
+- `src/app/(dashboard)/` — Protected dashboard layout and views:
+  - `layout.tsx` — Application shell with Header, Sidebar, and active floating TimeTracker.
+  - `dashboard/page.tsx` — Overview widgets (active task progress, weekly hours, due tasks, recent logs).
+  - `tasks/page.tsx` — Kanban drag-and-drop task board.
+  - `time-logs/page.tsx` — Weekly log tables, daily totals, and weekly target progress.
+  - `reports/page.tsx` — Monthly analytics, bar chart breakdown, and completed task summaries.
+- `src/app/api/` — SQLite REST API endpoints:
+  - `tasks/route.ts` — GET all user tasks, POST create new task.
+  - `tasks/[id]/route.ts` — PATCH update task status/metadata, DELETE task.
+  - `tasks/response.ts` — Data transfer object (DTO) mapper and shared task types.
+  - `timelogs/route.ts` — GET time logs, POST record completed time session.
+- `src/components/` — Application components:
+  - `Header.tsx` — Top bar with sidebar toggle, app branding, and user initials avatar.
+  - `sidebar.tsx` — Collapsible navigation sidebar with dynamic time-based greeting.
+  - `TimeTracker.tsx` — Draggable floating widget displaying active timer with controls.
+  - `Dashboard/` — Dashboard widgets (`daily-timeline.tsx`, `dashboard-progress.tsx`, `recent-activity.tsx`, `tasks-due.tsx`, `total-hours.tsx`).
+  - `Tasks/` — Task management (`task-board.tsx`, `task-column.tsx`, `task-card.tsx`, `task-ongoing.tsx`, `task-completed.tsx`, `edit-task-dialog.tsx`, `pill.tsx`).
+  - `TimeLogs/` — Time log views (`log-table.tsx`, `todays-total.tsx`, `weekly-progress.tsx`).
+  - `Reports/` — Reports widgets (`bar-chart.tsx`, `report-metric.tsx`, `report-table.tsx`).
+  - `ui/` — Active base UI components (`alert-dialog.tsx`, `button.tsx`, `card.tsx`, `chart.tsx`, `dialog.tsx`, `dropdown-menu.tsx`, `input.tsx`, `select.tsx`, `skeleton.tsx`, `textarea.tsx`).
+- `src/context/` — React Context providers:
+  - `AuthContext.tsx` — Appwrite authentication state.
+  - `SidebarContext.tsx` — Sidebar visibility and mobile responsiveness.
+  - `TimerContext.tsx` — Central task, timer, and time-log engine.
+- `src/lib/` — Shared libraries and utilities:
+  - `appwrite.ts` — Browser Appwrite client and session authentication helpers.
+  - `auth.ts` — Server-side JWT authentication verification.
+  - `db.ts` — SQLite database initialization and schema setup.
+  - `utils.ts` — Shared date formatting, week calculation, duration formatting, and class merger (`cn`).

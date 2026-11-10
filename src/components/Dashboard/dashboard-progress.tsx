@@ -4,44 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pause, Play, Square } from "lucide-react";
 import { useTimer } from "@/context/TimerContext";
-
-/** =========================================================
- * Avatar Component -- i'm not making use of this now
- * 
- * Renders a small circular badge displaying user initials.
- * Used in the dashboard to show who is currently working on an active task.
- * 
- * @param initials - The user's initials (e.g., "JD")
- * @param tone - Tailwind background color class for styling
- 
-export function Avatar({ initials, tone }: { initials: string; tone: string }) {
-  return (
-    <span
-      className={`flex size-8 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold text-primary ${tone}`}
-    >
-      {initials}
-    </span>
-  );
-}
-=====================================================================*/
-
-/**
- * Formats a raw number of seconds into a standard HH:MM:SS clock string.
- * Ensures that single-digit minutes or seconds are zero-padded (e.g. 01:05:09).
- *
- * @param seconds - Total number of seconds
- * @returns A formatted string like "01:05:09"
- */
-const formatSeconds = (seconds: number) => {
-  const h = Math.floor(seconds / 3600)
-    .toString()
-    .padStart(2, "0");
-  const m = Math.floor((seconds % 3600) / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = (seconds % 60).toString().padStart(2, "0");
-  return `${h}:${m}:${s}`;
-};
+import { formatSeconds } from "@/lib/utils";
 
 /**
  * DashboardProgress Component

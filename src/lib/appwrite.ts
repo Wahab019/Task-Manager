@@ -35,3 +35,44 @@ export async function getAuthHeader(): Promise<Record<string, string>> {
     return {};
   }
 }
+
+/**
+ * Creates an Appwrite session using email and password, handling SDK method compatibility.
+ */
+export async function createEmailSession(email: string, password: string) {
+  if (typeof account.createEmailPasswordSession === "function") {
+    return await account.createEmailPasswordSession(email, password);
+  }
+  const legacyAccount = account as unknown as {
+    createEmailSession?: (e: string, p: string) => Promise<unknown>;
+  };
+  if (typeof legacyAccount.createEmailSession === "function") {
+    return await legacyAccount.createEmailSession(email, password);
+  }
+  throw new Error("Appwrite authentication method not available.");
+}
+
+/**
+ * Establishes an Appwrite session with credentials, clearing any conflicting active session if needed.
+ */
+export async function loginWithEmail(email: string, password: string) {
+  try {
+    await createEmailSession(email, password);
+  } catch (err: unknown) {
+    const error = err as { message?: string; code?: number; type?: string };
+    if (
+      error?.message?.includes("session is active") ||
+      error?.code === 409 ||
+      error?.type === "user_session_already_exists"
+    ) {
+      try {
+        await account.deleteSession("current");
+      } catch {
+        // Ignore error if session wasn't active
+      }
+      await createEmailSession(email, password);
+    } else {
+      throw err;
+    }
+  }
+}

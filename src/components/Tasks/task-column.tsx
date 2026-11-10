@@ -17,23 +17,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { TaskCard } from "./task-card";
 import { CompletedTask } from "./task-completed";
 import { OngoingTask } from "./task-ongoing";
-import { useTimer } from "@/context/TimerContext";
+import { useTimer, type Priority, type Task } from "@/context/TimerContext";
+import { formatSeconds } from "@/lib/utils";
 
-/** Priority levels available when creating or displaying a task. */
-export type Priority = "low" | "normal" | "high";
-
-/** Task data required by the board's status columns and task cards. */
-export type Task = {
-  id: string;
-  title: string;
-  description: string;
-  priority: Priority;
-  status: "todo" | "in_progress" | "done";
-  estimatedMinutes: number | null;
-  deadline: string | null;
-  elapsedSeconds: number;
-  $updatedAt?: string;
-};
+export type { Priority, Task };
 
 /** Raw values maintained by the new-task form before submission. */
 type DraftTask = {
@@ -46,18 +33,6 @@ type DraftTask = {
 
 /** Date scopes supported by the completed-task filter. */
 type DoneScope = "this-week" | "today";
-
-/** Formats a number of seconds as an `HH:MM:SS` clock-style label. */
-const formatSeconds = (seconds: number) => {
-  const h = Math.floor(seconds / 3600)
-    .toString()
-    .padStart(2, "0");
-  const m = Math.floor((seconds % 3600) / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = (seconds % 60).toString().padStart(2, "0");
-  return `${h}:${m}:${s}`;
-};
 
 /**
  * Formats an optional minute estimate for display on an in-progress task.

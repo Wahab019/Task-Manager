@@ -216,7 +216,7 @@ export function TaskCard({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this task?</AlertDialogTitle>
             <AlertDialogDescription>
-              This can't be undone.
+              This can&apos;t be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           {deleteError && (

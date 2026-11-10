@@ -4,34 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Pencil, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTimer } from "@/context/TimerContext";
-
-/**
- * Builds the local calendar bounds for the current Monday-to-Sunday week.
- * The returned timestamps are used to filter time logs for weekly progress.
- */
-function getWeekBounds() {
-  const now = new Date();
-  const day = now.getDay(); // 0 = Sun, 1 = Mon, …, 6 = Sat
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + diffToMonday);
-  monday.setHours(0, 0, 0, 0);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
-  return { monday, sunday };
-}
-
-/** Formats elapsed seconds as the `HH:MM` label used by the progress card. */
-function formatHoursMinutes(totalSeconds: number) {
-  const h = Math.floor(totalSeconds / 3600)
-    .toString()
-    .padStart(2, "0");
-  const m = Math.floor((totalSeconds % 3600) / 60)
-    .toString()
-    .padStart(2, "0");
-  return `${h}:${m}`;
-}
+import { formatHoursMinutes, getWeekBounds } from "@/lib/utils";
 
 /**
  * Displays progress toward a weekly target and lets the user edit that target.

@@ -1,32 +1,6 @@
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { toTaskResponse, TaskRecord } from "../response";
-
-/**
- * Type definitions for task properties.
- */
-type Status = "todo" | "in_progress" | "done";
-type Priority = "low" | "normal" | "high";
-
-/**
- * Type guard to check whether the provided value is a valid Status.
- *
- * @param value - The value to check
- * @returns True if the value is a valid Status
- */
-function isStatus(value: unknown): value is Status {
-  return value === "todo" || value === "in_progress" || value === "done";
-}
-
-/**
- * Type guard to check whether the provided value is a valid Priority.
- *
- * @param value - The value to check
- * @returns True if the value is a valid Priority
- */
-function isPriority(value: unknown): value is Priority {
-  return value === "low" || value === "normal" || value === "high";
-}
+import { toTaskResponse, TaskRecord, isPriority, isStatus } from "../response";
 
 /**
  * Handles PATCH requests to update a specific task by ID using SQL.

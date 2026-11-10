@@ -10,8 +10,8 @@ import {
 import { useMemo } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { TaskColumn, type Task, type Priority } from "./task-column";
-import { useTimer, type Task as TimerTask } from "@/context/TimerContext";
+import { TaskColumn } from "./task-column";
+import { useTimer, type Task, type Priority } from "@/context/TimerContext";
 
 /** Labels displayed above each task status column. */
 const STATUS_LABELS: Record<Task["status"], string> = {
@@ -84,7 +84,7 @@ export function TaskBoard() {
       done: [],
     };
 
-    for (const task of tasks as TimerTask[]) {
+    for (const task of tasks) {
       grouped[task.status].push({
         ...task,
         estimatedMinutes: task.estimatedMinutes,
