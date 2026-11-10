@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, Landmark, Loader2 } from "lucide-react";
 import { z } from "zod";
-import { account } from "@/lib/appwrite";
+import { loginWithEmail } from "@/lib/appwrite";
 
 /**
  * Zod schema for validating login form inputs.
@@ -54,31 +54,13 @@ export default function LoginPage() {
   const [generalError, setGeneralError] = useState<string | null>(null); // Global errors (e.g., wrong credentials)
 
   /**
-   * Helper function to establish a session with Appwrite.
-   *
-   * It attempts to call the appropriate Appwrite authentication method.
-   * If a session is successfully created, the user is authenticated.
-   * Throws an error if the underlying Appwrite SDK method is missing.
-   */
-  const createSession = async () => {
-    if (typeof account.createEmailPasswordSession === "function") {
-      await account.createEmailPasswordSession(email, password);
-    } else if (typeof (account as any).createEmailSession === "function") {
-      await (account as any).createEmailSession(email, password);
-    } else {
-      throw new Error("Appwrite authentication method not available.");
-    }
-  };
-
-  /**
    * Handles the form submission event.
    *
    * 1. Prevents default browser form submission.
    * 2. Clears previous errors.
    * 3. Validates inputs using the Zod schema.
    * 4. Attempts to create an Appwrite session.
-   * 5. If a session conflict occurs (user already logged in), it clears the old session and retries.
-   * 6. Redirects to the dashboard on success, or sets an error message on failure.
+   * 5. Redirects to the dashboard on success, or sets an error message on failure.
    *
    * @param e - The form submission event
    */
@@ -102,29 +84,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      try {
-        await createSession();
-      } catch (err: any) {
-        if (
-          err?.message?.includes("session is active") ||
-          err?.code === 409 ||
-          err?.type === "user_session_already_exists"
-        ) {
-          try {
-            await account.deleteSession("current");
-          } catch (_) {
-            // Ignore error if session wasn't active
-          }
-          await createSession();
-        } else {
-          throw err;
-        }
-      }
-
+      await loginWithEmail(email, password);
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { message?: string };
       setGeneralError(
-        err?.message || "Failed to log in. Please check your credentials.",
+        error?.message || "Failed to log in. Please check your credentials.",
       );
     } finally {
       setLoading(false);
@@ -187,12 +152,12 @@ export default function LoginPage() {
             >
               Password
             </label>
-            <Link
+            {/* <Link
               href="/reset-password"
               className="text-[10px] font-bold text-primary underline underline-offset-2 hover:text-[#0a3026] transition-colors"
             >
               Forgot Password?
-            </Link>
+            </Link> */}
           </div>
           <div className="relative">
             <input
